@@ -241,7 +241,12 @@ color:#888;
 <button id="btnAdd" class="btn azul" onclick="adicionar()">➕   Adicionar</button>
 <button id="btnExcel" class="btn azul" onclick="baixarExcel()">📥  Baixar Excel</button>
 <button id="btnLimpar" class="btn azul" onclick="limpar()">🗑️ Limpar Dados</button>
+<input type="file" id="inputExcel" accept=".xlsx,.xls" style="display:none">
 
+<button class="btn azul" onclick="document.getElementById('inputExcel').click()">
+📤 Importar Excel
+</button>
+  
 <table id="tabela">
 <thead>
 <tr>
@@ -637,6 +642,7 @@ lista.appendChild(option)
 }
 
 document.addEventListener("DOMContentLoaded", function(){
+document.getElementById("inputExcel").addEventListener("change", importarExcel)
 let salvo = localStorage.getItem("itensEstoque")
 if(salvo){
   itens = JSON.parse(salvo)
@@ -792,6 +798,54 @@ document.getElementById("observacao").value = ""
 render()
 }
 
+function importarExcel(e){
+  const file = e.target.files[0]
+  if(!file) return
+
+  const reader = new FileReader()
+
+  reader.onload = function(event){
+    const data = new Uint8Array(event.target.result)
+    const workbook = XLSX.read(data, { type: "array" })
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+    const json = XLSX.utils.sheet_to_json(sheet)
+
+    json.forEach(linha => {
+
+      let unidade = linha.Unidade || ""
+      let produto = linha.Produto || ""
+      let medida = linha.Medida || "Selecione"
+      let quantidade = Number(linha.Quantidade) || 0
+      let observacao = linha.Observacao || ""
+
+      // 🔥 MESMA LÓGICA DO SEU ADICIONAR (SOMA)
+      let existente = itens.find(i => 
+        i.produto === produto &&
+        i.unidade === unidade &&
+        i.medida === medida &&
+        i.observacao === observacao
+      )
+
+      if(existente){
+        existente.quantidade += quantidade
+      } else {
+        itens.push({unidade, produto, medida, quantidade, observacao})
+      }
+
+    })
+
+    render()
+    salvarLocal()
+
+    alert("Planilha importada e somada com sucesso!")
+    document.getElementById("inputExcel").value = ""
+  }
+
+  reader.readAsArrayBuffer(file)
+}
+  
+  
 function baixarExcel(){
 let unidade = document.getElementById("unidade").value
 let responsavel = document.getElementById("responsavel").value
@@ -806,7 +860,10 @@ let nome =
 let dados = baseProdutos.map(base => {
 
 // procura se item foi lançado
-let encontrado = itens.find(i => i.produto === base.nome)
+let encontrado = itens.find(i => 
+  i.produto === base.nome &&
+  i.unidade === unidade
+)
 
 return {
 Unidade: unidade,
@@ -818,6 +875,7 @@ Observacao: encontrado ? encontrado.observacao : "",
 Responsavel: responsavel
 }
 })
+
 
 // 🔥 ADICIONA ITENS ATÍPICOS (não estão na base)
 itens.forEach(i => {
