@@ -222,6 +222,9 @@ color:#888;
 <input type="text" id="produto" list="listaProdutos">
 <datalist id="listaProdutos"></datalist>
 
+<label>Observação</label>
+<input type="text" id="observacao" placeholder="Ex: cor, tamanho, detalhes...">  
+  
 <label>Medida</label>
 <select id="medida">
 <option>Selecione</option>
@@ -246,6 +249,7 @@ color:#888;
 <th>Produto</th>
 <th>Medida</th>
 <th>Qtd</th>
+<th>Obs</th>
 <th></th>
 </tr>
 </thead>
@@ -263,9 +267,364 @@ let tipo = "contagem"
 
 /* BASE DE PRODUTOS */
 const baseProdutos = [
-{ material: "DIDÁTICO", nome: "Agulha de mão n° 05" }, { material: "DIDÁTICO", nome: "Agulha de mão n° 06" }, { material: "DIDÁTICO", nome: "Agulha pra vagonite" }, { material: "DIDÁTICO", nome: "Alfinete de cabeça niquelado" }, { material: "DIDÁTICO", nome: "Alfinete de segurança" }, { material: "DIDÁTICO", nome: "Apito de jogo esporte" }, { material: "DIDÁTICO", nome: "Arco para cabelo de plástico" }, { material: "DIDÁTICO", nome: "Argila (1 kg)" }, { material: "DIDÁTICO", nome: "Argola para malabares profissional" }, { material: "DIDÁTICO", nome: "Bambolê Profissional o mais SIMPLES" }, { material: "DIDÁTICO", nome: "Bambolê SIMPLES de brinquedo" }, { material: "DIDÁTICO", nome: "Bandeja para rolinho G" }, { material: "DIDÁTICO", nome: "Bandeja para rolinho P" }, { material: "DIDÁTICO", nome: "Baqueta para Berimbau" }, { material: "DIDÁTICO", nome: "Baqueta para percussão 5A" }, { material: "DIDÁTICO", nome: "Barbante rolo" }, { material: "DIDÁTICO", nome: "Base cremosa para maquiagem NÃO profissional" }, { material: "DIDÁTICO", nome: "Bastão de cola quente" }, { material: "DIDÁTICO", nome: "Bastão de Maculele" }, { material: "DIDÁTICO", nome: "Bateria para microfone não recarregavél 9 volts" }, { material: "DIDÁTICO", nome: "Baton para maquiagem NÃO profissional" }, { material: "DIDÁTICO", nome: "Blush para maquiagem NÃO profissional" }, { material: "DIDÁTICO", nome: "Bola de assoprar n° 7" }, { material: "DIDÁTICO", nome: "Bola de Basquete Mirim" }, { material: "DIDÁTICO", nome: "Bola de futsal Max 100" }, { material: "DIDÁTICO", nome: "Bola de futsal Max 200" }, { material: "DIDÁTICO", nome: "Bola de futsal Max 500" }, { material: "DIDÁTICO", nome: "Bola de gude simples tamanho médio 50 und" }, { material: "DIDÁTICO", nome: "Bola de inicação n° 10" }, { material: "DIDÁTICO", nome: "Bola de voleibol m6 5500" }, { material: "DIDÁTICO", nome: "Bola orange ball" }, { material: "DIDÁTICO", nome: "Bola suiça" }, { material: "DIDÁTICO", nome: "Bolinha de Frescobol" }, { material: "DIDÁTICO", nome: "Bolinha p/ malabares profissional" }, { material: "DIDÁTICO", nome: "Bomba para encher bola" }, { material: "DIDÁTICO", nome: "Bordado inglês" }, { material: "DIDÁTICO", nome: "Botões diversos simples" }, { material: "DIDÁTICO", nome: "Broxa (pincel) tamanho 0" }, { material: "DIDÁTICO", nome: "Cabo 1,5m P2 para P10" }, { material: "DIDÁTICO", nome: "Cabo Canon P10" }, { material: "DIDÁTICO", nome: "Cabo de som P10-P10 - 5m" }, { material: "DIDÁTICO", nome: "Cabo de som P2-P2 - 5m" }, { material: "DIDÁTICO", nome: "Cabo de som P2-RCA - 5m" }, { material: "DIDÁTICO", nome: "Caneleira 1 Kg" }, { material: "DIDÁTICO", nome: "Caneleira 2 kg" }, { material: "DIDÁTICO", nome: "Caneta para tecido core divervas" }, { material: "DIDÁTICO", nome: "Caneta Posca 7mm cores diversas" }, { material: "DIDÁTICO", nome: "Carbonato de magnésio 1 Kg" }, { material: "DIDÁTICO", nome: "Carvão vegetal para desenho c/ 12 unidades" }, { material: "DIDÁTICO", nome: "Clave para malabares profissional" }, { material: "DIDÁTICO", nome: "Cola de contato tubo 75g" }, { material: "DIDÁTICO", nome: "Cola em spray para tecido 500 ml" }, { material: "DIDÁTICO", nome: "Cola permanente 250g" }, { material: "DIDÁTICO", nome: "Cola universal pra artesanato" }, { material: "DIDÁTICO", nome: "Colchonete para ginástica" }, { material: "DIDÁTICO", nome: "Colete para jogos s/ numeração" }, { material: "DIDÁTICO", nome: "Cone pequeno de silicone" }, { material: "DIDÁTICO", nome: "Cones Grande de silicone" }, { material: "DIDÁTICO", nome: "Corante liquido para tinta (Cores variadas) (tipo xadrez)" }, { material: "DIDÁTICO", nome: "Corda p/cabo de guerra (sisal)" }, { material: "DIDÁTICO", nome: "Couro Cru para atabaque -50cm" }, { material: "DIDÁTICO", nome: "Dedobol" }, { material: "DIDÁTICO", nome: "Elástico- pct10 mt" }, { material: "DIDÁTICO", nome: "Encordoamento de nylon (para instrumento de corda)SIMPLES" }, { material: "DIDÁTICO", nome: "Encordoamento de aço (para instrumento de corda) SIMPLES" }, { material: "DIDÁTICO", nome: "Espaguete flutuador para piscina" }, { material: "DIDÁTICO", nome: "Extensão elétrica 10 m TRÊS TOMADAS" }, { material: "DIDÁTICO", nome: "Feltro estampado cores variadas" }, { material: "DIDÁTICO", nome: "Feltro liso cores variadas" }, { material: "DIDÁTICO", nome: "Fibra de silicone para enchimento" }, { material: "DIDÁTICO", nome: "Filtro de Linha 5 TOMADAS" }, { material: "DIDÁTICO", nome: "Fio encerado 1,5 mm rolo 100 metros" }, { material: "DIDÁTICO", nome: "Fita de cetim" }, { material: "DIDÁTICO", nome: "Fita de cetim n° 3 cores variadas- 10 mt" }, { material: "DIDÁTICO", nome: "Fita decorada de natal" }, { material: "DIDÁTICO", nome: "Fitilho 10mt cores variadas" }, { material: "DIDÁTICO", nome: "Fluido para máquina de fumaça" }, { material: "DIDÁTICO", nome: "Fonte Universal para Teclado SIMPLES" }, { material: "DIDÁTICO", nome: "Grampo para cabelo 100 und cor preto" }, { material: "DIDÁTICO", nome: "Halter 1 kg" }, { material: "DIDÁTICO", nome: "Halter 2 kg" }, { material: "DIDÁTICO", nome: "Halter para hidroginástica" }, { material: "DIDÁTICO", nome: "Jogo da memória Adulto" }, { material: "DIDÁTICO", nome: "Jogo da memória Infatil" }, { material: "DIDÁTICO", nome: "Jogo de Botões pct com 12 botões" }, { material: "DIDÁTICO", nome: "Jogo de Dama e Ludo" }, { material: "DIDÁTICO", nome: "Jogo de Xadrez" }, { material: "DIDÁTICO", nome: "Jogo Super Trunfo" }, { material: "DIDÁTICO", nome: "Jogo Torre Copo" }, { material: "DIDÁTICO", nome: "Jogo Uno" }, { material: "DIDÁTICO", nome: "Kit Badminton - 1 par Raquete com 3 petecas" }, { material: "DIDÁTICO", nome: "Kit de pincéis para maquiagem profissional marca simples" }, { material: "DIDÁTICO", nome: "kit de tarracha para violão" }, { material: "DIDÁTICO", nome: "Kit rede Badminton peteca (adans ou vollo)" }, { material: "DIDÁTICO", nome: "Lã (cores variadas)" }, { material: "DIDÁTICO", nome: "Lápis para olhos para maquiagem não profissional" }, { material: "DIDÁTICO", nome: "Linha de algodão para bordados" }, { material: "DIDÁTICO", nome: "Linha de algodão para crochê" }, { material: "DIDÁTICO", nome: "Linha de costura — cone" }, { material: "DIDÁTICO", nome: "Lonita crua" }, { material: "DIDÁTICO", nome: "Maceta pelúcia para surdo" }, { material: "DIDÁTICO", nome: "Malha jersey" }, { material: "DIDÁTICO", nome: "Manta acrílica (acrilon)" }, { material: "DIDÁTICO", nome: "Maquiagem para clown NÃO profissional" }, { material: "DIDÁTICO", nome: "Massa biscuit (cores variadas) 500 gr" }, { material: "DIDÁTICO", nome: "Massa de modelar 12 cores" }, { material: "DIDÁTICO", nome: "Massa Epoxi" }, { material: "DIDÁTICO", nome: "Meia calça adulto P grossa" }, { material: "DIDÁTICO", nome: "Meia calça infantil G grossa" }, { material: "DIDÁTICO", nome: "Nylon espessura grossa n° 0,60mm" }, { material: "DIDÁTICO", nome: "Nylon espessura média n° 0,35mm" }, { material: "DIDÁTICO", nome: "Palha da costa" }, { material: "DIDÁTICO", nome: "Palheta 0,8 mm" }, { material: "DIDÁTICO", nome: "Pancake branco para maquiagem Não profissional" }, { material: "DIDÁTICO", nome: "Papel Crepom" }, { material: "DIDÁTICO", nome: "Papel termocolante para pach work" }, { material: "DIDÁTICO", nome: "Passa fita de algodão" }, { material: "DIDÁTICO", nome: "Passamanaria" }, { material: "DIDÁTICO", nome: "Pele para Repique 10 (nylon)" }, { material: "DIDÁTICO", nome: "Pele para Repique 12 (nylon)" }, { material: "DIDÁTICO", nome: "Pele para Repique 6 (nylon)" }, { material: "DIDÁTICO", nome: "Pele para Repique 8 (nylon)" }, { material: "DIDÁTICO", nome: "Pele para surdo 18 (nylon)" }, { material: "DIDÁTICO", nome: "Pele para surdo 20 (nylon)" }, { material: "DIDÁTICO", nome: "Pele para surdo 22 (nylon)" }, { material: "DIDÁTICO", nome: "Pele para Tarol 14 (nylon)" }, { material: "DIDÁTICO", nome: "Perucas Coloridas" }, { material: "DIDÁTICO", nome: "Pilha recarregavel AA com 2 pilhas" }, { material: "DIDÁTICO", nome: "Pilha recarregavel AAA com 2pilhas" }, { material: "DIDÁTICO", nome: "Pincel" }, { material: "DIDÁTICO", nome: "Pincel Redondo Artistico" }, { material: "DIDÁTICO", nome: "Pincel Artistico Chato" }, { material: "DIDÁTICO", nome: "Pincel brocha" }, { material: "DIDÁTICO", nome: "Pincel Trincha" }, { material: "DIDÁTICO", nome: "Pintura de rosto cremosa para maquiagem não profissional" }, { material: "DIDÁTICO", nome: "Pintura de rosto líquida NÃO profissional" }, { material: "DIDÁTICO", nome: "Pistola de cola quente Grande" }, { material: "DIDÁTICO", nome: "Pistola de cola quente Pequena" }, { material: "DIDÁTICO", nome: "Purpurina em pó cores variadas 250gr" }, { material: "DIDÁTICO", nome: "Rastilho para Cavaquinho" }, { material: "DIDÁTICO", nome: "Renda de algodão" }, { material: "DIDÁTICO", nome: "Renda de nylon branca" }, { material: "DIDÁTICO", nome: "Rolinho de Espuma G" }, { material: "DIDÁTICO", nome: "Rolinho de Espuma M" }, { material: "DIDÁTICO", nome: "Rolinho de Espuma P" }, { material: "DIDÁTICO", nome: "Rolo de corda para rapel 300 mt" }, { material: "DIDÁTICO", nome: "Sacaria 100% algodão" }, { material: "DIDÁTICO", nome: "Saia de Maculelê - (Feita de Palha)" }, { material: "DIDÁTICO", nome: "Sianinha grande" }, { material: "DIDÁTICO", nome: "Suporte de parede para violão" }, { material: "DIDÁTICO", nome: "Suporte para Teclado Musical em X Simples" }, { material: "DIDÁTICO", nome: "Tecido de algodão CRU" }, { material: "DIDÁTICO", nome: "Tecido de cetim simples 1,40 m de largura" }, { material: "DIDÁTICO", nome: "Tecido de chitão" }, { material: "DIDÁTICO", nome: "Tecido de tricoline liso" }, { material: "DIDÁTICO", nome: "Tecido etamine 4 fios" }, { material: "DIDÁTICO", nome: "Tecido liganete sem elastano" }, { material: "DIDÁTICO", nome: "Tecido tricoline estampado" }, { material: "DIDÁTICO", nome: "Tela para pintura 10x15 cm" }, { material: "DIDÁTICO", nome: "Tela para pintura 20x35 cm" }, { material: "DIDÁTICO", nome: "Tela para pintura 30x30 cm" }, { material: "DIDÁTICO", nome: "Tela para pintura 60x80 cm" }, { material: "DIDÁTICO", nome: "Tesoura grande para tecido lamina de inox- 21cm" }, { material: "DIDÁTICO", nome: "Tinta acrílica —250 ml (cores variadas)" }, { material: "DIDÁTICO", nome: "Tinta guache-250 ml (cores variadas)" }, { material: "DIDÁTICO", nome: "Tinta látex PVA - 18It SIMPES" }, { material: "DIDÁTICO", nome: "Tinta para tecido cores variadas -250 ml" }, { material: "DIDÁTICO", nome: "Tinta spray (Arte urbana) cores variadas" }, { material: "DIDÁTICO", nome: "Velcro rolo com 25mts" }, { material: "DIDÁTICO", nome: "Verniz fosco para pintura e desenho 100 ml" }, { material: "DIDÁTICO", nome: "Viés" }, { material: "EXPEDIENTE", nome: "Adaptador de tomada padrão três pinos redondo" }, { material: "EXPEDIENTE", nome: "Apontador sem reservatório, Caixa com 40 Unidades" }, { material: "EXPEDIENTE", nome: "Barbante Rolo Pequeno" }, { material: "EXPEDIENTE", nome: "Bastão de cola quente - pct de 1Kg" }, { material: "EXPEDIENTE", nome: "Bloco adesivo 76x76mm" }, { material: "EXPEDIENTE", nome: "Bloco de desenho A4 140g/m‘ - Bloco com 20 folhas, Pacote com 5 Blocos." }, { material: "EXPEDIENTE", nome: "Borracha branca sem protetor caixa com 40 unidades" }, { material: "EXPEDIENTE", nome: "Caixa para arquivo morto em Polionda nas medidas 347x245x133mm" }, { material: "EXPEDIENTE", nome: "Caneta esferográfica Azul, caixa com 50 unidades." }, { material: "EXPEDIENTE", nome: "Caneta hidrocor (12 cores), caixa com 5 estações de 12 cores" }, { material: "EXPEDIENTE", nome: "Caneta Marca Texto, caixa com 12 unidades." }, { material: "EXPEDIENTE", nome: "Cartolina dupla face (diversas cores), pacote com 20 folhas" }, { material: "EXPEDIENTE", nome: "Clips Tamanho 2/10" }, { material: "EXPEDIENTE", nome: "Cola branca 1 L" }, { material: "EXPEDIENTE", nome: "Cola colorida c/ 4 unidades de 23g por caixa" }, { material: "EXPEDIENTE", nome: "Cola gliter c/ 12 unidades de 23g por caixa" }, { material: "EXPEDIENTE", nome: "Cola silicone Líquida de 100ml" }, { material: "EXPEDIENTE", nome: "Corretivo líquido C/ 12 unidades" }, { material: "EXPEDIENTE", nome: "Envelope Branco correspondência, caixa com 100 unidades" }, { material: "EXPEDIENTE", nome: "Envelope pardo tamanho A4, caixa com 100 unidades" }, { material: "EXPEDIENTE", nome: "Estilete grande." }, { material: "EXPEDIENTE", nome: "Etiquetas adesiva de papel A4, adesivo de folha inteira, pacote com 25 folhas." }, { material: "EXPEDIENTE", nome: "EVA (cores diversas) c/ 10 unidades" }, { material: "EXPEDIENTE", nome: "EVA estampas diversas c/ 05 unidades" }, { material: "EXPEDIENTE", nome: "Fita adesiva colorida, pequeno,pacote com 10 rolos." }, { material: "EXPEDIENTE", nome: "Fita adesiva larga p/ empacotamento com 4 unidades" }, { material: "EXPEDIENTE", nome: "Fita adesiva transparente, fino, pequeno, pacote com 10 rolos." }, { material: "EXPEDIENTE", nome: "Fita banana" }, { material: "EXPEDIENTE", nome: "Fita crepe c/ 6 rolos" }, { material: "EXPEDIENTE", nome: "Fita dupla face c/ 4 rolos" }, { material: "EXPEDIENTE", nome: "Fita tape" }, { material: "EXPEDIENTE", nome: "Giz de cera Grosso, caixa com 12 estaçóes de 12 cores cada" }, { material: "EXPEDIENTE", nome: "Grampeador de tapeceiro" }, { material: "EXPEDIENTE", nome: "Grampeador médio" }, { material: "EXPEDIENTE", nome: "Grampos p/ grampeador de tapeceiro medindo 106/8mm" }, { material: "EXPEDIENTE", nome: "Grampos p/ grampeador médio" }, { material: "EXPEDIENTE", nome: "Lápis de cor (12 cores), Caixa com 12 estações de 12 cores." }, { material: "EXPEDIENTE", nome: "Lápis preto — Caixa c/ 144 unds" }, { material: "EXPEDIENTE", nome: "Microfone de mão com fio" }, { material: "EXPEDIENTE", nome: "Mouse" }, { material: "EXPEDIENTE", nome: "Papel A4 cx. 5000 fls" }, { material: "EXPEDIENTE", nome: "Papel carbono para tecido" }, { material: "EXPEDIENTE", nome: "Papel cartão c/ 20 unid" }, { material: "EXPEDIENTE", nome: "Papel celofane c/50 unid" }, { material: "EXPEDIENTE", nome: "Papel cenário pardo, pacote com 100 folhas" }, { material: "EXPEDIENTE", nome: "Papel de seda cores diversas, pacote com 20 folhas" }, { material: "EXPEDIENTE", nome: "Papel Kraft, pacote com 100 folhas" }, { material: "EXPEDIENTE", nome: "Papel laminado" }, { material: "EXPEDIENTE", nome: "Papel Paraná c/ 10" }, { material: "EXPEDIENTE", nome: "Papel Sulfite A3, 75g/mz, pacote com 500 folhas" }, { material: "EXPEDIENTE", nome: "Pasta com fecho Romeu e Julieta" }, { material: "EXPEDIENTE", nome: "Pasta para arquivo suspenso" }, { material: "EXPEDIENTE", nome: "Pastas plástica com elástico c/ 10 unidades" }, { material: "EXPEDIENTE", nome: "Pen drive — 32 GB" }, { material: "EXPEDIENTE", nome: "Pincel atômico c/ 12 unid" }, { material: "EXPEDIENTE", nome: "Pincel p/quadro brnco c / 12 unid" }, { material: "EXPEDIENTE", nome: "Plástico adesivo autocolante transparente — rolo 25 m" }, { material: "EXPEDIENTE", nome: "Reabastecedor p/pinceI atômico" }, { material: "EXPEDIENTE", nome: "Régua c/ 10 unid de 30cm em acrílico" }, { material: "EXPEDIENTE", nome: "Teclado Multimídia para computador" }, { material: "EXPEDIENTE", nome: "Tesoura de picotar grande" }, { material: "EXPEDIENTE", nome: "Tesouras sem ponta c/ 20 unid" }, { material: "EXPEDIENTE", nome: "TNT (cores diversas) - rolo com 50m" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Absorvente com abas pct/8" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Água Sanitária 5L" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Álcool em gel - 500mI" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Balde plástico - 20It" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Bobina saco transparente picotado 20x28cm" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Cloro 5L" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Colher descartável — Cx com 1000" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável 150 ml com tampa — C/1000 unds" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável 50 ml — Cx com 5000 unidades" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável para festa 200 ml C/2500 unds" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo pote descartável 100 ml com tampa- c/1000 unids" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Cumbuca de isopor descartável para festa" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Desentupidor de pia" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Desentupidor de vaso sanitário" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Desinfetante líquido 5 I" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Detergente líquido 500mI" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Escova para limpeza em geral" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Esponja de aço para limpeza c/8 unidades" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Esponja dupla face para limpeza (PACOTE COM 4)" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Filme Plástico PVC c/ 100 mts" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Flanela para limpeza" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Fósforo — Pacote com 10 unidades" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Garfo descartável para festa c/1000" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Gel fixador para cabelo" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Guardanapo de papel c/1000" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Limpador Multiuso 500 ml" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Luvas de procedimento c/100" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano de chão - saco" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano de Prato Branco Liso" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano multiuso de limpeza" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel alumínio — 100 metros" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel Higiênico c/4 unid" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel Higiênico rolo com 300m" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel toalha interfolhado para banheiro 1000fl" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel toalha para cozinha com 02 rolos" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Pente Grosso" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Prato descartável para festa c/1000" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Pregador de roupa" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Rodo de Alumínio Reforçado 40cm" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Sabão em pó - 5 kg" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Sabonete líquido - 5 L" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Saco de lixo preto 100 litros" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Saco de lixo preto 40 litros" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para cachorro quente com 1000 unidades" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para chup-chup com 1000 unidades" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para pipoca com 1000 unid" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Touca descartável tnt c/100 unids" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Vassoura de Piaçava" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Abridor de latas" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Afiador de Facas (Pedra)" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Assadeira Redonda - Bolo pudim - 30 cm de Diâmetro" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Assadeira Retangular - 23cmx12cmx7cm" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Assadeira Retangular - 31cmx12cmx7cm" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Bacia/tigela Grande C/tampa -Plástico - aproim 10L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Balança digital para cozinha" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Bandeja de Aluminio para servir -Retangular" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Bandeja de plástico Self Service -retangular 48x33x2,4" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Batedor de arame (fuê)" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Borracha para Panela de Pressão 10 L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa multiuso para 5L (para geladeira)" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa Organizadora Multiuso com Trava 1O0L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa Térmica 32L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caldeirão 10L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caneca de alumínio" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caneca de vidro" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Coador de Café grande" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher de Silicone" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher de servir Arroz em Inox" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Grande de Inox para misturar Suco" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Grande de Polietileno" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher pequena de Polietileno" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Refeição de inox" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Concha" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Conjunto de medidores 5 peças" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Conjunto Tigelas Bowl inox 2L, 3L, 4L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Copo medidor" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Cuba Gastronômica" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Descascador de legumes" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escada de aluminio -5 degraus" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escorredor de louça duplo" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escorredor de macarrão" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escumadeira" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Espátula de silicone" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de carne" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de legumes" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de Refeição Inox SEM PONTA" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Forma de gelo" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Frigideira alumínio" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Frigideira antiaderente" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garfo para refeição em inox" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garrafa térmica 12L (Válvula de Apertar)" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garrafa Térmica em Inox 2,5 L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Jarra de Suco plástica Grande" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Jarra de Vidro para Suco 2,OL" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Leiteira de alumínio 2L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Mangueira de gás de cozinha (uso industrial)" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pallet de Plástico Branco" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela Caçarola de Alumínio 9,5 L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela Caçarola de Alumínio 13L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela de Pipoca Grande 10L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela de pressão 7L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pegador de macarrão" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Peneira coador para suco (grande)" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pinça de inox" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pincel de silicone" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pote de plástico para Mantimentos 1L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pote de plástico para Mantimentos 2L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Prato de vidro para refeição" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Ralador inox" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Rodo para pia" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Rolo de Abrir Massa em Polietileno" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Saleiro — porta sal" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Suporte para detergente e esponja" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Suporte para Papel toalha" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tábua de carne em Polietileno" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular grande" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular médio" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular pequeno" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Termômetro culinário digital" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tesoura de cozinha" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Travessa de vidro 4L" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Válvula de gás de cozinha" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Vasilhames de plástico grande" }
+{ material: "DIDÁTICO", nome: "Agulha de mão n° 05", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Agulha de mão n° 06", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Agulha pra vagonite", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Alfinete de cabeça niquelado", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Alfinete de segurança", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Apito de jogo esporte", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Arco para cabelo de plástico", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Argila (1 kg)", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Argola para malabares profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bambolê Profissional o mais SIMPLES", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bambolê SIMPLES de brinquedo", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bandeja para rolinho G", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bandeja para rolinho P", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Baqueta para Berimbau", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Baqueta para percussão 5A", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Barbante rolo", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Base cremosa para maquiagem NÃO profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bastão de cola quente", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bastão de Maculele", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bateria para microfone não recarregavél 9 volts", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Baton para maquiagem NÃO profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Blush para maquiagem NÃO profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bola de assoprar n° 7", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Bola de Basquete Mirim", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bola de futsal Max 100", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bola de futsal Max 200", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bola de futsal Max 500", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bola de gude simples tamanho médio 50 und", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Bola de inicação n° 10", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bola de voleibol m6 5500", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bola orange ball", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bola suiça", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bolinha de Frescobol", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bolinha p/ malabares profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bomba para encher bola", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Bordado inglês", medida: "Rolo" },
+{ material: "DIDÁTICO", nome: "Botões diversos simples", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Broxa (pincel) tamanho 0", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cabo 1,5m P2 para P10", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cabo Canon P10", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cabo de som P10-P10 - 5m", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cabo de som P2-P2 - 5m", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cabo de som P2-RCA - 5m", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Caneleira 1 Kg", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Caneleira 2 kg", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Caneta para tecido core divervas", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Caneta Posca 7mm cores diversas", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Carbonato de magnésio 1 Kg", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Carvão vegetal para desenho c/ 12 unidades", medida: "Caixa" },
+{ material: "DIDÁTICO", nome: "Clave para malabares profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cola de contato tubo 75g", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cola em spray para tecido 500 ml", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cola permanente 250g", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cola universal pra artesanato", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Colchonete para ginástica", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Colete para jogos s/ numeração", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cone pequeno de silicone", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Cones Grande de silicone", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Corante liquido para tinta (Cores variadas) (tipo xadrez)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Corda p/cabo de guerra (sisal)", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Couro Cru para atabaque -50cm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Dedobol", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Elástico- pct10 mt", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Encordoamento de nylon (para instrumento de corda)SIMPLES", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Encordoamento de aço (para instrumento de corda) SIMPLES", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Espaguete flutuador para piscina", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Extensão elétrica 10 m TRÊS TOMADAS", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Feltro estampado cores variadas", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Feltro liso cores variadas", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Fibra de silicone para enchimento", medida: "Kg" },
+{ material: "DIDÁTICO", nome: "Filtro de Linha 5 TOMADAS", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Fio encerado 1,5 mm rolo 100 metros", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Fita de cetim", medida: "Rolo" },
+{ material: "DIDÁTICO", nome: "Fita de cetim n° 3 cores variadas- 10 mt", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Fita decorada de natal", medida: "Rolo" },
+{ material: "DIDÁTICO", nome: "Fitilho 10mt cores variadas", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Fluido para máquina de fumaça", medida: "Litro" },
+{ material: "DIDÁTICO", nome: "Fonte Universal para Teclado SIMPLES", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Grampo para cabelo 100 und cor preto", medida: "Caixa" },
+{ material: "DIDÁTICO", nome: "Halter 1 kg", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Halter 2 kg", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Halter para hidroginástica", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Jogo da memória Adulto", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Jogo da memória Infatil", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Jogo de Botões pct com 12 botões", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Jogo de Dama e Ludo", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Jogo de Xadrez", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Jogo Super Trunfo", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Jogo Torre Copo", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Jogo Uno", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Kit Badminton - 1 par Raquete com 3 petecas", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Kit de pincéis para maquiagem profissional marca simples", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "kit de tarracha para violão", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Kit rede Badminton peteca (adans ou vollo)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Lã (cores variadas)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Lápis para olhos para maquiagem não profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Linha de algodão para bordados", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Linha de algodão para crochê", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Linha de costura — cone", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Lonita crua", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Maceta pelúcia para surdo", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Malha jersey", medida: "Kg" },
+{ material: "DIDÁTICO", nome: "Manta acrílica (acrilon)", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Maquiagem para clown NÃO profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Massa biscuit (cores variadas) 500 gr", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Massa de modelar 12 cores", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Massa Epoxi", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Meia calça adulto P grossa", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Meia calça infantil G grossa", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Nylon espessura grossa n° 0,60mm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Nylon espessura média n° 0,35mm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Palha da costa", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Palheta 0,8 mm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pancake branco para maquiagem Não profissional", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Papel Crepom", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Papel termocolante para pach work", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Passa fita de algodão", medida: "Rolo" },
+{ material: "DIDÁTICO", nome: "Passamanaria", medida: "Rolo" },
+{ material: "DIDÁTICO", nome: "Pele para Repique 10 (nylon)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pele para Repique 12 (nylon)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pele para Repique 6 (nylon)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pele para Repique 8 (nylon)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pele para surdo 18 (nylon)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pele para surdo 20 (nylon)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pele para surdo 22 (nylon)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pele para Tarol 14 (nylon)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Perucas Coloridas", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pilha recarregavel AA com 2 pilhas", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Pilha recarregavel AAA com 2pilhas", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Pincel", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pincel Redondo Artistico", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pincel Artistico Chato", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pincel brocha", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pincel Trincha", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pintura de rosto cremosa para maquiagem não profissional", medida: "Caixa" },
+{ material: "DIDÁTICO", nome: "Pintura de rosto líquida NÃO profissional", medida: "Caixa" },
+{ material: "DIDÁTICO", nome: "Pistola de cola quente Grande", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Pistola de cola quente Pequena", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Purpurina em pó cores variadas 250gr", medida: "Pacote" },
+{ material: "DIDÁTICO", nome: "Rastilho para Cavaquinho", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Renda de algodão", medida: "Rolo" },
+{ material: "DIDÁTICO", nome: "Renda de nylon branca", medida: "Rolo" },
+{ material: "DIDÁTICO", nome: "Rolinho de Espuma G", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Rolinho de Espuma M", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Rolinho de Espuma P", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Rolo de corda para rapel 300 mt", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Sacaria 100% algodão", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Saia de Maculelê - (Feita de Palha)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Sianinha grande", medida: "Rolo" },
+{ material: "DIDÁTICO", nome: "Suporte de parede para violão", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Suporte para Teclado Musical em X Simples", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tecido de algodão CRU", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Tecido de cetim simples 1,40 m de largura", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Tecido de chitão", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Tecido de tricoline liso", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Tecido etamine 4 fios", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Tecido liganete sem elastano", medida: "Kg" },
+{ material: "DIDÁTICO", nome: "Tecido tricoline estampado", medida: "Metro" },
+{ material: "DIDÁTICO", nome: "Tela para pintura 10x15 cm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tela para pintura 20x35 cm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tela para pintura 30x30 cm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tela para pintura 60x80 cm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tesoura grande para tecido lamina de inox- 21cm", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tinta acrílica —250 ml (cores variadas)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tinta guache-250 ml (cores variadas)", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tinta látex PVA - 18It SIMPES", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tinta para tecido cores variadas -250 ml", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Tinta spray (Arte urbana) cores variadas", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Velcro rolo com 25mts", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Verniz fosco para pintura e desenho 100 ml", medida: "Unidade" },
+{ material: "DIDÁTICO", nome: "Viés", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Adaptador de tomada padrão três pinos redondo", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Apontador sem reservatório, Caixa com 40 Unidades", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Barbante Rolo Pequeno", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Bastão de cola quente - pct de 1Kg", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Bloco adesivo 76x76mm", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Bloco de desenho A4 140g/m‘ - Bloco com 20 folhas, Pacote com 5 Blocos.", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Borracha branca sem protetor caixa com 40 unidades", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Caixa para arquivo morto em Polionda nas medidas 347x245x133mm", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Caneta esferográfica Azul, caixa com 50 unidades.", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Caneta hidrocor (12 cores), caixa com 5 estações de 12 cores", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Caneta Marca Texto, caixa com 12 unidades.", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Cartolina dupla face (diversas cores), pacote com 20 folhas", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Clips Tamanho 2/10", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Cola branca 1 L", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Cola colorida c/ 4 unidades de 23g por caixa", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Cola gliter c/ 12 unidades de 23g por caixa", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Cola silicone Líquida de 100ml", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Corretivo líquido C/ 12 unidades", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Envelope Branco correspondência, caixa com 100 unidades", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Envelope pardo tamanho A4, caixa com 100 unidades", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Estilete grande.", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Etiquetas adesiva de papel A4, adesivo de folha inteira, pacote com 25 folhas.", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "EVA (cores diversas) c/ 10 unidades", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "EVA estampas diversas c/ 05 unidades", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Fita adesiva colorida, pequeno,pacote com 10 rolos.", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Fita adesiva larga p/ empacotamento com 4 unidades", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Fita adesiva transparente, fino, pequeno, pacote com 10 rolos.", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Fita banana", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Fita crepe c/ 6 rolos", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Fita dupla face c/ 4 rolos", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Fita tape", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Giz de cera Grosso, caixa com 12 estaçóes de 12 cores cada", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Grampeador de tapeceiro", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Grampeador médio", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Grampos p/ grampeador de tapeceiro medindo 106/8mm", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Grampos p/ grampeador médio", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Lápis de cor (12 cores), Caixa com 12 estações de 12 cores.", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Lápis preto — Caixa c/ 144 unds", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Microfone de mão com fio", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Mouse", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Papel A4 ", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Papel carbono para tecido", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Papel cartão c/ 20 unid", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Papel celofane c/50 unid", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Papel cenário pardo, pacote com 100 folhas", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Papel de seda cores diversas, pacote com 20 folhas", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Papel Kraft, pacote com 100 folhas", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Papel laminado", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Papel Paraná c/ 10", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Papel Sulfite A3, 75g/mz, pacote com 500 folhas", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Pasta com fecho Romeu e Julieta", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Pasta para arquivo suspenso", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Pastas plástica com elástico c/ 10 unidades", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Pen drive — 32 GB", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Pincel atômico c/ 12 unid", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Pincel p/quadro brnco c / 12 unid", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "Plástico adesivo autocolante transparente — rolo 25 m", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Reabastecedor p/pinceI atômico", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Régua c/ 10 unid de 30cm em acrílico", medida: "Pacote" },
+{ material: "EXPEDIENTE", nome: "Teclado Multimídia para computador", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Tesoura de picotar grande", medida: "Unidade" },
+{ material: "EXPEDIENTE", nome: "Tesouras sem ponta c/ 20 unid", medida: "Caixa" },
+{ material: "EXPEDIENTE", nome: "TNT (cores diversas) - rolo com 50m", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Absorvente com abas pct/8", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Água Sanitária 5L", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Álcool em gel - 500mI", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Balde plástico - 20It", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Bobina saco transparente picotado", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Cloro 5L", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Colher descartável — 100 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável 150 ml com tampa — 100 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável 50 ml — 100 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável para festa 200 ml - 100 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo pote descartável 100 ml com tampa- 100 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Cumbuca de isopor descartável para festa - 100 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Desentupidor de pia", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Desentupidor de vaso sanitário", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Desinfetante líquido 5 I", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Detergente líquido 500mI", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Escova para limpeza em geral", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Esponja de aço para limpeza c/8 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Esponja dupla face para limpeza (PACOTE COM 4)", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Filme Plástico PVC c/ 100 mts", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Flanela para limpeza", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Fósforo — Pacote com 10 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Garfo descartável para festa - 100 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Gel fixador para cabelo", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Guardanapo de papel c/1000", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Limpador Multiuso 500 ml", medida: "Unieaee" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Luvas de procedimento c/100", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano de chão - saco", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano de Prato Branco Liso", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano multiuso de limpeza", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel alumínio — 100 metros", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel Higiênico c/4 unid", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel Higiênico rolo com 300m", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel toalha interfolhado para banheiro 1000fl", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel toalha para cozinha com 02 rolos", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pente Grosso", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Prato descartável para festa - 50 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pregador de roupa", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Rodo de Alumínio Reforçado 40cm", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sabão em pó - 5 kg", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sabonete líquido - 5 L", medida: "Unidade" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Saco de lixo preto 100 litros", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Saco de lixo preto 40 litros", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para cachorro quente com 1000 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para chup-chup com 1000 unidades", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para pipoca com 1000 unid", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Touca descartável tnt c/100 unids", medida: "Pacote" },
+{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Vassoura de Piaçava", medida: "unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Abridor de latas", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Afiador de Facas (Pedra)", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Assadeira Redonda - Bolo pudim - 30 cm de Diâmetro", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Assadeira Retangular - 23cmx12cmx7cm", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Assadeira Retangular - 31cmx12cmx7cm", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Bacia/tigela Grande C/tampa -Plástico - aproim 10L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Balança digital para cozinha", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Bandeja de Aluminio para servir -Retangular", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Bandeja de plástico Self Service -retangular 48x33x2,4", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Batedor de arame (fuê)", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Borracha para Panela de Pressão 10 L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa multiuso para 5L (para geladeira)", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa Organizadora Multiuso com Trava 1O0L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa Térmica 32L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caldeirão 10L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caneca de alumínio", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caneca de vidro", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Coador de Café grande", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher de Silicone", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher de servir Arroz em Inox", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Grande de Inox para misturar Suco", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Grande de Polietileno", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher pequena de Polietileno", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Refeição de inox", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Concha", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Conjunto de medidores 5 peças", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Conjunto Tigelas Bowl inox 2L, 3L, 4L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Copo medidor", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Cuba Gastronômica", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Descascador de legumes", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escada de aluminio -5 degraus", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escorredor de louça duplo", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escorredor de macarrão", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escumadeira", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Espátula de silicone", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de carne", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de legumes", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de Refeição Inox SEM PONTA", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Forma de gelo", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Frigideira alumínio", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Frigideira antiaderente", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garfo para refeição em inox", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garrafa térmica 12L (Válvula de Apertar)", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garrafa Térmica em Inox 2,5 L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Jarra de Suco plástica Grande", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Jarra de Vidro para Suco 2,OL", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Leiteira de alumínio 2L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Mangueira de gás de cozinha (uso industrial)", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pallet de Plástico Branco", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela Caçarola de Alumínio 9,5 L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela Caçarola de Alumínio 13L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela de Pipoca Grande 10L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela de pressão 7L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pegador de macarrão", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Peneira coador para suco (grande)", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pinça de inox", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pincel de silicone", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pote de plástico para Mantimentos 1L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pote de plástico para Mantimentos 2L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Prato de vidro para refeição", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Ralador inox", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Rodo para pia", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Rolo de Abrir Massa em Polietileno", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Saleiro — porta sal", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Suporte para detergente e esponja", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Suporte para Papel toalha", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tábua de carne em Polietileno", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular grande", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular médio", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular pequeno", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Termômetro culinário digital", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tesoura de cozinha", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Travessa de vidro 4L", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Válvula de gás de cozinha", medida: "Unidade" },
+{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Vasilhames de plástico grande", medida: "Unidade" }
 ]
-
 function carregarProdutos(){
 let lista = document.getElementById("listaProdutos")
 lista.innerHTML = ""
@@ -277,12 +636,35 @@ lista.appendChild(option)
 })
 }
 
-carregarProdutos()
+document.addEventListener("DOMContentLoaded", function(){
+let salvo = localStorage.getItem("itensEstoque")
+if(salvo){
+  itens = JSON.parse(salvo)
+  render()
+}
+  carregarProdutos()
 
-document.getElementById("produto").addEventListener("change", function(){
-document.getElementById("medida").focus()
+  document.getElementById("produto").addEventListener("input", function(){
+    preencherMedida()
+    document.getElementById("medida").focus()
+  })
+
+  // 🔥 ENTER FUNCIONANDO CORRETAMENTE
+  ["produto", "observacao", "quantidade"].forEach(id => {
+    document.getElementById(id).addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        e.preventDefault()
+        adicionar()
+      }
+    })
+  })
+
 })
 
+function salvarLocal(){
+  localStorage.setItem("itensEstoque", JSON.stringify(itens))
+}
+  
 function abrirApp(t){
 tipo = t
 
@@ -314,9 +696,23 @@ document.getElementById("app").classList.add("hidden")
 }
 }
 
+function preencherMedida() {
+  const nomeProduto = document.getElementById("produto").value;
+  const campoMedida = document.getElementById("medida");
+
+  const item = baseProdutos.find(p => 
+    p.nome.toLowerCase() === nomeProduto.toLowerCase()
+  );
+
+  if (item) {
+    campoMedida.value = item.medida;
+  }
+}
+  
 function adicionar(){
 let unidade = document.getElementById("unidade").value
 let produto = document.getElementById("produto").value
+let observacao = document.getElementById("observacao").value
 let medida = document.getElementById("medida").value
 let quantidade = Number(document.getElementById("quantidade").value)
 
@@ -325,25 +721,29 @@ alert("Informe o responsável")
 return
 }
 
-if(produto == "" || quantidade == "") return
+if(produto == "" || !quantidade) return
 
 // 🔥 VERIFICA SE JÁ EXISTE
 let existente = itens.find(i => 
 i.produto === produto && 
 i.unidade === unidade && 
-i.medida === medida
+i.medida === medida &&
+i.observacao === observacao
 )
 
 if(existente){
 existente.quantidade += quantidade
 } else {
-itens.unshift({unidade, produto, medida, quantidade}) // já entra no topo
+itens.unshift({unidade, produto, medida, quantidade, observacao})
 }
 
 render()
-
+salvarLocal()
+  
 document.getElementById("produto").value = ""
 document.getElementById("quantidade").value = ""
+document.getElementById("observacao").value = ""
+document.getElementById("produto").focus()
 }
 
 function render(){
@@ -357,6 +757,7 @@ tbody.innerHTML += `
 <td>${item.produto}</td>
 <td>${item.medida}</td>
 <td>${item.quantidade}</td>
+<td>${item.observacao || ""}</td>
 <td><button class="remover" onclick="remover(${i})">x</button></td>
 </tr>`
 })
@@ -378,6 +779,7 @@ document.getElementById("unidade").value = "Selecione"
 document.getElementById("produto").value = ""
 document.getElementById("medida").value = "Selecione"
 document.getElementById("quantidade").value = ""
+document.getElementById("observacao").value = "" 
 render()
 }
 
@@ -403,6 +805,7 @@ Material: base.material,
 Produto: base.nome,
 Medida: encontrado ? encontrado.medida : "",
 Quantidade: encontrado ? encontrado.quantidade : 0,
+Observacao: encontrado ? encontrado.observacao : "",
 Responsavel: responsavel
 }
 })
@@ -418,6 +821,7 @@ Material: "Não listado - Atípico",
 Produto: i.produto,
 Medida: i.medida,
 Quantidade: i.quantidade,
+Observacao: i.observacao,
 Responsavel: responsavel
 })
 }
