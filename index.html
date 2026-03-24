@@ -705,19 +705,29 @@ function preencherMedida() {
 
   if (item) {
     campoMedida.value = item.medida;
+  } else {
+    campoMedida.value = "Selecione";
   }
 }
   
 function adicionar(){
 let unidade = document.getElementById("unidade").value
-let produto = document.getElementById("produto").value
-let observacao = document.getElementById("observacao").value
+let produto = document.getElementById("produto").value.trim()
+let observacao = document.getElementById("observacao").value.trim()
 let medida = document.getElementById("medida").value
 let quantidade = Number(document.getElementById("quantidade").value)
+let responsavel = document.getElementById("responsavel").value.trim()
 
-if(tipo === "pedido" && document.getElementById("responsavel").value == ""){
-alert("Informe o responsável")
-return
+// 🔥 VALIDAÇÃO COMPLETA
+if(
+  responsavel === "" ||
+  unidade === "Selecione" ||
+  produto === "" ||
+  medida === "Selecione" ||
+  !quantidade
+){
+  alert("Preencha todos os campos corretamente!")
+  return
 }
 
 if(produto == "" || !quantidade) return
