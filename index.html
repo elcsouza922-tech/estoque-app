@@ -657,15 +657,19 @@ const baseProdutos = [
 { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Válvula de gás de cozinha", medida: "TUBO" },
 { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Vasilhames de plástico grande", medida: "Unidade" }
 ]
+  
 function carregarProdutos(){
-let lista = document.getElementById("listaProdutos")
-lista.innerHTML = ""
+  let lista = document.getElementById("listaProdutos")
+  lista.innerHTML = ""
 
-baseProdutos.forEach(p=>{
-let option = document.createElement("option")
-option.value = p.nome
-lista.appendChild(option)
-})
+  // Remove duplicados e ordena
+  let nomesUnicos = [...new Set(baseProdutos.map(p => p.nome))].sort()
+
+  nomesUnicos.forEach(nome=>{
+    let option = document.createElement("option")
+    option.value = nome
+    lista.appendChild(option)
+  })
 }
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -677,8 +681,9 @@ if(salvo){
 }
   carregarProdutos()
 
-  document.getElementById("produto").addEventListener("input", function(){
-    preencherMedida()
+ document.getElementById("produto").addEventListener("input", function(){
+  preencherMedida()
+  carregarProdutos() // força atualizar sugestões
   })
 
   // 🔥 ENTER FUNCIONANDO CORRETAMENTE
@@ -733,7 +738,7 @@ function preencherMedida() {
   const campoMedida = document.getElementById("medida");
 
   const item = baseProdutos.find(p => 
-    p.nome.toLowerCase() === nomeProduto
+    p.nome.trim().toLowerCase() === nomeProduto
   );
 
   if (item) {
