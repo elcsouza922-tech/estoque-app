@@ -673,30 +673,31 @@ function carregarProdutos(){
 }
 
 document.addEventListener("DOMContentLoaded", function(){
-document.getElementById("inputExcel").addEventListener("change", importarExcel)
-let salvo = localStorage.getItem("itensEstoque")
-if(salvo){
-  itens = JSON.parse(salvo)
-  render()
-}
-  carregarProdutos()
+    document.getElementById("inputExcel").addEventListener("change", importarExcel);
+    
+    let salvo = localStorage.getItem("itensEstoque");
+    if(salvo){
+        itens = JSON.parse(salvo);
+        render();
+    }
+    
+    carregarProdutos();
 
- document.getElementById("produto").addEventListener("input", function(){
-  preencherMedida()
-  carregarProdutos() // força atualizar sugestões
-  })
+    // Preencher medida automaticamente ao selecionar produto
+    document.getElementById("produto").addEventListener("change", function(){
+        preencherMedida();
+    });
 
-  // 🔥 ENTER FUNCIONANDO CORRETAMENTE
-  ["produto", "observacao", "quantidade"].forEach(id => {
-    document.getElementById(id).addEventListener("keydown", function(e){
-      if(e.key === "Enter"){
-        e.preventDefault()
-        adicionar()
-      }
-    })
-  })
-
-})
+    // 🔥 CORREÇÃO DO ENTER: Aplicado nos campos de digitação
+    ["produto", "observacao", "quantidade"].forEach(id => {
+        document.getElementById(id).addEventListener("keydown", function(e){
+            if(e.key === "Enter"){
+                e.preventDefault(); // Impede o comportamento padrão
+                adicionar();        // Chama a função de adicionar
+            }
+        });
+    });
+});
 
 function salvarLocal(){
   localStorage.setItem("itensEstoque", JSON.stringify(itens))
