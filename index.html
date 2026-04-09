@@ -630,38 +630,49 @@
 
     document.getElementById("produto").addEventListener("change", preencherMedida);
 
-    function adicionar(){
-        let unidade = document.getElementById("unidade").value;
-        let responsavel = document.getElementById("responsavel").value.trim();
-        let produto = document.getElementById("produto").value.trim();
-        let medida = document.getElementById("medida").value;
-        let qtd = Number(document.getElementById("quantidade").value);
-        let obs = document.getElementById("observacao").value.trim();
+   function adicionar(){
+    let unidade = document.getElementById("unidade").value;
+    let responsavel = document.getElementById("responsavel").value.trim();
+    let produto = document.getElementById("produto").value.trim();
+    let medida = document.getElementById("medida").value;
+    let qtd = Number(document.getElementById("quantidade").value);
+    let obs = document.getElementById("observacao").value.trim();
 
-        if(!unidade || !responsavel || !produto || !medida || qtd <= 0) {
-            alert("Erro: Preencha Responsável, Unidade, Produto e Quantidade corretamente!");
-            return;
-        }
-
-        // Soma se for o mesmo produto+unidade+obs
-        let ex = itens.find(i => i.produto === produto && i.unidade === unidade && i.observacao === obs);
-        if(ex) {
-            ex.quantidade += qtd;
-        } else {
-            itens.unshift({unidade, produto, medida, quantidade: qtd, observacao: obs});
-        }
-
-        render();
-        salvarLocal();
-        mostrarToast("✅ Item adicionado!");
-
-        // Limpa campos de entrada
-        document.getElementById("produto").value = "";
-        document.getElementById("quantidade").value = "";
-        document.getElementById("observacao").value = "";
-        document.getElementById("produto").focus();
+    if(!unidade || !responsavel || !produto || !medida || qtd <= 0) {
+        alert("Erro: Preencha Responsável, Unidade, Produto e Quantidade corretamente!");
+        return;
     }
 
+    // BUSCA O MATERIAL NA BASE ANTES DE ADICIONAR
+    const produtoEncontrado = BASE_PRODUTOS.find(p => p.nome === produto);
+    const material = produtoEncontrado ? produtoEncontrado.material : "NÃO LISTADO"; // <--- NOVO
+
+    // Soma se for o mesmo produto+unidade+obs
+    let ex = itens.find(i => i.produto === produto && i.unidade === unidade && i.observacao === obs);
+    if(ex) {
+        ex.quantidade += qtd;
+    } else {
+        // AGORA SALVAMOS O MATERIAL DENTRO DO OBJETO
+        itens.unshift({
+            unidade, 
+            responsavel, 
+            material, // <--- SALVANDO O MATERIAL AQUI
+            produto, 
+            medida, 
+            quantidade: qtd, 
+            observacao: obs
+        });
+    }
+
+    render();
+    salvarLocal();
+    mostrarToast("✅ Item adicionado!");
+
+    document.getElementById("produto").value = "";
+    document.getElementById("quantidade").value = "";
+    document.getElementById("observacao").value = "";
+    document.getElementById("produto").focus();
+}
     function render(){
         let tbody = document.querySelector("#tabela tbody");
         tbody.innerHTML = "";
