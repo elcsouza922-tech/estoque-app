@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Estoque Pro</title>
@@ -152,7 +153,19 @@
                 <input type="number" id="quantidade" inputmode="numeric">
             </div>
         </div>
-
+        
+<div class="menu-tabs">
+    <button onclick="mudarAba('principal')">Lançamentos</button>
+    <button onclick="abrirDashRestrito()">Dashboard 🔒</button>
+</div>
+    <section id="aba-dashboard" style="display: none; padding: 20px;">
+    <h2>Dashboard de Auditoria</h2>
+    <div id="status-dash">Carregando dados...</div>
+    <div style="display: grid; grid-template-columns: 1 side; gap: 20px;">
+        <canvas id="graficoUnidades"></canvas> </div>
+    <div id="tabela-resumo"></div>
+</section>
+        
         <div class="actions-grid">
             <button id="btnAdd" class="btn azul" onclick="adicionar()">➕ Adicionar</button>
             <button class="btn btn-outline" onclick="abrirImportar()">📤 Importar</button>
@@ -745,6 +758,26 @@
         reader.readAsArrayBuffer(file);
     });
 
+async function carregarDashboard() {
+    const URL_PLANILHA = "SUA_URL_AQUI";
+    
+    try {
+        const response = await fetch(URL_PLANILHA);
+        const dados = await response.json();
+        
+        // Aqui você processa os dados para o Dash
+        // Exemplo: Contar quantos itens cada unidade enviou
+        const resumoUnidades = {};
+        dados.forEach(item => {
+            resumoUnidades[item.Unidade] = (resumoUnidades[item.Unidade] || 0) + 1;
+        });
+
+        montarGrafico(resumoUnidades);
+    } catch (e) {
+        console.error("Erro ao carregar Dash:", e);
+    }
+}
+    
 async function baixarExcel() {
     let unidade = document.getElementById("unidade").value;
     let responsavel = document.getElementById("responsavel").value.trim();
@@ -760,7 +793,7 @@ async function baixarExcel() {
     }
 
     // URL do seu Google Apps Script
-    const URL_PLANILHA = "https://script.google.com/macros/s/AKfycbzvLKwSQVPSN_WS2z4IxRowOfXxsQ3KqHscKGBmgEeDdjBTDjyGZHE-2_xgaXE_z5V9hw/exec";
+    const URL_PLANILHA = "https://script.google.com/macros/s/AKfycbzsupPx1J6G7T8b-iLGTWI9Z4hX8-QuYM0rLudFXqhFRnIlHif5rdK3KDh17BjO8AA1Kw/exec";
     
 
     // Preparar os dados exatamente como o banco de dados espera
@@ -839,6 +872,59 @@ async function baixarExcel() {
             }
         }
     });
+
+    // Senha de acesso ao Dash
+const SENHA_MESTRA = "1234"; // Altere para sua senha
+
+function abrirDashRestrito() {
+    let senha = prompt("Digite a senha para acessar o Dashboard:");
+    
+    if (senha === SENHA_MESTRA) {
+        mudarAba('dashboard');
+        carregarDadosDash();
+    } else {
+        alert("Senha incorreta! Acesso negado.");
+    }
+}
+
+function mudarAba(aba) {
+    if (aba === 'principal') {
+        document.getElementById('aba-principal').style.display = 'block';
+        document.getElementById('aba-dashboard').style.display = 'none';
+    } else {
+        document.getElementById('aba-principal').style.display = 'none';
+        document.getElementById('aba-dashboard').style.display = 'block';
+    }
+}
+
+async function carregarDadosDash() {
+    const URL_PLANILHA = "SUA_URL_DO_APPS_SCRIPT_AQUI"; // A mesma que você usou no doPost
+    
+    try {
+        const response = await fetch(URL_PLANILHA);
+        const dados = await response.json();
+        
+        // Exemplo: Resumo por Unidade
+        let resumo = {};
+        dados.forEach(item => {
+            resumo[item.Unidade] = (resumo[item.Unidade] || 0) + 1;
+        });
+
+        exibirResumo(resumo);
+        document.getElementById("status-dash").innerText = "Dados atualizados em tempo real.";
+    } catch (e) {
+        document.getElementById("status-dash").innerText = "Erro ao conectar com o banco de dados.";
+    }
+}
+
+function exibirResumo(resumo) {
+    let html = "<table><tr><th>Unidade</th><th>Total Lançado</th></tr>";
+    for (let unidade in resumo) {
+        html += `<tr><td>${unidade}</td><td>${resumo[unidade]}</td></tr>`;
+    }
+    html += "</table>";
+    document.getElementById("tabela-resumo").innerHTML = html;
+}
 </script>
 
 </body>
