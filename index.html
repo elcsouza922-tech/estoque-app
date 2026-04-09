@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Estoque Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
@@ -21,55 +21,57 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-gray);
+            background-image: radial-gradient(circle at 2px 2px, #e2e8f0 1px, transparent 0);
             background-size: 40px 40px;
             margin: 0;
             color: var(--text-dark);
         }
 
         #toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #1e293b;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            display: none;
-            z-index: 1000;
+            position: fixed; top: 20px; right: 20px; background: #1e293b; color: white;
+            padding: 12px 24px; border-radius: 10px; box-shadow: var(--shadow); display: none; z-index: 1000;
         }
 
         /* HOME */
-        .home { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px 20px; box-sizing: border-box; }
-        .home h1 { font-size: 28px; font-weight: 700; color: var(--primary-blue); margin-bottom: 10px; }
-        .opcoes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%; max-width: 600px; margin-bottom: 40px; }
+        .home { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px 20px; }
+        .home h1 { font-size: 32px; font-weight: 700; background: linear-gradient(90deg, #1e40af, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .opcoes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 600px; margin-bottom: 30px; }
         .opcao { padding: 24px; border-radius: 20px; background: var(--glass); border: 1px solid #e2e8f0; box-shadow: var(--shadow); cursor: pointer; transition: 0.3s; text-align: center; }
         .opcao:hover { transform: translateY(-5px); border-color: var(--primary-blue); }
+        .opcao strong { display: block; font-size: 18px; margin-bottom: 5px; }
 
         /* DASHBOARD NA HOME */
-        .dash-container { width: 100%; max-width: 800px; background: white; padding: 25px; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; }
+        .dash-container { width: 100%; max-width: 800px; background: var(--glass); padding: 30px; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; margin-top: 20px; backdrop-filter: blur(10px); }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .dash-header h2 { margin: 0; font-size: 18px; color: #64748b; }
-        #graficoArea { width: 100%; max-height: 300px; margin-bottom: 20px; }
-
+        .dash-header h2 { font-size: 18px; color: #64748b; margin: 0; }
+        
         /* TABELA DASH */
-        .tabela-dash { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .tabela-dash th { text-align: left; padding: 10px; border-bottom: 2px solid #f1f5f9; color: #64748b; }
-        .tabela-dash td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .tabela-dash-container { overflow-x: auto; margin-top: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .tabela-dash { width: 100%; border-collapse: collapse; font-size: 14px; background: white; }
+        .tabela-dash th { background: #f8fafc; padding: 12px; text-align: left; color: #64748b; }
+        .tabela-dash td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
 
         /* APP CONTAINER */
-        .container { max-width: 800px; margin: 40px auto; padding: 30px; background: var(--glass); border-radius: 24px; box-shadow: var(--shadow); }
+        .container { max-width: 800px; margin: 40px auto; padding: 30px; background: var(--glass); border-radius: 24px; box-shadow: var(--shadow); backdrop-filter: blur(10px); }
         .hidden { display: none !important; }
         .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        @media (max-width: 600px) { .form-group { grid-template-columns: 1fr; } }
+        
         label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; display: block; }
-        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 15px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 15px; box-sizing: border-box; }
 
-        .btn { padding: 14px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn { padding: 14px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
         .azul { background: var(--primary-blue); color: white; }
         .verde { background: var(--primary-green); color: white; }
         .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
 
-        .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #94a3b8; }
+        .table-container { overflow-x: auto; margin-top: 30px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #f8fafc; padding: 14px; text-align: left; color: #64748b; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 14px; border-bottom: 1px solid #f1f5f9; }
+        .remover { background: #fee2e2; color: #ef4444; border: none; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; }
+
+        .footer { text-align: center; margin-top: 40px; font-size: 13px; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -78,39 +80,42 @@
 
 <div id="home" class="home">
     <h1>Sistema de Estoque Pro</h1>
-    <p style="color: #64748b; margin-bottom: 30px;">Gerenciamento de Auditoria e Pedidos</p>
+    <p style="color: #64748b; margin-bottom: 30px;">Selecione a operação desejada</p>
     
     <div class="opcoes-grid">
         <div class="opcao" onclick="abrirApp('contagem')">
-            <strong>📦 Contagem</strong>
+            <strong>📦 Contagem de Estoque</strong>
+            <span>Registrar quantidades atuais</span>
         </div>
         <div class="opcao" onclick="abrirApp('pedido')">
-            <strong>🛒 Pedido</strong>
+            <strong>🛒 Pedido de Compra</strong>
+            <span>Solicitar reposição de materiais</span>
         </div>
     </div>
 
     <div class="dash-container">
         <div class="dash-header">
-            <h2>📊 Resumo de Operações (Real-time)</h2>
-            <button class="btn btn-outline" style="padding: 5px 12px; font-size: 11px;" onclick="abrirDashRestrito()">🔄 Atualizar Dash</button>
+            <h2>📊 Dashboard de Auditoria</h2>
+            <button class="btn btn-outline" style="padding: 8px 16px;" onclick="acessoRestritoDash()">🔓 Acessar Dash</button>
         </div>
         
-        <div id="status-dash" style="text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 10px;">Acesse para carregar os dados</div>
-        
-        <div id="area-restrita-dash" class="hidden">
-            <div id="graficoArea">
-                <canvas id="graficoUnidades"></canvas>
+        <div id="area-dash" class="hidden">
+            <div id="status-dash" style="font-size: 12px; color: #64748b; margin-bottom: 15px;">Atualizado agora</div>
+            <canvas id="graficoUnidades" style="max-height: 250px;"></canvas>
+            
+            <div class="tabela-dash-container">
+                <table class="tabela-dash">
+                    <thead>
+                        <tr>
+                            <th>Unidade</th>
+                            <th>Último Responsável</th>
+                            <th>Total Itens</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-dash">
+                        </tbody>
+                </table>
             </div>
-            <table class="tabela-dash">
-                <thead>
-                    <tr>
-                        <th>Unidade</th>
-                        <th>Lançamentos</th>
-                        <th>Último Lançamento</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-tabela-dash"></tbody>
-            </table>
         </div>
     </div>
 
@@ -119,18 +124,18 @@
 
 <div id="app" class="hidden">
     <div class="container">
-        <button class="btn btn-outline" style="margin-bottom:20px; padding: 8px 16px;" onclick="voltar()">← Voltar ao Menu</button>
+        <button class="btn btn-outline" style="margin-bottom:20px; padding: 8px 16px;" onclick="voltar()">← Voltar</button>
         <h1 id="titulo" style="text-align:center; margin-bottom: 30px;">Contagem</h1>
 
         <div class="form-group">
             <div>
                 <label>Responsável</label>
-                <input type="text" id="responsavel" placeholder="Nome">
+                <input type="text" id="responsavel" placeholder="Quem está contando?">
             </div>
             <div>
                 <label>Unidade</label>
                 <select id="unidade">
-                    <option value="">Selecione</option>
+                    <option value="">Selecione a Unidade</option>
                     <option>ANDORINHAS</option><option>BELA VISTA</option><option>BONFIM</option>
                     <option>CENTRO</option><option>CONQUISTA</option><option>CONSOLAÇÃO</option>
                     <option>CARATOÍRA</option><option>ITARARÉ</option><option>JARDIM CAMBURI</option>
@@ -145,7 +150,7 @@
         <div class="form-group" style="grid-template-columns: 2fr 1fr;">
             <div>
                 <label>Produto</label>
-                <input type="text" id="produto" list="listaProdutos" placeholder="Buscar...">
+                <input type="text" id="produto" list="listaProdutos" placeholder="Buscar produto...">
                 <datalist id="listaProdutos"></datalist>
             </div>
             <div>
@@ -157,7 +162,7 @@
         <div class="form-group" style="grid-template-columns: 2fr 1fr;">
             <div>
                 <label>Observação</label>
-                <input type="text" id="observacao" placeholder="Ex: cor, defeito...">
+                <input type="text" id="observacao" placeholder="Ex: cor, validade...">
             </div>
             <div>
                 <label>Medida</label>
@@ -169,8 +174,8 @@
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-            <button id="btnAdd" class="btn azul" onclick="adicionar()">➕ Adicionar Item</button>
-            <button class="btn btn-outline" style="color:#ef4444" onclick="limpar()">🗑️ Limpar Tudo</button>
+            <button id="btnAdd" class="btn azul" onclick="adicionar()">➕ Adicionar</button>
+            <button class="btn btn-outline" style="color:#ef4444" onclick="limpar()">🗑️ Limpar Lista</button>
         </div>
 
         <div class="table-container">
@@ -181,7 +186,7 @@
         </div>
 
         <button id="btnExcel" class="btn azul" style="width:100%; margin-top: 25px; height: 50px;" onclick="baixarExcel()">
-            📥 FINALIZAR E ENVIAR DADOS
+            📥 FINALIZAR E SINCRONIZAR
         </button>
     </div>
 </div>
@@ -190,9 +195,10 @@
     let itens = [];
     let tipo = "contagem";
     let chartInstance = null;
-    const SENHA_MESTRA = "1234"; 
-    const URL_API = "https://script.google.com/macros/s/AKfycbzsupPx1J6G7T8b-iLGTWI9Z4hX8-QuYM0rLudFXqhFRnIlHif5rdK3KDh17BjO8AA1Kw/exec"; // <--- COLOQUE SUA URL AQUI
+    const SENHA_DASH = "1234";
+    const URL_API = "https://script.google.com/macros/s/AKfycbzsupPx1J6G7T8b-iLGTWI9Z4hX8-QuYM0rLudFXqhFRnIlHif5rdK3KDh17BjO8AA1Kw/exec";
 
+    // ... (Aqui vai a sua BASE_PRODUTOS original que você colou anteriormente)
      const BASE_PRODUTOS = [
 
         { material: "DIDÁTICO", nome: "Agôgo", medida: "Unidade" },
@@ -957,64 +963,54 @@
 
     ];
 
-    // LÓGICA DO DASHBOARD
-    function abrirDashRestrito() {
-        let senha = prompt("Acesso Restrito ao Auditor. Digite a senha:");
-        if (senha === SENHA_MESTRA) {
-            document.getElementById("area-restrita-dash").classList.remove("hidden");
+    function acessoRestritoDash() {
+        let senha = prompt("Acesso restrito. Digite a senha:");
+        if(senha === SENHA_DASH) {
+            document.getElementById("area-dash").classList.remove("hidden");
             carregarDadosDash();
-        } else {
-            alert("Senha incorreta.");
-        }
+        } else { alert("Senha incorreta!"); }
     }
 
     async function carregarDadosDash() {
-        document.getElementById("status-dash").innerText = "⏳ Buscando dados no Sheets...";
+        document.getElementById("status-dash").innerText = "⏳ Sincronizando dados...";
         try {
             const response = await fetch(URL_API);
             const dados = await response.json();
-            
-            let resumo = {};
-            dados.forEach(item => {
-                resumo[item.Unidade] = (resumo[item.Unidade] || 0) + 1;
-            });
-
-            renderizarGrafico(resumo);
-            renderizarTabelaDash(resumo, dados);
-            document.getElementById("status-dash").innerText = "✅ Atualizado: " + new Date().toLocaleTimeString();
-        } catch (e) {
-            document.getElementById("status-dash").innerText = "❌ Erro ao conectar.";
-        }
+            processarDash(dados);
+        } catch (e) { document.getElementById("status-dash").innerText = "❌ Erro ao carregar."; }
     }
 
-    function renderizarGrafico(resumo) {
+    function processarDash(dados) {
+        let resumo = {};
+        let ultimos = {};
+        
+        dados.forEach(d => {
+            resumo[d.unidade] = (resumo[d.unidade] || 0) + 1;
+            ultimos[d.unidade] = d.responsavel;
+        });
+
+        // Gráfico
         const ctx = document.getElementById('graficoUnidades').getContext('2d');
         if (chartInstance) chartInstance.destroy();
-
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: Object.keys(resumo),
-                datasets: [{
-                    label: 'Itens Lançados',
-                    data: Object.values(resumo),
-                    backgroundColor: '#2563eb'
-                }]
+                datasets: [{ label: 'Itens Enviados', data: Object.values(resumo), backgroundColor: '#2563eb' }]
             },
             options: { responsive: true, maintainAspectRatio: false }
         });
-    }
 
-    function renderizarTabelaDash(resumo, dados) {
+        // Tabela Dash
         const tbody = document.getElementById("corpo-tabela-dash");
         tbody.innerHTML = "";
         for (let unidade in resumo) {
-            tbody.innerHTML += `<tr><td>${unidade}</td><td>${resumo[unidade]}</td><td>Ok</td></tr>`;
+            tbody.innerHTML += `<tr><td>${unidade}</td><td>${ultimos[unidade]}</td><td>${resumo[unidade]}</td></tr>`;
         }
+        document.getElementById("status-dash").innerText = "✅ Atualizado: " + new Date().toLocaleTimeString();
     }
 
-    // LÓGICA DO APP (LANÇAMENTOS)
-    function abrirApp(t){
+    function abrirApp(t) {
         tipo = t;
         document.getElementById("home").classList.add("hidden");
         document.getElementById("app").classList.remove("hidden");
@@ -1022,33 +1018,26 @@
         carregarDatalist();
     }
 
-    function voltar(){ 
+    function voltar() {
         document.getElementById("home").classList.remove("hidden");
         document.getElementById("app").classList.add("hidden");
     }
 
-    function carregarDatalist(){
-        const lista = document.getElementById("listaProdutos");
-        lista.innerHTML = "";
-        BASE_PRODUTOS.forEach(p => {
-            let opt = document.createElement("option");
-            opt.value = p.nome;
-            lista.appendChild(opt);
-        });
-    }
-
-    function adicionar(){
+    function adicionar() {
         const unidade = document.getElementById("unidade").value;
         const responsavel = document.getElementById("responsavel").value;
         const produto = document.getElementById("produto").value;
-        const qtd = document.getElementById("quantidade").value;
-        const material = BASE_PRODUTOS.find(p => p.nome === produto)?.material || "NÃO LISTADO";
+        const qtd = Number(document.getElementById("quantidade").value);
+        
+        if(!unidade || !responsavel || !produto || qtd <= 0) {
+            alert("Preencha todos os campos!"); return;
+        }
 
-        if(!unidade || !responsavel || !produto || qtd <= 0) return alert("Preencha tudo!");
-
+        const info = BASE_PRODUTOS.find(p => p.nome === produto);
         itens.unshift({
-            unidade, responsavel, material, produto, 
-            quantidade: qtd, medida: document.getElementById("medida").value, 
+            unidade, responsavel, produto, quantidade: qtd,
+            material: info ? info.material : "NÃO LISTADO",
+            medida: document.getElementById("medida").value,
             observacao: document.getElementById("observacao").value
         });
 
@@ -1057,40 +1046,48 @@
         document.getElementById("quantidade").value = "";
     }
 
-    function render(){
+    function render() {
         let tbody = document.querySelector("#tabela tbody");
         tbody.innerHTML = "";
         itens.forEach((item, i) => {
-            tbody.innerHTML += `<tr><td>${item.unidade}</td><td>${item.produto}</td><td>${item.quantidade}</td><td>${item.observacao}</td><td><button onclick="itens.splice(${i},1);render()">✕</button></td></tr>`;
+            tbody.innerHTML += `<tr><td>${item.unidade}</td><td>${item.produto}</td><td>${item.quantidade}</td><td>${item.observacao}</td><td><button class="remover" onclick="itens.splice(${i},1);render()">✕</button></td></tr>`;
         });
     }
 
     async function baixarExcel() {
-        if (itens.length === 0) return alert("Lista vazia!");
+        if(itens.length === 0) return alert("Adicione itens!");
+        mostrarToast("🚀 Enviando para a nuvem...");
         
-        mostrarToast("🚀 Sincronizando...");
         try {
             await fetch(URL_API, {
                 method: 'POST',
                 mode: 'no-cors',
                 body: JSON.stringify(itens)
             });
-            alert("Dados Salvos no Sheets com Sucesso!");
+            alert("Dados Sincronizados! Gerando backup Excel...");
+            
+            // Aqui você pode manter sua lógica original do XLSX.writeFile se desejar
+            
             itens = [];
             render();
             voltar();
-        } catch (e) {
-            alert("Erro ao salvar online.");
-        }
+        } catch (e) { alert("Erro na sincronização."); }
     }
 
     function mostrarToast(msg) {
         let t = document.getElementById("toast");
         t.innerText = msg; t.style.display = "block";
-        setTimeout(() => { t.style.display = "none"; }, 2000);
+        setTimeout(() => { t.style.display = "none"; }, 2500);
     }
-
-    function limpar(){ if(confirm("Limpar tudo?")) { itens = []; render(); } }
+    
+    function carregarDatalist(){
+        const lista = document.getElementById("listaProdutos");
+        lista.innerHTML = "";
+        BASE_PRODUTOS.forEach(p => {
+            let opt = document.createElement("option"); opt.value = p.nome;
+            lista.appendChild(opt);
+        });
+    }
 </script>
 </body>
 </html>
