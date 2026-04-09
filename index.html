@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Estoque Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     
     <style>
         :root {
@@ -25,253 +26,84 @@
             color: var(--text-dark);
         }
 
-        /* HOME MODERNA */
-        .home {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            padding: 20px;
-        }
-
-        .home h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            background: linear-gradient(90deg, #1e40af, #2563eb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .home p {
-            color: #64748b;
-            margin-bottom: 40px;
-        }
-
-        .opcoes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .opcao {
-            padding: 24px;
-            border-radius: 20px;
-            background: var(--glass);
-            border: 1px solid #e2e8f0;
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .opcao:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-blue);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .opcao strong {
-            display: block;
-            font-size: 18px;
-            margin-bottom: 8px;
-            color: #0f172a;
-        }
-
-        .opcao span {
-            font-size: 14px;
-            color: #64748b;
-        }
-
-        /* CONTAINER PRINCIPAL */
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 30px;
-            background: var(--glass);
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .hidden { display: none !important; }
-
-        h1 { text-align: center; font-weight: 700; margin-bottom: 30px; }
-
-        /* FORMULÁRIO */
-        .form-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .form-group { grid-template-columns: 1fr; }
-        }
-
-        label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 6px;
-            display: block;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px 16px;
+        /* NOTIFICAÇÃO (TOAST) */
+        #toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 24px;
             border-radius: 10px;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            font-size: 15px;
-            transition: border 0.2s;
-            box-sizing: border-box;
+            box-shadow: var(--shadow);
+            display: none;
+            z-index: 1000;
         }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            ring: 2px solid #bfdbfe;
-        }
+        /* HOME */
+        .home { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+        .home h1 { font-size: 32px; font-weight: 700; background: linear-gradient(90deg, #1e40af, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .opcoes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 600px; }
+        .opcao { padding: 24px; border-radius: 20px; background: var(--glass); border: 1px solid #e2e8f0; box-shadow: var(--shadow); cursor: pointer; transition: 0.3s; text-align: center; }
+        .opcao:hover { transform: translateY(-5px); border-color: var(--primary-blue); }
+        .opcao strong { display: block; font-size: 18px; margin-bottom: 5px; }
 
-        /* BOTÕES */
-        .actions-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 10px;
-            margin: 25px 0;
-        }
+        /* APP CONTAINER */
+        .container { max-width: 800px; margin: 40px auto; padding: 30px; background: var(--glass); border-radius: 24px; box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+        .hidden { display: none !important; }
+        
+        .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        @media (max-width: 600px) { .form-group { grid-template-columns: 1fr; } }
+        
+        label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; display: block; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 15px; box-sizing: border-box; }
+        input:disabled, select:disabled { background: #f1f5f9; cursor: not-allowed; opacity: 0.7; }
 
-        @media (max-width: 500px) {
-            .actions-grid { grid-template-columns: 1fr; }
-        }
+        .actions-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin: 25px 0; }
+        @media (max-width: 500px) { .actions-grid { grid-template-columns: 1fr; } }
 
-        .btn {
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-back {
-            background: transparent;
-            color: #64748b;
-            margin-bottom: 20px;
-            width: fit-content;
-            padding: 8px 16px;
-        }
-
-        .btn-back:hover { color: var(--text-dark); background: #e2e8f0; }
-
+        .btn { padding: 14px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
         .azul { background: var(--primary-blue); color: white; }
-        .azul:hover { background: #1d4ed8; filter: brightness(1.1); }
-
         .verde { background: var(--primary-green); color: white; }
-        .verde:hover { background: #15803d; }
+        .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
+        .btn-outline:hover { background: #f8fafc; }
 
-        .btn-outline {
-            background: white;
-            border: 1px solid #cbd5e1;
-            color: #475569;
-        }
-
-        .btn-outline:hover { background: #f1f5f9; }
-
-        /* TABELA MODERNA */
-        .table-container {
-            overflow-x: auto;
-            margin-top: 30px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            font-size: 14px;
-        }
-
-        th {
-            background: #f8fafc;
-            padding: 14px;
-            text-align: left;
-            font-weight: 600;
-            color: #64748b;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        tr:last-child td { border-bottom: none; }
-
-        .remover {
-            background: #fee2e2;
-            color: #ef4444;
-            border: none;
-            border-radius: 8px;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
+        /* TABELA */
+        .table-container { overflow-x: auto; margin-top: 30px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #f8fafc; padding: 14px; text-align: left; color: #64748b; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 14px; border-bottom: 1px solid #f1f5f9; }
+        .remover { background: #fee2e2; color: #ef4444; border: none; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-weight: bold; }
         .remover:hover { background: #ef4444; color: white; }
 
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            font-size: 13px;
-            color: #94a3b8;
-            padding-bottom: 20px;
-        }
+        .footer { text-align: center; margin-top: 40px; font-size: 13px; color: #94a3b8; }
     </style>
 </head>
 
 <body>
 
+<div id="toast">Item adicionado!</div>
+
 <div id="home" class="home">
     <h1>Controle de Fluxo</h1>
-    <p>Selecione a operação para iniciar</p>
-
+    <p style="color: #64748b; margin-bottom: 30px;">Selecione a operação para iniciar</p>
     <div class="opcoes-grid">
         <div class="opcao" onclick="abrirApp('contagem')">
             <strong>📦 Contagem de Estoque</strong>
             <span>Auditoria e registro de saldos físicos</span>
         </div>
-
         <div class="opcao" onclick="abrirApp('pedido')">
             <strong>🛒 Pedido de Compra</strong>
             <span>Solicitação de reposição para unidades</span>
         </div>
     </div>
-
     <div class="footer">Elielton Souza © 2026</div>
 </div>
 
 <div id="app" class="hidden">
     <div class="container">
-        <button class="btn btn-back" onclick="voltar()">← Voltar ao Menu</button>
-        
-        <h1 id="titulo">Contagem de Estoque</h1>
+        <button class="btn btn-outline" style="margin-bottom:20px; padding: 8px 16px;" onclick="voltar()">← Voltar</button>
+        <h1 id="titulo" style="text-align:center; margin-bottom: 30px;">Contagem de Estoque</h1>
 
         <div class="form-group">
             <div>
@@ -296,7 +128,7 @@
         <div class="form-group" style="grid-template-columns: 2fr 1fr;">
             <div>
                 <label>Produto</label>
-                <input type="text" id="produto" list="listaProdutos" placeholder="Digite para buscar...">
+                <input type="text" id="produto" list="listaProdutos" placeholder="Buscar produto...">
                 <datalist id="listaProdutos"></datalist>
             </div>
             <div>
@@ -313,17 +145,17 @@
         <div class="form-group" style="grid-template-columns: 2fr 1fr;">
             <div>
                 <label>Observação</label>
-                <input type="text" id="observacao" placeholder="Ex: cor, tamanho, avaria...">
+                <input type="text" id="observacao" placeholder="Ex: cor, tamanho...">
             </div>
             <div>
                 <label>Quantidade</label>
-                <input type="number" id="quantidade" inputmode="numeric" placeholder="0">
+                <input type="number" id="quantidade" inputmode="numeric">
             </div>
         </div>
 
         <div class="actions-grid">
-            <button id="btnAdd" class="btn azul" onclick="adicionar()">➕ Adicionar Item</button>
-            <button class="btn btn-outline" onclick="document.getElementById('inputExcel').click()">📤 Importar</button>
+            <button id="btnAdd" class="btn azul" onclick="adicionar()">➕ Adicionar</button>
+            <button class="btn btn-outline" onclick="abrirImportar()">📤 Importar</button>
             <button id="btnLimpar" class="btn btn-outline" style="color:#ef4444" onclick="limpar()">🗑️ Limpar</button>
         </div>
 
@@ -344,7 +176,7 @@
             </table>
         </div>
 
-        <button id="btnExcel" class="btn azul" style="width:100%; margin-top: 20px;" onclick="baixarExcel()">
+        <button id="btnExcel" class="btn azul" style="width:100%; margin-top: 25px; height: 50px;" onclick="baixarExcel()">
             📥 Gerar Planilha Final (Excel)
         </button>
 
@@ -352,13 +184,12 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
-    // --- MANTIVE EXATAMENTE O SEU SCRIPT ABAIXO ---
-    let itens = []
-    let tipo = "contagem"
+    let itens = [];
+    let tipo = "contagem";
 
-    const baseProdutos = [
+    // --- COLE SUA LISTA COMPLETA AQUI ---
+  const baseProdutos = [
         { material: "DIDÁTICO", nome: "Agôgo", medida: "Unidade" },
         { material: "DIDÁTICO", nome: "Agulha de mão nº 05", medida: "Pacote" },
         { material: "DIDÁTICO", nome: "Agulha de mão nº 06", medida: "Pacote" },
@@ -739,195 +570,222 @@
         { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Travessa de vidro 4L", medida: "Unidade" },
         { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Válvula de gás de cozinha", medida: "TUBO" },
         { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Vasilhames de plástico grande", medida: "Unidade" }
-    ]
+    ];
 
-    function carregarProdutos(){
-        let lista = document.getElementById("listaProdutos")
-        lista.innerHTML = ""
-        let nomesUnicos = [...new Set(baseProdutos.map(p => p.nome))].sort()
-        nomesUnicos.forEach(nome=>{
-            let option = document.createElement("option")
-            option.value = nome
-            lista.appendChild(option)
-        })
+    function carregarDatalist(){
+        const lista = document.getElementById("listaProdutos");
+        lista.innerHTML = "";
+        const nomes = [...new Set(BASE_PRODUTOS.map(p => p.nome))].sort();
+        nomes.forEach(n => {
+            let opt = document.createElement("option");
+            opt.value = n;
+            lista.appendChild(opt);
+        });
     }
 
-    document.addEventListener("DOMContentLoaded", function(){
-        document.getElementById("inputExcel").addEventListener("change", importarExcel);
-        let salvo = localStorage.getItem("itensEstoque");
-        if(salvo){ itens = JSON.parse(salvo); render(); }
-        carregarProdutos();
-        document.getElementById("produto").addEventListener("change", preencherMedida);
-        ["produto", "observacao", "quantidade"].forEach(id => {
-            document.getElementById(id).addEventListener("keydown", function(e){
-                if(e.key === "Enter"){ e.preventDefault(); adicionar(); }
-            });
-        });
-    });
-
-    function salvarLocal(){ localStorage.setItem("itensEstoque", JSON.stringify(itens)) }
+    // Gerencia chaves diferentes no LocalStorage para não misturar contagem com pedido
+    function getStorageKey() { return "estoque_v3_" + tipo; }
+    
+    function salvarLocal(){ localStorage.setItem(getStorageKey(), JSON.stringify(itens)); }
+    
+    function carregarLocal(){
+        let salvo = localStorage.getItem(getStorageKey());
+        itens = salvo ? JSON.parse(salvo) : [];
+        render();
+    }
 
     function abrirApp(t){
-        tipo = t
-        itens = []
-        document.getElementById("responsavel").value = ""
-        document.getElementById("unidade").value = ""
-        document.getElementById("unidade").disabled = false
-        document.getElementById("home").classList.add("hidden")
-        document.getElementById("app").classList.remove("hidden")
-        document.getElementById("titulo").innerText = tipo === "pedido" ? "🛒 Pedido de Compra" : "📦 Contagem de Estoque"
-        let cor = tipo === "pedido" ? "verde" : "azul"
-        document.getElementById("btnAdd").className = "btn " + cor
-        document.getElementById("btnExcel").className = "btn " + cor
-        render()
+        tipo = t;
+        document.getElementById("home").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
+        document.getElementById("titulo").innerText = tipo === "pedido" ? "🛒 Pedido de Compra" : "📦 Contagem de Estoque";
+        
+        let cor = tipo === "pedido" ? "verde" : "azul";
+        document.getElementById("btnAdd").className = "btn " + cor;
+        document.getElementById("btnExcel").className = "btn " + cor;
+
+        carregarLocal();
+        carregarDatalist();
     }
 
     function voltar(){
-        if(confirm("Deseja sair? Todos os dados serão perdidos.")){
-            document.getElementById("home").classList.remove("hidden")
-            document.getElementById("app").classList.add("hidden")
+        if(confirm("Deseja voltar ao menu principal? Os itens na tabela ficarão salvos.")){
+            document.getElementById("home").classList.remove("hidden");
+            document.getElementById("app").classList.add("hidden");
         }
+    }
+
+    function mostrarToast(msg) {
+        let t = document.getElementById("toast");
+        t.innerText = msg;
+        t.style.display = "block";
+        setTimeout(() => { t.style.display = "none"; }, 2500);
     }
 
     function preencherMedida() {
-        const nomeProduto = document.getElementById("produto").value.trim().toLowerCase();
-        const campoMedida = document.getElementById("medida");
-        const item = baseProdutos.find(p => p.nome.trim().toLowerCase() === nomeProduto);
-        if (item) campoMedida.value = item.medida;
-        else campoMedida.value = "";
+        const prodNome = document.getElementById("produto").value.trim().toLowerCase();
+        const item = BASE_PRODUTOS.find(p => p.nome.toLowerCase() === prodNome);
+        if(item) document.getElementById("medida").value = item.medida;
     }
 
-    function adicionar(){
-        let unidade = document.getElementById("unidade").value
-        let produto = document.getElementById("produto").value.trim()
-        let observacao = document.getElementById("observacao").value.trim()
-        let medida = document.getElementById("medida").value
-        let quantidade = Number(document.getElementById("quantidade").value)
-        let responsavel = document.getElementById("responsavel").value.trim()
+    document.getElementById("produto").addEventListener("change", preencherMedida);
 
-        if(responsavel === "" || unidade === "" || produto === "" || medida === "" || quantidade <= 0 || isNaN(quantidade)){
-            alert("Preencha todos os campos corretamente!")
-            return
+    function adicionar(){
+        let unidade = document.getElementById("unidade").value;
+        let responsavel = document.getElementById("responsavel").value.trim();
+        let produto = document.getElementById("produto").value.trim();
+        let medida = document.getElementById("medida").value;
+        let qtd = Number(document.getElementById("quantidade").value);
+        let obs = document.getElementById("observacao").value.trim();
+
+        if(!unidade || !responsavel || !produto || !medida || qtd <= 0) {
+            alert("Erro: Preencha Responsável, Unidade, Produto e Quantidade corretamente!");
+            return;
         }
 
-        let existente = itens.find(i => i.produto === produto && i.unidade === unidade && i.medida === medida && i.observacao === observacao)
-        if(existente) existente.quantidade += quantidade
-        else itens.unshift({unidade, produto, medida, quantidade, observacao})
+        // Soma se for o mesmo produto+unidade+obs
+        let ex = itens.find(i => i.produto === produto && i.unidade === unidade && i.observacao === obs);
+        if(ex) {
+            ex.quantidade += qtd;
+        } else {
+            itens.unshift({unidade, produto, medida, quantidade: qtd, observacao: obs});
+        }
 
-        render()
-        salvarLocal()
+        render();
+        salvarLocal();
+        mostrarToast("✅ Item adicionado!");
 
-        if(itens.length > 0) document.getElementById("unidade").disabled = true
-        document.getElementById("produto").value = ""
-        document.getElementById("quantidade").value = ""
-        document.getElementById("observacao").value = ""
-        document.getElementById("produto").focus()
+        // Limpa campos de entrada
+        document.getElementById("produto").value = "";
+        document.getElementById("quantidade").value = "";
+        document.getElementById("observacao").value = "";
+        document.getElementById("produto").focus();
     }
 
     function render(){
-        let tbody = document.querySelector("#tabela tbody")
-        tbody.innerHTML = ""
-        itens.forEach((item,i)=>{
+        let tbody = document.querySelector("#tabela tbody");
+        tbody.innerHTML = "";
+        
+        // Bloqueia unidade se houver itens para evitar misturar unidades na mesma lista
+        document.getElementById("unidade").disabled = (itens.length > 0);
+
+        itens.forEach((item, i) => {
             tbody.innerHTML += `
             <tr>
                 <td>${item.unidade}</td>
                 <td>${item.produto}</td>
-                <td>${item.quantidade}</td>
+                <td><strong>${item.quantidade}</strong></td>
                 <td>${item.observacao || "-"}</td>
                 <td><button class="remover" onclick="remover(${i})">✕</button></td>
-            </tr>`
-        })
+            </tr>`;
+        });
     }
 
     function remover(i){
-        itens.splice(i,1)
-        if(itens.length === 0) document.getElementById("unidade").disabled = false
-        render()
-        salvarLocal()
+        itens.splice(i, 1);
+        render();
+        salvarLocal();
     }
 
     function limpar(){
-        if(!confirm("Deseja realmente limpar os dados?")) return
-        itens = []
-        localStorage.removeItem("itensEstoque")
-        document.getElementById("responsavel").value = ""
-        document.getElementById("unidade").disabled = false
-        document.getElementById("produto").value = ""
-        document.getElementById("medida").value = ""
-        document.getElementById("quantidade").value = ""
-        document.getElementById("observacao").value = "" 
-        render()
+        if(confirm("Isso apagará todos os itens da lista atual. Confirmar?")){
+            itens = [];
+            localStorage.removeItem(getStorageKey());
+            render();
+        }
     }
 
-    function importarExcel(e){
-        const file = e.target.files[0]
-        if(!file) return
-        const reader = new FileReader()
-        reader.onload = function(event){
-            const data = new Uint8Array(event.target.result)
-            const workbook = XLSX.read(data, { type: "array" })
-            const sheet = workbook.Sheets[workbook.SheetNames[0]]
-            const json = XLSX.utils.sheet_to_json(sheet)
-            json.forEach(linha => {
-                let unidade = linha.Unidade || ""
-                let produto = linha.Produto || ""
-                let medida = linha.Medida || ""
-                let quantidade = Number(linha.Quantidade) || 0
-                let observacao = linha.Observacao || ""
-                let existente = itens.find(i => i.produto === produto && i.unidade === unidade && i.medida === medida && i.observacao === observacao)
-                if(existente) existente.quantidade += quantidade
-                else itens.push({unidade, produto, medida, quantidade, observacao})
-            })
-            render(); salvarLocal();
-            alert("Planilha importada com sucesso!");
-            document.getElementById("inputExcel").value = ""
+    function abrirImportar() {
+        if(!document.getElementById("responsavel").value || !document.getElementById("unidade").value) {
+            alert("Atenção: Defina o Responsável e a Unidade antes de importar dados!");
+            return;
         }
-        reader.readAsArrayBuffer(file)
+        document.getElementById("inputExcel").click();
     }
+
+    document.getElementById("inputExcel").addEventListener("change", function(e){
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt){
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            
+            json.forEach(linha => {
+                let p = linha.Produto || "";
+                let q = Number(linha.Quantidade) || 0;
+                if(p && q > 0) {
+                    let ex = itens.find(i => i.produto === p);
+                    if(ex) ex.quantidade += q;
+                    else itens.push({
+                        unidade: document.getElementById("unidade").value,
+                        produto: p,
+                        medida: linha.Medida || "Unidade",
+                        quantidade: q,
+                        observacao: linha.Observacao || ""
+                    });
+                }
+            });
+            render(); salvarLocal();
+            alert("Importação concluída com sucesso!");
+            e.target.value = "";
+        };
+        reader.readAsArrayBuffer(file);
+    });
 
     function baixarExcel(){
-        let unidade = document.getElementById("unidade").value
-        let responsavel = document.getElementById("responsavel").value
-        let dataStr = new Date().toLocaleDateString().replace(/\//g,"-")
-        let nome = (tipo === "pedido" ? "pedido" : "estoque") + "_" + unidade + "_" + dataStr + ".xlsx"
+        let unidade = document.getElementById("unidade").value;
+        let responsavel = document.getElementById("responsavel").value;
+        if(!unidade || !responsavel) { alert("Preencha Responsável e Unidade!"); return; }
 
-        let dados = baseProdutos.map(base => {
-            let encontrado = itens.find(i => i.produto === base.nome && i.unidade === unidade)
+        // Mapeia a BASE_PRODUTOS inteira para o Excel (incluindo os com zero)
+        let dataFinal = BASE_PRODUTOS.map(base => {
+            let lancado = itens.find(i => i.produto === base.nome && i.unidade === unidade);
             return {
                 Unidade: unidade,
                 Material: base.material,
                 Produto: base.nome,
-                Medida: encontrado ? encontrado.medida : base.medida,
-                Quantidade: encontrado ? encontrado.quantidade : 0,
-                Observacao: encontrado ? encontrado.observacao : "",
+                Medida: base.medida,
+                Quantidade: lancado ? lancado.quantidade : 0,
+                Observacao: lancado ? lancado.observacao : "",
                 Responsavel: responsavel
-            }
-        })
+            };
+        });
 
+        // Adiciona itens atípicos que não constam na base original
         itens.forEach(i => {
-            let existeNaBase = baseProdutos.find(p => p.nome === i.produto)
-            if(!existeNaBase){
-                dados.push({
-                    Unidade: i.unidade, Material: "Não listado - Atípico", Produto: i.produto,
+            if(!BASE_PRODUTOS.find(b => b.nome === i.produto)) {
+                dataFinal.push({
+                    Unidade: i.unidade, Material: "NÃO LISTADO", Produto: i.produto,
                     Medida: i.medida, Quantidade: i.quantidade, Observacao: i.observacao, Responsavel: responsavel
-                })
+                });
             }
-        })
+        });
 
-        let ws = XLSX.utils.json_to_sheet(dados)
-        let colWidths = []
-        dados.forEach(row => {
-            Object.keys(row).forEach((key, i) => {
-                let tamanho = String(row[key]).length
-                colWidths[i] = Math.max(colWidths[i] || key.length, tamanho)
-            })
-        })
-        ws['!cols'] = colWidths.map(w => ({ wch: w + 2 }))
-        let wb = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(wb, ws, "Dados")
-        XLSX.writeFile(wb, nome)
-        limpar()
+        const ws = XLSX.utils.json_to_sheet(dataFinal);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Dados");
+        
+        // Ajuste de largura das colunas
+        ws['!cols'] = [{wch:15}, {wch:20}, {wch:40}, {wch:10}, {wch:10}, {wch:30}, {wch:20}];
+
+        XLSX.writeFile(wb, `${tipo}_${unidade}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+        
+        if(confirm("Exportação concluída! Deseja limpar a lista de lançamentos agora?")) {
+            limpar();
+        }
     }
+
+    // Atalho teclado: Enter no campo de quantidade adiciona o item
+    document.addEventListener("keypress", function(e) {
+        if(e.key === "Enter") {
+            const activeId = document.activeElement.id;
+            if(["produto", "quantidade", "observacao"].includes(activeId)) {
+                adicionar();
+            }
+        }
+    });
 </script>
 
 </body>
