@@ -734,48 +734,88 @@
         reader.readAsArrayBuffer(file);
     });
 
-    function baixarExcel(){
-        let unidade = document.getElementById("unidade").value;
-        let responsavel = document.getElementById("responsavel").value;
-        if(!unidade || !responsavel) { alert("Preencha Responsável e Unidade!"); return; }
-
-        // Mapeia a BASE_PRODUTOS inteira para o Excel (incluindo os com zero)
-        let dataFinal = BASE_PRODUTOS.map(base => {
-            let lancado = itens.find(i => i.produto === base.nome && i.unidade === unidade);
-            return {
-                Unidade: unidade,
-                Material: base.material,
-                Produto: base.nome,
-                Medida: base.medida,
-                Quantidade: lancado ? lancado.quantidade : 0,
-                Observacao: lancado ? lancado.observacao : "",
-                Responsavel: responsavel
-            };
-        });
-
-        // Adiciona itens atípicos que não constam na base original
-        itens.forEach(i => {
-            if(!BASE_PRODUTOS.find(b => b.nome === i.produto)) {
-                dataFinal.push({
-                    Unidade: i.unidade, Material: "NÃO LISTADO", Produto: i.produto,
-                    Medida: i.medida, Quantidade: i.quantidade, Observacao: i.observacao, Responsavel: responsavel
-                });
-            }
-        });
-
-        const ws = XLSX.utils.json_to_sheet(dataFinal);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Dados");
-        
-        // Ajuste de largura das colunas
-        ws['!cols'] = [{wch:15}, {wch:20}, {wch:40}, {wch:10}, {wch:10}, {wch:30}, {wch:20}];
-
-        XLSX.writeFile(wb, `${tipo}_${unidade}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
-        
-        if(confirm("Exportação concluída! Deseja limpar a lista de lançamentos agora?")) {
-            limpar();
-        }
+async function baixarExcel() {
+    let unidade = document.getElementById("unidade").value;
+    let responsavel = document.getElementById("responsavel").value.trim();
+    
+    if (!unidade || !responsavel) { 
+        alert("Atenção: Preencha o Nome do Responsável e selecione a Unidade antes de finalizar!"); 
+        return; 
     }
+
+    if (itens.length === 0) {
+        alert("A lista está vazia! Adicione itens antes de gerar a planilha.");
+        return;
+    }
+
+    // URL do seu Google Apps Script
+    const URL_PLANILHA = "https://script.google.com/macros/s/AKfycbzqyRpBR_lm7qqQDlFluvlabVPVDYEAHw-BrYLlZ9Y60YPq_lDoRIHqfsxtlAWrNKNXpA/exec";
+
+    // Preparar os dados exatamente como o banco de dados espera
+    let dadosParaSincronizar = itens.map(i => ({
+        unidade: i.unidade,
+        responsavel: responsavel,
+        produto: i.produto,
+        quantidade: i.quantidade,
+        medida: i.medida,
+        observacao: i.observacao || "",
+        tipo: tipo // 'contagem' ou 'pedido'
+    }));
+
+    try {
+        mostrarToast("🚀 Sincronizando com a nuvem...");
+        
+        // Envio para o Google Sheets
+        await fetch(URL_PLANILHA, {
+            method: 'POST',
+            mode: 'no-cors', // Importante para evitar erro de redirecionamento do Google
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dadosParaSincronizar)
+        });
+
+        mostrarToast("✅ Dados salvos na Planilha Google!");
+    } catch (e) {
+        console.error("Erro na sincronização:", e);
+        alert("Houve um problema ao salvar online, mas vamos gerar o arquivo Excel para você não perder os dados.");
+    }
+
+    // --- CONTINUAÇÃO: GERAÇÃO DO ARQUIVO EXCEL LOCAL (Backup e Conferência) ---
+    
+    let dataFinal = BASE_PRODUTOS.map(base => {
+        let lancado = itens.find(i => i.produto === base.nome && i.unidade === unidade);
+        return {
+            Unidade: unidade,
+            Material: base.material,
+            Produto: base.nome,
+            Medida: base.medida,
+            Quantidade: lancado ? lancado.quantidade : 0,
+            Observacao: lancado ? lancado.observacao : "",
+            Responsavel: responsavel
+        };
+    });
+
+    // Adiciona itens atípicos que não constam na base original
+    itens.forEach(i => {
+        if (!BASE_PRODUTOS.find(b => b.nome === i.produto)) {
+            dataFinal.push({
+                Unidade: i.unidade, Material: "NÃO LISTADO", Produto: i.produto,
+                Medida: i.medida, Quantidade: i.quantidade, Observacao: i.observacao, Responsavel: responsavel
+            });
+        }
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataFinal);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Dados");
+    ws['!cols'] = [{wch:15}, {wch:20}, {wch:40}, {wch:10}, {wch:10}, {wch:30}, {wch:20}];
+
+    XLSX.writeFile(wb, `${tipo}_${unidade}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+    
+    if(confirm("Processo finalizado! Deseja limpar a tela para uma nova operação?")) {
+        limpar();
+    }
+}
 
     // Atalho teclado: Enter no campo de quantidade adiciona o item
     document.addEventListener("keypress", function(e) {
