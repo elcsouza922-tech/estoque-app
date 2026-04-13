@@ -216,11 +216,53 @@
         document.getElementById('btn-enviar').classList.toggle('hidden', itensLocal.length === 0);
     }
 
-    async function enviarTudo() {
-        mostrarToast("🚀 Sincronizando...");
-        await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(itensLocal) });
-        alert("Enviado!"); itensLocal = []; switchSection('home', document.getElementById('nav-home'));
+    // Substitua a função enviarParaNuvem anterior por esta:
+
+async function enviarParaNuvem() {
+    if (itensLocal.length === 0) return;
+
+    mostrarToast("🚀 Sincronizando e Gerando Excel...");
+
+    try {
+        // 1. GERA E BAIXA O EXCEL LOCALMENTE (Como era antes)
+        const dataParaExcel = itensLocal.map(item => ({
+            Data: new Date().toLocaleDateString(),
+            Unidade: item.unidade,
+            Responsável: item.responsavel,
+            Categoria: item.material,
+            Produto: item.produto,
+            Quantidade: item.quantidade,
+            Medida: item.medida,
+            Observação: item.observacao,
+            Tipo: item.tipo
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataParaExcel);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Lancamento");
+        
+        // Nome do arquivo com a unidade e tipo para facilitar sua organização
+        const nomeArquivo = `Lancamento_${itensLocal[0].unidade}_${tipoAtual}.xlsx`;
+        XLSX.writeFile(wb, nomeArquivo);
+
+        // 2. ENVIA PARA O GOOGLE SHEETS
+        await fetch(URL_API, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(itensLocal) 
+        });
+
+        alert("✅ Enviado com sucesso e Excel baixado!");
+        
+        // Limpa tudo e volta para o início
+        itensLocal = [];
+        switchSection('home', document.getElementById('nav-home'));
+        
+    } catch(e) { 
+        alert("❌ Erro ao enviar, mas verifique se o Excel foi baixado."); 
+        console.error(e);
     }
+}
 
     async function syncDados() {
         try { const r = await fetch(URL_API + "?t=" + Date.now()); db = await r.json(); popularFiltros(); renderDash(); renderCompras(); renderEstoque(); } catch(e) { console.error(e); }
@@ -310,53 +352,7 @@
     function paginarEstoque(d) { pagEstoque += d; if(pagEstoque<1) pagEstoque=1; renderEstoque(); }
     function mostrarToast(m) { let t = document.getElementById('toast'); t.innerText = m; t.style.display="block"; setTimeout(()=>t.style.display="none", 3000); }
     function exportarExcel(t) { const data = db.filter(d => t === 'compras' ? d.tipo === 'pedido' : d.tipo === 'contagem'); const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados"); XLSX.writeFile(wb, `EstoquePro_${t}.xlsx`); }
-// Substitua a função enviarParaNuvem anterior por esta:
 
-async function enviarParaNuvem() {
-    if (itensLocal.length === 0) return;
-
-    mostrarToast("🚀 Sincronizando e Gerando Excel...");
-
-    try {
-        // 1. GERA E BAIXA O EXCEL LOCALMENTE (Como era antes)
-        const dataParaExcel = itensLocal.map(item => ({
-            Data: new Date().toLocaleDateString(),
-            Unidade: item.unidade,
-            Responsável: item.responsavel,
-            Categoria: item.material,
-            Produto: item.produto,
-            Quantidade: item.quantidade,
-            Medida: item.medida,
-            Observação: item.observacao,
-            Tipo: item.tipo
-        }));
-
-        const ws = XLSX.utils.json_to_sheet(dataParaExcel);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Lancamento");
-        
-        // Nome do arquivo com a unidade e tipo para facilitar sua organização
-        const nomeArquivo = `Lancamento_${itensLocal[0].unidade}_${tipoAtual}.xlsx`;
-        XLSX.writeFile(wb, nomeArquivo);
-
-        // 2. ENVIA PARA O GOOGLE SHEETS
-        await fetch(URL_API, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(itensLocal) 
-        });
-
-        alert("✅ Enviado com sucesso e Excel baixado!");
-        
-        // Limpa tudo e volta para o início
-        itensLocal = [];
-        switchSection('home', document.getElementById('nav-home'));
-        
-    } catch(e) { 
-        alert("❌ Erro ao enviar, mas verifique se o Excel foi baixado."); 
-        console.error(e);
-    }
-}
     
 </script>
 </body>
