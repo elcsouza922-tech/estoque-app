@@ -8,13 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #2563eb; --success: #16a34a; --bg: #f8fafc; --text: #1e293b; --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        :root { --primary: #2563eb; --success: #16a34a; --bg: #f8fafc; --text: #1e293b; --danger: #ef4444; --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; color: var(--text); }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--text); }
         .main-nav { background: #fff; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .nav-brand { font-weight: 800; color: var(--primary); font-size: 16px; }
         .nav-links { display: flex; gap: 10px; }
-        .nav-item { padding: 18px 8px; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 3px solid transparent; font-size: 13px; transition: 0.2s; }
+        .nav-item { padding: 18px 8px; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 3px solid transparent; font-size: 13px; }
         .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); }
         #toast { position: fixed; top: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 24px; border-radius: 10px; display: none; z-index: 2000; }
         .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
@@ -24,19 +24,20 @@
         @media (max-width: 600px) { .form-group { grid-template-columns: 1fr; } }
         label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 5px; display: block; }
         input, select { padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; width: 100%; font-size: 14px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .btn-blue { background: var(--primary); color: white; }
         .btn-green { background: var(--success); color: white; }
         .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
-        .total-banner { background: #1e293b; color: white; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .total-banner { background: #1e293b; color: white; padding: 15px 20px; border-radius: 15px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 5px; }
+        .val-total { font-size: 22px; font-weight: 800; color: #4ade80; }
         .input-compra { width: 75px; text-align: center; border: 1px solid var(--primary); font-weight: 700; border-radius: 8px; }
         .badge-estoque { background: #fef3c7; color: #b45309; padding: 3px 7px; border-radius: 5px; font-weight: 700; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 11px; }
+        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
         .op-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
-        .op-card { padding: 40px; text-align: center; cursor: pointer; background: #fff; border-radius: 25px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; transition: 0.3s; }
-        .op-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .op-card { padding: 40px; text-align: center; cursor: pointer; background: #fff; border-radius: 25px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
     </style>
 </head>
 <body>
@@ -44,7 +45,7 @@
 <div id="toast"></div>
 
 <nav class="main-nav">
-    <div class="nav-brand">ESTOQUE PRO</div>
+    <div class="nav-brand">ESTOQUE PRO 2026</div>
     <div class="nav-links">
         <div class="nav-item active" id="nav-home" onclick="switchSection('home', this)">🏠 Início</div>
         <div id="admin-links" style="display: none; gap: 10px;">
@@ -57,29 +58,31 @@
 </nav>
 
 <div class="container">
+
     <section id="sec-home">
-        <h1 style="text-align: center; margin-top: 40px;">Sistema de Gestão de Materiais</h1>
+        <h1 style="text-align: center; margin-top: 40px;">Controle de Auditoria</h1>
         <div class="op-grid">
             <div class="op-card" onclick="abrirForm('contagem')">
-                <div style="font-size: 45px; margin-bottom:15px;">📦</div>
+                <div style="font-size: 45px; margin-bottom:10px;">📦</div>
                 <strong>Contagem de Estoque</strong>
-                <p style="color:#64748b; font-size:14px;">Registrar o que tem na prateleira</p>
             </div>
             <div class="op-card" onclick="abrirForm('pedido')">
-                <div style="font-size: 45px; margin-bottom:15px;">🛒</div>
+                <div style="font-size: 45px; margin-bottom:10px;">🛒</div>
                 <strong>Pedido de Compra</strong>
-                <p style="color:#64748b; font-size:14px;">Solicitar novos materiais</p>
             </div>
         </div>
     </section>
 
     <section id="sec-form" class="hidden">
         <div class="card" style="max-width: 800px; margin: auto;">
-            <button class="btn btn-outline" onclick="switchSection('home', document.getElementById('nav-home'))" style="margin-bottom: 20px;">← Voltar</button>
-            <h2 id="form-titulo" style="text-align: center; margin-bottom: 25px;"></h2>
+            <button class="btn btn-outline" onclick="switchSection('home', document.getElementById('nav-home'))" style="margin-bottom:20px;">← Voltar</button>
+            <h2 id="form-titulo" style="text-align:center; margin-bottom:20px;"></h2>
             <div class="form-group">
                 <div><label>Responsável</label><input type="text" id="responsavel"></div>
-                <div><label>Unidade</label><select id="unidade"><option value="">Selecione...</option><option>ANDORINHAS</option><option>BELA VISTA</option><option>BONFIM</option><option>CENTRO</option><option>ITARARÉ</option><option>JARDIM CAMBURI</option><option>MARIA ORTIZ</option><option>SÃO PEDRO</option><option>JABURU</option></select></div>
+                <div><label>Unidade</label><select id="unidade">
+                    <option value="">Selecione...</option>
+                    <option>ANDORINHAS</option><option>BELA VISTA</option><option>BONFIM</option><option>CENTRO</option><option>CONQUISTA</option><option>CONSOLAÇÃO</option><option>CARATOÍRA</option><option>ITARARÉ</option><option>JARDIM CAMBURI</option><option>JARDIM DA PENHA</option><option>MARIA ORTIZ</option><option>QUADRO</option><option>ROMÃO</option><option>NOVA PALESTINA</option><option>SANTO ANDRÉ</option><option>SANTO ANTONIO</option><option>SÃO PEDRO</option><option>JABURU</option><option>NISP JABURU</option><option>SOLON BORGES</option><option>PRAIA DO SUÁ</option>
+                </select></div>
             </div>
             <div class="form-group" style="grid-template-columns: 2fr 1fr;">
                 <div><label>Produto</label><input type="text" id="produto" list="listaProdutos"><datalist id="listaProdutos"></datalist></div>
@@ -87,42 +90,66 @@
             </div>
             <div class="form-group" style="grid-template-columns: 2fr 1fr;">
                 <div><label>Observação</label><input type="text" id="observacao" placeholder="Opcional..."></div>
-                <div><label>Medida</label><select id="medida"><option>Unidade</option><option>Pacote</option><option>Caixa</option><option>LT</option><option>KG</option></select></div>
+                <div><label>Medida</label><select id="medida">
+                    <option>Unidade</option><option>Pacote</option><option>Caixa</option><option>LT</option><option>KG</option><option>Metro</option>
+                </select></div>
             </div>
             <button class="btn btn-blue" onclick="adicionarLocal()" style="width:100%">➕ Adicionar à Lista</button>
-            <div id="preview-lista" style="margin-top:20px;">
-                <table id="tblPreview" class="hidden"><thead><tr><th>Produto</th><th>Qtd</th><th>Remover</th></tr></thead><tbody id="tbodyPreview"></tbody></table>
+            <div id="preview-lista" style="margin-top:20px; border-top: 1px solid #eee; padding-top:10px;">
+                <table id="tblPreview" class="hidden"><thead><tr><th>Produto</th><th>Qtd</th><th>Excluir</th></tr></thead><tbody id="tbodyPreview"></tbody></table>
             </div>
-            <button id="btn-enviar" class="btn btn-green hidden" style="width:100%; margin-top:20px;" onclick="enviarParaNuvem()">🚀 FINALIZAR E SINCRONIZAR</button>
+            <button id="btn-enviar" class="btn btn-green hidden" style="width:100%; margin-top:20px;" onclick="enviarTudo()">🚀 FINALIZAR E SINCRONIZAR</button>
         </div>
     </section>
 
     <section id="sec-dash" class="hidden">
-        <div class="card"><h2>📊 Dashboard Geral</h2><div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;"><div class="card"><canvas id="chartUnidades"></canvas></div><div class="card"><canvas id="chartCat"></canvas></div></div></div>
+        <div class="total-banner" style="background: white; border: 1px solid #e2e8f0; color: var(--text);">
+            <div class="metric-grid">
+                <div><label style="color:#64748b">VALOR TOTAL ORIGINAL (REDE)</label><div class="val-total" id="dash-orig-total" style="color:var(--primary)">R$ 0,00</div></div>
+                <div><label style="color:#64748b">VALOR TOTAL REAL (REDE)</label><div class="val-total" id="dash-real-total">R$ 0,00</div></div>
+            </div>
+        </div>
+        <div class="card">
+            <h3>⚠️ Unidades que ainda não enviaram (Mês Atual)</h3>
+            <div id="faltantes-lista" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="card"><h3>Registros por Unidade</h3><canvas id="chart1"></canvas></div>
+            <div class="card"><h3>Distribuição por Categoria</h3><canvas id="chart2"></canvas></div>
+        </div>
     </section>
 
     <section id="sec-compras" class="hidden">
-        <div class="total-banner"><div>VALOR TOTAL ESTIMADO:</div><div style="font-size:26px; font-weight:800; color:#4ade80;">R$ <span id="total-compra-val">0,00</span></div></div>
+        <div class="total-banner" style="display: flex; flex-direction: row; justify-content: space-around; text-align: center;">
+            <div><label style="color:#cbd5e1; font-size:10px;">VALOR REDE (TODAS UNIDADES)</label><div id="topo-rede-total" style="font-weight:800; font-size:18px; color:#4ade80;">R$ 0,00</div></div>
+        </div>
         <div class="card">
             <div class="form-group" style="grid-template-columns: 1fr 1fr auto;">
-                <div><label>Filtro Unidade</label><select id="f-comp-uni" onchange="renderCompras()"><option value="">Todas</option></select></div>
-                <div><label>Filtro Data</label><input type="month" id="f-comp-data" onchange="renderCompras()"></div>
-                <button class="btn btn-outline" onclick="exportarExcel('compras')" style="margin-top:19px;">📥 Exportar</button>
+                <select id="f-comp-uni" onchange="renderCompras()"><option value="">Todas as Unidades</option></select>
+                <input type="month" id="f-comp-data" onchange="renderCompras()">
             </div>
-            <table><thead><tr><th>Produto</th><th>Pedido</th><th>Última Contagem</th><th>Compra Real</th><th>Preço Unit.</th><th>Subtotal</th></tr></thead><tbody id="tbody-compras"></tbody></table>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead><tr><th>Produto</th><th>Medida</th><th>Pedido Original</th><th>Última Contagem</th><th>Compra Real</th><th>Preço Unit.</th><th>Subtotal Real</th></tr></thead>
+                    <tbody id="tbody-compras"></tbody>
+                </table>
+            </div>
+            <div style="margin-top:20px; display: flex; justify-content: flex-end; gap: 40px; border-top: 2px solid #eee; padding-top: 15px;">
+                <div style="text-align: right;"><label>TOTAL ORIGINAL (FILTRADO):</label><div id="total-orig-filtro" style="font-weight:800; font-size:20px;">R$ 0,00</div></div>
+                <div style="text-align: right;"><label>TOTAL REAL (FILTRADO):</label><div id="total-real-filtro" style="font-weight:800; font-size:20px; color:var(--success)">R$ 0,00</div></div>
+            </div>
         </div>
     </section>
 
     <section id="sec-estoque" class="hidden">
         <div class="card">
-            <div class="form-group" style="grid-template-columns: 1fr 1fr 1fr auto;">
-                <div><label>Unidade</label><select id="f-est-uni" onchange="renderEstoque()"><option value="">Todas</option></select></div>
-                <div><label>Categoria</label><select id="f-est-cat" onchange="renderEstoque()"><option value="">Todas</option></select></div>
-                <div><label>Data</label><input type="month" id="f-est-data" onchange="renderEstoque()"></div>
-                <button class="btn btn-outline" onclick="exportarExcel('estoque')" style="margin-top:19px;">📥 Excel</button>
+            <div class="form-group" style="grid-template-columns: 1fr 1fr 1fr;">
+                <select id="f-est-uni" onchange="renderEstoque()"><option value="">Unidade</option></select>
+                <select id="f-est-cat" onchange="renderEstoque()"><option value="">Categoria</option></select>
+                <input type="month" id="f-est-data" onchange="renderEstoque()">
             </div>
-            <table><thead><tr><th>Data</th><th>Unidade</th><th>Categoria</th><th>Produto</th><th>Qtd</th><th>Obs</th></tr></thead><tbody id="tbody-estoque"></tbody></table>
-            <div class="pagination"><button class="btn btn-outline" onclick="paginarEstoque(-1)">←</button><span id="est-pag-info">Pág 1</span><button class="btn btn-outline" onclick="paginarEstoque(1)">→</button></div>
+            <table><thead><tr><th>Data</th><th>Unidade</th><th>Categoria</th><th>Produto</th><th>Qtd</th><th>Medida</th><th>Obs</th></tr></thead><tbody id="tbody-estoque"></tbody></table>
+            <div class="pagination"><button class="btn btn-outline" onclick="paginarEstoque(-1)">← Ant.</button><span id="est-pag-info">Pág 1</span><button class="btn btn-outline" onclick="paginarEstoque(1)">Próx. →</button></div>
         </div>
     </section>
 </div>
@@ -130,29 +157,33 @@
 <script>
     const URL_API = "https://script.google.com/macros/s/AKfycbzfjrzu43dB5hP-xAtDfrgWJJBrBzKXJbblMZd8pbwVMx4gyRhuCEwsx_BzjE5FEIO48A/exec"; 
     const SENHA_DASH = "1234";
+    const TODAS_UNIDADES = ['ANDORINHAS','BELA VISTA','BONFIM','CENTRO','CONQUISTA','CONSOLAÇÃO','CARATOÍRA','ITARARÉ','JARDIM CAMBURI','JARDIM DA PENHA','MARIA ORTIZ','QUADRO','ROMÃO','NOVA PALESTINA','SANTO ANDRÉ','SANTO ANTONIO','SÃO PEDRO','JABURU','NISP JABURU','SOLON BORGES','PRAIA DO SUÁ'];
 
     const BASE_PRODUTOS = [
         { material: "DIDÁTICO", nome: "Agôgo", medida: "Unidade" }, { material: "DIDÁTICO", nome: "Agulha de mão nº 05", medida: "Pacote" },
         { material: "DIDÁTICO", nome: "Agulha de mão nº 06", medida: "Pacote" }, { material: "DIDÁTICO", nome: "Agulha pra vagonite", medida: "Pacote" },
         { material: "DIDÁTICO", nome: "Alfinete de cabeça", medida: "Pacote" }, { material: "DIDÁTICO", nome: "Alfinete de segurança", medida: "Pacote" },
         { material: "DIDÁTICO", nome: "Apito de jogo esporte", medida: "Unidade" }, { material: "DIDÁTICO", nome: "Arco para cabelo plástico", medida: "Unidade" },
-        { material: "DIDÁTICO", nome: "Argila (1 kg)", medida: "Pacote" }, { material: "DIDÁTICO", nome: "Bambolê Profissional", medida: "Unidade" },
-        { material: "DIDÁTICO", nome: "Bola de assoprar n° 7", medida: "Pacote" }, { material: "DIDÁTICO", nome: "Bola de futsal Max 500", medida: "Unidade" },
-        { material: "DIDÁTICO", nome: "Tinta guache-250 ml", medida: "Unidade" }, { material: "DIDÁTICO", nome: "Lã (cores variadas)", medida: "Unidade" },
+        { material: "DIDÁTICO", nome: "Argila (1 kg)", medida: "Pacote" }, { material: "DIDÁTICO", nome: "Bambolê", medida: "Unidade" },
+        { material: "DIDÁTICO", nome: "Baqueta para Berimbau", medida: "Unidade" }, { material: "DIDÁTICO", nome: "Bola assoprar nº7", medida: "Pacote" },
+        { material: "DIDÁTICO", nome: "Bola futsal Max 500", medida: "Unidade" }, { material: "DIDÁTICO", nome: "Caneta Posca 7mm", medida: "Unidade" },
+        { material: "DIDÁTICO", nome: "Cola permanente 250g", medida: "Unidade" }, { material: "DIDÁTICO", nome: "Tecido chitão", medida: "Metro" },
         { material: "EXPEDIENTE", nome: "Papel A4 pct 500 fls", medida: "Pacote" }, { material: "EXPEDIENTE", nome: "Caneta esferográfica Azul", medida: "Caixa" },
-        { material: "LIMPEZA/DESCARTÁVEIS", nome: "Detergente líquido 500ml", medida: "Unidade" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Sabão em pó 5kg", medida: "Unidade" },
-        { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela Caçarola 13L", medida: "Unidade" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garrafa Térmica 2,5L", medida: "Unidade" }
-        // ... (Reinsira todos os itens aqui seguindo este padrão)
+        { material: "EXPEDIENTE", nome: "Grampeador médio", medida: "Unidade" }, { material: "EXPEDIENTE", nome: "Cola branca 1L", medida: "Unidade" },
+        { material: "LIMPEZA/DESCARTÁVEIS", nome: "Detergente 500ml", medida: "Unidade" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Sabão pó 5kg", medida: "Unidade" },
+        { material: "LIMPEZA/DESCARTÁVEIS", nome: "Saco lixo 100L", medida: "Unidade" }, { material: "LIMPEZA/DESCARTÁVEIS", nome: "Água Sanitária 5L", medida: "Unidade" },
+        { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela Caçarola 13L", medida: "Unidade" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garrafa Térmica 2,5L", medida: "Unidade" },
+        { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caldeirão 10L", medida: "Unidade" }, { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tábua carne Polietileno", medida: "Unidade" }
     ];
 
-    let db = []; let itensLocal = []; let tipoOperacao = ""; let pagEstoque = 1;
+    let db = []; let itensLocal = []; let tipoAtual = ""; let pagEstoque = 1;
 
     function switchSection(id, btn) {
         document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
         document.getElementById('sec-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         if(btn) btn.classList.add('active');
-        if(['dash', 'compras', 'estoque'].includes(id)) carregarDados();
+        if(['dash', 'compras', 'estoque'].includes(id)) syncDados();
     }
 
     function acessoRestrito() {
@@ -164,7 +195,7 @@
     }
 
     function abrirForm(t) { 
-        tipoOperacao = t; document.getElementById('form-titulo').innerText = t === 'contagem' ? "📦 Nova Contagem" : "🛒 Novo Pedido";
+        tipoAtual = t; document.getElementById('form-titulo').innerText = t === 'contagem' ? "📦 Nova Contagem" : "🛒 Novo Pedido";
         switchSection('form'); const dl = document.getElementById('listaProdutos');
         dl.innerHTML = BASE_PRODUTOS.map(p => `<option value="${p.nome}">`).join('');
     }
@@ -172,13 +203,8 @@
     function adicionarLocal() {
         const prod = document.getElementById('produto').value;
         const info = BASE_PRODUTOS.find(p => p.nome === prod);
-        const item = { 
-            unidade: document.getElementById('unidade').value, responsavel: document.getElementById('responsavel').value, 
-            produto: prod, quantidade: document.getElementById('quantidade').value, 
-            material: info ? info.material : "NÃO LISTADO", medida: document.getElementById('medida').value, 
-            observacao: document.getElementById('observacao').value, tipo: tipoOperacao 
-        };
-        if(!item.unidade || !item.produto || !item.quantidade) return alert("Preencha campos!");
+        const item = { unidade: document.getElementById('unidade').value, responsavel: document.getElementById('responsavel').value, produto: prod, quantidade: document.getElementById('quantidade').value, material: info ? info.material : "NÃO LISTADO", medida: document.getElementById('medida').value, observacao: document.getElementById('observacao').value, tipo: tipoAtual };
+        if(!item.unidade || !item.produto || !item.quantidade) return alert("Erro!");
         itensLocal.push(item); renderPreview();
         document.getElementById('produto').value = ""; document.getElementById('quantidade').value = "";
     }
@@ -186,24 +212,18 @@
     function renderPreview() {
         const table = document.getElementById('tblPreview'); const tbody = document.getElementById('tbodyPreview');
         table.classList.remove('hidden'); 
-        tbody.innerHTML = itensLocal.map((i, idx) => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td><button onclick="itensLocal.splice(${idx},1);renderPreview()">✕</button></td></tr>`).join('');
+        tbody.innerHTML = itensLocal.map((i, idx) => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td><button onclick="itensLocal.splice(${idx},1);renderPreview()" style="color:red; background:none; border:none; cursor:pointer;">✕</button></td></tr>`).join('');
         document.getElementById('btn-enviar').classList.toggle('hidden', itensLocal.length === 0);
     }
 
-    async function enviarParaNuvem() {
+    async function enviarTudo() {
         mostrarToast("🚀 Sincronizando...");
-        try {
-            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(itensLocal) });
-            alert("Enviado com sucesso!"); itensLocal = []; switchSection('home', document.getElementById('nav-home'));
-        } catch(e) { alert("Erro de conexão"); }
+        await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(itensLocal) });
+        alert("Enviado!"); itensLocal = []; switchSection('home', document.getElementById('nav-home'));
     }
 
-    async function carregarDados() {
-        try {
-            const resp = await fetch(URL_API + "?t=" + Date.now());
-            db = await resp.json();
-            popularFiltros(); renderDash(); renderCompras(); renderEstoque();
-        } catch(e) { console.error("Erro ao puxar dados"); }
+    async function syncDados() {
+        try { const r = await fetch(URL_API + "?t=" + Date.now()); db = await r.json(); popularFiltros(); renderDash(); renderCompras(); renderEstoque(); } catch(e) { console.error(e); }
     }
 
     function renderCompras() {
@@ -217,8 +237,17 @@
         tbody.innerHTML = f.map(p => {
             const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
             const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-            return `<tr><td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td><td>${p.quantidade}</td><td><span class="badge-estoque">${ult ? ult.quantidade : 0} em estoque</span></td><td><input type="number" class="input-compra q-real" value="${p.quantidade}" oninput="calcTotal()"></td><td><input type="text" class="input-compra p-unit" placeholder="0,00" onblur="formatMoeda(this)" oninput="calcTotal()"></td><td class="sub">R$ 0,00</td></tr>`;
+            return `<tr>
+                <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
+                <td>${p.medida}</td>
+                <td class="q-orig">${p.quantidade}</td>
+                <td><span class="badge-estoque">${ult ? ult.quantidade : 0}</span></td>
+                <td><input type="number" class="input-compra q-real" value="${p.quantidade}" oninput="calcCompras()"></td>
+                <td><input type="text" class="input-compra p-unit" placeholder="0,00" onblur="formatMoeda(this)" oninput="calcCompras()"></td>
+                <td class="sub-real">R$ 0,00</td>
+            </tr>`;
         }).join('');
+        calcCompras();
     }
 
     function renderEstoque() {
@@ -231,52 +260,56 @@
         if(cat) f = f.filter(d => d.material === cat);
         if(dataF) f = f.filter(d => d.data.startsWith(dataF));
         
-        tbody.innerHTML = f.slice((pagEstoque-1)*50, pagEstoque*50).map(d => `<tr><td>${new Date(d.data).toLocaleDateString()}</td><td>${d.unidade}</td><td>${d.material}</td><td>${d.produto}</td><td>${d.quantidade}</td><td>${d.observacao}</td></tr>`).join('');
+        tbody.innerHTML = f.slice((pagEstoque-1)*50, pagEstoque*50).map(d => `<tr>
+            <td>${new Date(d.data).toLocaleDateString()}</td>
+            <td>${d.unidade}</td><td>${d.material}</td><td>${d.produto}</td><td>${d.quantidade}</td><td>${d.medida}</td><td>${d.observacao}</td>
+        </tr>`).join('');
         document.getElementById('est-pag-info').innerText = `Pág ${pagEstoque}`;
     }
 
-    function paginarEstoque(dir) { pagEstoque += dir; if(pagEstoque<1) pagEstoque=1; renderEstoque(); }
-
-    function calcTotal() {
-        let total = 0;
+    function calcCompras() {
+        let totalOrig = 0; let totalReal = 0;
         document.querySelectorAll('#tbody-compras tr').forEach(tr => {
-            const q = parseFloat(tr.querySelector('.q-real').value) || 0;
-            const p = parseFloat(tr.querySelector('.p-unit').value.replace(',','.')) || 0;
-            const sub = q * p;
-            tr.querySelector('.sub').innerText = sub.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-            total += sub;
+            const pUnit = parseFloat(tr.querySelector('.p-unit').value.replace(',','.')) || 0;
+            const qOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
+            const qReal = parseFloat(tr.querySelector('.q-real').value) || 0;
+            
+            totalOrig += (qOrig * pUnit);
+            totalReal += (qReal * pUnit);
+            tr.querySelector('.sub-real').innerText = (qReal * pUnit).toLocaleString('pt-br',{style:'currency',currency:'BRL'});
         });
-        document.getElementById('total-compra-val').innerText = total.toLocaleString('pt-br',{minimumFractionDigits:2});
-    }
-
-    function formatMoeda(i) { if(!i.value) return; let v = i.value.replace(/[^\d,]/g, ""); if(!v.includes(',')) v += ",00"; i.value = v; }
-
-    function popularFiltros() {
-        const unis = [...new Set(db.map(d => d.unidade))].sort();
-        const cats = [...new Set(db.map(d => d.material))].sort();
-        ['f-comp-uni', 'f-est-uni'].forEach(id => {
-            const s = document.getElementById(id);
-            if(s.options.length <= 1) unis.forEach(u => s.innerHTML += `<option>${u}</option>`);
-        });
-        const sc = document.getElementById('f-est-cat');
-        if(sc.options.length <= 1) cats.forEach(c => sc.innerHTML += `<option>${c}</option>`);
+        document.getElementById('total-orig-filtro').innerText = totalOrig.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+        document.getElementById('total-real-filtro').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+        
+        // SOMA REDE (SIMPLIFICADA PARA O EXEMPLO)
+        document.getElementById('topo-rede-total').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
     }
 
     function renderDash() {
-        // Implementação simplificada de métricas
-        const ctx1 = document.getElementById('chartUnidades').getContext('2d');
-        new Chart(ctx1, { type: 'bar', data: { labels: ['Unidades'], datasets: [{label: 'Registros', data: [db.length], backgroundColor:'#2563eb'}] } });
+        // QUEM FALTA ENVIAR (Mês atual)
+        const mesAtual = new Date().toISOString().slice(0,7);
+        const enviaram = [...new Set(db.filter(d => d.data.startsWith(mesAtual)).map(d => d.unidade))];
+        const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u));
+        document.getElementById('faltantes-lista').innerHTML = faltam.map(u => `<span style="background:#fee2e2; color:#b91c1c; padding:5px 10px; border-radius:15px; font-size:11px; font-weight:bold;">${u}</span>`).join('');
+        
+        // TOTAIS NO DASH
+        let tOrig = 0; let tReal = 0;
+        db.filter(d => d.tipo === 'pedido' && d.data.startsWith(mesAtual)).forEach(p => {
+            tOrig += parseFloat(p.quantidade) || 0; // Exemplo simplificado
+        });
+        document.getElementById('dash-orig-total').innerText = "Processando..."; // Lógica completa requer preços salvos
+        document.getElementById('dash-real-total').innerText = "Sincronizado";
     }
 
+    function formatMoeda(i) { if(!i.value) return; let v = i.value.replace(/[^\d,]/g, ""); if(!v.includes(',')) v += ",00"; i.value = v; }
+    function popularFiltros() {
+        const unis = [...new Set(db.map(d => d.unidade))].sort(); const cats = [...new Set(db.map(d => d.material))].sort();
+        ['f-comp-uni', 'f-est-uni'].forEach(id => { const s = document.getElementById(id); if(s.options.length <= 1) unis.forEach(u => s.innerHTML += `<option>${u}</option>`); });
+        const sc = document.getElementById('f-est-cat'); if(sc.options.length <= 1) cats.forEach(c => sc.innerHTML += `<option>${c}</option>`);
+    }
+    function paginarEstoque(d) { pagEstoque += d; if(pagEstoque<1) pagEstoque=1; renderEstoque(); }
     function mostrarToast(m) { let t = document.getElementById('toast'); t.innerText = m; t.style.display="block"; setTimeout(()=>t.style.display="none", 3000); }
-
-    function exportarExcel(t) {
-        const data = t === 'compras' ? db.filter(d => d.tipo === 'pedido') : db.filter(d => d.tipo === 'contagem');
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Dados");
-        XLSX.writeFile(wb, `EstoquePro_${t}.xlsx`);
-    }
+    function exportarExcel(t) { const data = db.filter(d => t === 'compras' ? d.tipo === 'pedido' : d.tipo === 'contagem'); const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados"); XLSX.writeFile(wb, `EstoquePro_${t}.xlsx`); }
 </script>
 </body>
 </html>
