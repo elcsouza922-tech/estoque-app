@@ -211,6 +211,7 @@
             alert("✅ Dados enviados e Excel baixado!");
             itensLocal = []; document.getElementById('tbodyPreview').innerHTML = "";
             document.getElementById('tblPreview').classList.add('hidden');
+            limparCamposFormulario(); // <--- Adicione aqui
             switchSection('home', document.getElementById('nav-home'));
         } catch(e) { alert("Erro ao enviar."); }
     }
@@ -219,6 +220,13 @@
         try { const r = await fetch(URL_API + "?t=" + Date.now()); db = await r.json(); popularFiltros(); renderDash(); renderCompras(); renderEstoque(); } catch(e) { console.error("Erro sincronia"); }
     }
 
+function voltarParaHome() {
+    if(confirm("Deseja sair? Os dados não salvos serão perdidos.")) {
+        limparCamposFormulario(); // <--- Adicione aqui
+        switchSection('home', document.getElementById('nav-home'));
+    }
+}
+    
     function renderCompras() {
         const uni = document.getElementById('f-comp-uni').value;
         const dataF = document.getElementById('f-comp-data').value;
@@ -283,6 +291,23 @@
     }
     function mostrarToast(m) { let t = document.getElementById('toast'); t.innerText = m; t.style.display="block"; setTimeout(()=>t.style.display="none", 3000); }
     function exportarExcel(t) { const data = db.filter(d => t === 'compras' ? d.tipo === 'pedido' : d.tipo === 'contagem'); const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados"); XLSX.writeFile(wb, `Relatorio_${t}.xlsx`); }
+
+    function limparCamposFormulario() {
+    // Limpa os inputs de texto e número
+    document.getElementById('responsavel').value = "";
+    document.getElementById('unidade').selectedIndex = 0;
+    document.getElementById('produto').value = "";
+    document.getElementById('quantidade').value = "";
+    document.getElementById('observacao').value = "";
+    document.getElementById('medida').selectedIndex = 0;
+    
+    // Limpa a lista temporária e esconde a tabela de preview
+    itensLocal = [];
+    document.getElementById('tbodyPreview').innerHTML = "";
+    document.getElementById('tblPreview').classList.add('hidden');
+    document.getElementById('btn-enviar').classList.add('hidden');
+}
+
 </script>
 </body>
 </html>
