@@ -35,9 +35,18 @@
         }
 
         /* HOME */
-        .home { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px 20px; }
+        .home { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px 20px; position: relative; }
         .home h1 { font-size: 32px; font-weight: 700; background: linear-gradient(90deg, #1e40af, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
-        .opcoes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 600px; margin-bottom: 30px; }
+        
+        /* NOVO BOTÃO DASHBOARD SUPERIOR */
+        .btn-dash-top {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .opcoes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 600px; margin-bottom: 30px; margin-top: 40px; }
         .opcao { padding: 24px; border-radius: 20px; background: var(--glass); border: 1px solid #e2e8f0; box-shadow: var(--shadow); cursor: pointer; transition: 0.3s; text-align: center; }
         .opcao:hover { transform: translateY(-5px); border-color: var(--primary-blue); }
         .opcao strong { display: block; font-size: 18px; margin-bottom: 5px; }
@@ -126,8 +135,11 @@
 
 <div id="toast">Item adicionado!</div>
 
-<!-- ===================== HOME ===================== -->
 <div id="home" class="home">
+    <div class="btn-dash-top">
+        <button class="btn btn-outline" style="padding: 8px 16px; font-size: 12px;" onclick="acessoRestritoDash()">🔓 Sair</button>
+    </div>
+
     <h1>Sistema de Estoque Pro</h1>
     <p style="color: #64748b; margin-bottom: 30px;">Selecione a operação desejada</p>
 
@@ -142,103 +154,92 @@
         </div>
     </div>
 
-    <!-- DASHBOARD -->
-    <div class="dash-container">
+    <div id="area-dash" class="dash-container hidden">
         <div class="dash-header">
             <h2>📊 Dashboard de Auditoria</h2>
-            <button class="btn btn-outline" style="padding: 8px 16px;" onclick="acessoRestritoDash()">🔓 Acessar Dash</button>
+            <button class="btn btn-outline" style="padding: 8px 16px;" onclick="document.getElementById('area-dash').classList.add('hidden')">✕ Fechar</button>
         </div>
 
-        <div id="area-dash" class="hidden">
+        <div class="d-filter-row">
+            <select id="filtroUnidade"><option value="">Todas as unidades</option></select>
+            <select id="filtroCategoria"><option value="">Todas as categorias</option></select>
+            <button class="d-refresh-btn" onclick="carregarDadosDash()">🔄 Atualizar</button>
+        </div>
+        <div class="d-status-bar">
+            <span id="statusDashTxt">Aguardando dados...</span>
+            <span id="statusDashAtt"></span>
+        </div>
 
-            <!-- Filtros e status -->
-            <div class="d-filter-row">
-                <select id="filtroUnidade"><option value="">Todas as unidades</option></select>
-                <select id="filtroCategoria"><option value="">Todas as categorias</option></select>
-                <button class="d-refresh-btn" onclick="carregarDadosDash()">🔄 Atualizar</button>
+        <div class="d-section-label">Visão Geral</div>
+        <div class="d-metric-grid">
+            <div class="d-metric-card">
+                <div class="d-metric-label">Registros totais</div>
+                <div class="d-metric-value" id="mTotal">—</div>
+                <div class="d-metric-sub">itens enviados</div>
             </div>
-            <div class="d-status-bar">
-                <span id="statusDashTxt">Aguardando dados...</span>
-                <span id="statusDashAtt"></span>
+            <div class="d-metric-card">
+                <div class="d-metric-label">Unidades ativas</div>
+                <div class="d-metric-value d-metric-ok" id="mAtivas">—</div>
+                <div class="d-metric-sub">com envio registrado</div>
             </div>
+            <div class="d-metric-card">
+                <div class="d-metric-label">Sem envio ⚠️</div>
+                <div class="d-metric-value d-metric-danger" id="mSemEnvio">—</div>
+                <div class="d-metric-sub">precisam de atenção</div>
+            </div>
+            <div class="d-metric-card">
+                <div class="d-metric-label">Responsáveis</div>
+                <div class="d-metric-value d-metric-warn" id="mResp">—</div>
+                <div class="d-metric-sub">colaboradores únicos</div>
+            </div>
+        </div>
 
-            <!-- Métricas -->
-            <div class="d-section-label">Visão Geral</div>
-            <div class="d-metric-grid">
-                <div class="d-metric-card">
-                    <div class="d-metric-label">Registros totais</div>
-                    <div class="d-metric-value" id="mTotal">—</div>
-                    <div class="d-metric-sub">itens enviados</div>
+        <div class="d-charts-row">
+            <div class="d-chart-card">
+                <div class="d-chart-title">Itens por unidade</div>
+                <div class="d-legend-row">
+                    <span><span class="d-legend-dot" style="background:#2563eb;"></span>Quantidade de registros</span>
                 </div>
-                <div class="d-metric-card">
-                    <div class="d-metric-label">Unidades ativas</div>
-                    <div class="d-metric-value d-metric-ok" id="mAtivas">—</div>
-                    <div class="d-metric-sub">com envio registrado</div>
-                </div>
-                <div class="d-metric-card">
-                    <div class="d-metric-label">Sem envio ⚠️</div>
-                    <div class="d-metric-value d-metric-danger" id="mSemEnvio">—</div>
-                    <div class="d-metric-sub">precisam de atenção</div>
-                </div>
-                <div class="d-metric-card">
-                    <div class="d-metric-label">Responsáveis</div>
-                    <div class="d-metric-value d-metric-warn" id="mResp">—</div>
-                    <div class="d-metric-sub">colaboradores únicos</div>
-                </div>
-            </div>
-
-            <!-- Gráficos -->
-            <div class="d-charts-row">
-                <div class="d-chart-card">
-                    <div class="d-chart-title">Itens por unidade</div>
-                    <div class="d-legend-row">
-                        <span><span class="d-legend-dot" style="background:#2563eb;"></span>Quantidade de registros</span>
-                    </div>
-                    <div style="position:relative; height:220px;">
-                        <canvas id="graficoUnidades" role="img" aria-label="Gráfico de barras horizontais com quantidade de registros por unidade">Dados de estoque por unidade.</canvas>
-                    </div>
-                </div>
-                <div class="d-chart-card">
-                    <div class="d-chart-title">Distribuição por categoria</div>
-                    <div id="legendCategoria" class="d-legend-row"></div>
-                    <div style="position:relative; height:220px;">
-                        <canvas id="graficoCategoria" role="img" aria-label="Gráfico de rosca com distribuição por categoria de material">Distribuição de categorias de material.</canvas>
-                    </div>
+                <div style="position:relative; height:220px;">
+                    <canvas id="graficoUnidades"></canvas>
                 </div>
             </div>
-
-            <!-- Cobertura por unidade -->
-            <div class="d-section-label">Cobertura por unidade</div>
-            <div class="d-units-grid" id="unitsGrid"></div>
-
-            <!-- Tabela detalhamento -->
-            <div class="d-section-label">Detalhamento de registros</div>
-            <div class="d-table-card">
-                <table class="d-table">
-                    <thead>
-                        <tr>
-                            <th>Unidade</th>
-                            <th>Responsável</th>
-                            <th>Produto</th>
-                            <th>Qtd</th>
-                            <th>Categoria</th>
-                            <th>Observação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyDetalhe">
-                        <tr><td colspan="6" class="d-empty">Carregue os dados para visualizar</td></tr>
-                    </tbody>
-                </table>
+            <div class="d-chart-card">
+                <div class="d-chart-title">Distribuição por categoria</div>
+                <div id="legendCategoria" class="d-legend-row"></div>
+                <div style="position:relative; height:220px;">
+                    <canvas id="graficoCategoria"></canvas>
+                </div>
             </div>
+        </div>
 
-        </div><!-- /area-dash -->
-    </div><!-- /dash-container -->
+        <div class="d-section-label">Cobertura por unidade</div>
+        <div class="d-units-grid" id="unitsGrid"></div>
+
+        <div class="d-section-label">Detalhamento de registros</div>
+        <div class="d-table-card">
+            <table class="d-table">
+                <thead>
+                    <tr>
+                        <th>Unidade</th>
+                        <th>Responsável</th>
+                        <th>Produto</th>
+                        <th>Qtd</th>
+                        <th>Categoria</th>
+                        <th>Observação</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyDetalhe">
+                    <tr><td colspan="6" class="d-empty">Carregue os dados para visualizar</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="footer">Elielton Souza © 2026</div>
-</div><!-- /home -->
+</div>
 
 
-<!-- ===================== APP (Contagem / Pedido) ===================== -->
 <div id="app" class="hidden">
     <div class="container">
         <button class="btn btn-outline" style="margin-bottom:20px; padding: 8px 16px;" onclick="voltar()">← Voltar</button>
@@ -306,13 +307,9 @@
             📥 FINALIZAR E SINCRONIZAR
         </button>
     </div>
-</div><!-- /app -->
-
+</div>
 
 <script>
-    /* =========================================================
-       CONFIGURAÇÕES
-    ========================================================= */
     const SENHA_DASH = "1234";
     const URL_API = "https://script.google.com/macros/s/AKfycbwDg74_WmWJoqFu2tyz55KkaqlKj-dxhxXrsLJQ-IB6emip9KVkEKoGrH8KQjE6QLoMtg/exec";
 
@@ -331,9 +328,6 @@
         'NÃO LISTADO': '#64748b'
     };
 
-    /* =========================================================
-       BASE DE PRODUTOS
-    ========================================================= */
     const BASE_PRODUTOS = [
         { material: "DIDÁTICO", nome: "Agôgo", medida: "Unidade" },
         { material: "DIDÁTICO", nome: "Agulha de mão nº 05", medida: "Pacote" },
@@ -717,18 +711,12 @@
         { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Vasilhames de plástico grande", medida: "Unidade" }
     ];
 
-    /* =========================================================
-       ESTADO DO APP
-    ========================================================= */
     let itens = [];
     let tipo = "contagem";
     let chartUnidades = null;
     let chartCategoria = null;
     let dadosGlobais = [];
 
-    /* =========================================================
-       HOME / NAVEGAÇÃO
-    ========================================================= */
     function acessoRestritoDash() {
         let senha = prompt("Acesso restrito. Digite a senha:");
         if (senha === SENHA_DASH) {
@@ -752,9 +740,6 @@
         document.getElementById("app").classList.add("hidden");
     }
 
-    /* =========================================================
-       DASHBOARD
-    ========================================================= */
     async function carregarDadosDash() {
         document.getElementById('statusDashTxt').textContent = '⏳ Sincronizando dados...';
         try {
@@ -834,7 +819,6 @@
         const resumo = {};
         dados.forEach(d => { resumo[d.unidade] = (resumo[d.unidade] || 0) + 1; });
         const sorted = Object.entries(resumo).sort((a, b) => b[1] - a[1]);
-
         if (chartUnidades) chartUnidades.destroy();
         const ctx = document.getElementById('graficoUnidades').getContext('2d');
         chartUnidades = new Chart(ctx, {
@@ -845,17 +829,12 @@
                     label: 'Registros',
                     data: sorted.map(e => e[1]),
                     backgroundColor: '#2563eb',
-                    borderRadius: 4,
-                    borderSkipped: false
+                    borderRadius: 4
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: 'rgba(100,116,139,0.1)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
-                    y: { grid: { display: false }, ticks: { color: '#475569', font: { size: 11 } } }
-                }
+                plugins: { legend: { display: false } }
             }
         });
     }
@@ -869,36 +848,12 @@
         const labels = Object.keys(resumo);
         const values = Object.values(resumo);
         const cores = labels.map(l => CORES_CAT[l] || '#64748b');
-        const total = values.reduce((a, b) => a + b, 0);
-
-        document.getElementById('legendCategoria').innerHTML = labels.map((l, i) =>
-            `<span><span class="d-legend-dot" style="background:${cores[i]}"></span>${l} ${Math.round(values[i] / total * 100)}%</span>`
-        ).join('');
-
         if (chartCategoria) chartCategoria.destroy();
         const ctx = document.getElementById('graficoCategoria').getContext('2d');
         chartCategoria = new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: cores,
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, cutout: '62%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (c) => ` ${c.label}: ${c.raw} (${Math.round(c.raw / total * 100)}%)`
-                        }
-                    }
-                }
-            }
+            data: { labels, datasets: [{ data: values, backgroundColor: cores }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false } } }
         });
     }
 
@@ -909,64 +864,30 @@
             resumo[d.unidade] = (resumo[d.unidade] || 0) + 1;
             ultResp[d.unidade] = d.responsavel;
         });
-        const max = Math.max(...Object.values(resumo), 1);
-
         document.getElementById('unitsGrid').innerHTML = TODAS_UNIDADES.map(u => {
             const count = resumo[u] || 0;
             const resp = ultResp[u] || 'Sem envio';
-            const pct = Math.round(count / max * 100);
             const cor = count === 0 ? '#dc2626' : count < 5 ? '#d97706' : '#16a34a';
-            const badge = count === 0
-                ? '<span class="d-badge d-badge-red">Sem envio</span>'
-                : count < 5
-                    ? '<span class="d-badge d-badge-amber">Poucos itens</span>'
-                    : '<span class="d-badge d-badge-green">OK</span>';
             return `<div class="d-unit-pill">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px;margin-bottom:4px;">
-                    <div class="d-unit-name" title="${u}">${u}</div>
-                    ${badge}
-                </div>
+                <div class="d-unit-name">${u}</div>
                 <div class="d-unit-count" style="color:${cor}">${count}</div>
                 <div class="d-unit-resp">${resp}</div>
-                <div class="d-bar-mini"><div class="d-bar-fill" style="width:${pct}%;background:${cor}"></div></div>
             </div>`;
         }).join('');
     }
 
     function renderTabelaDetalhe(dados) {
         const tb = document.getElementById('tbodyDetalhe');
-        if (!dados.length) {
-            tb.innerHTML = '<tr><td colspan="6" class="d-empty">Nenhum registro encontrado</td></tr>';
-            return;
-        }
-        const catClass = {
-            'DIDÁTICO': 'd-badge-blue',
-            'EXPEDIENTE': 'd-badge-green',
-            'LIMPEZA/DESCARTÁVEIS': 'd-badge-amber',
-            'UTENSÍLIOS DOMÉSTICOS': 'd-badge-red',
-            'NÃO LISTADO': ''
-        };
-        tb.innerHTML = dados.slice(0, 200).map(d => {
-            const cat = d.material || 'NÃO LISTADO';
-            return `<tr>
-                <td><strong style="font-weight:600">${d.unidade}</strong></td>
-                <td style="color:#64748b">${d.responsavel}</td>
-                <td>${d.produto}</td>
-                <td style="font-weight:600">${d.quantidade}</td>
-                <td><span class="d-badge ${catClass[cat] || ''}">${cat}</span></td>
-                <td style="color:#94a3b8;font-size:12px">${d.observacao || '—'}</td>
-            </tr>`;
-        }).join('');
-        if (dados.length > 200) {
-            tb.innerHTML += `<tr><td colspan="6" style="text-align:center;font-size:12px;color:#94a3b8;padding:10px">
-                +${dados.length - 200} registros não exibidos. Use os filtros para refinar.
-            </td></tr>`;
-        }
+        tb.innerHTML = dados.slice(0, 200).map(d => `<tr>
+            <td><strong>${d.unidade}</strong></td>
+            <td>${d.responsavel}</td>
+            <td>${d.produto}</td>
+            <td>${d.quantidade}</td>
+            <td>${d.material || 'NÃO LISTADO'}</td>
+            <td>${d.observacao || '—'}</td>
+        </tr>`).join('');
     }
 
-    /* =========================================================
-       APP — FORMULÁRIO
-    ========================================================= */
     function carregarDatalist() {
         const lista = document.getElementById("listaProdutos");
         lista.innerHTML = "";
@@ -982,93 +903,43 @@
         const responsavel = document.getElementById("responsavel").value;
         const produto = document.getElementById("produto").value;
         const qtd = Number(document.getElementById("quantidade").value);
-
-        if (!unidade || !responsavel || !produto || qtd <= 0) {
-            alert("Preencha todos os campos corretamente!");
-            return;
-        }
-
+        if (!unidade || !responsavel || !produto || qtd <= 0) return alert("Preencha tudo!");
         const info = BASE_PRODUTOS.find(p => p.nome === produto);
         itens.unshift({
-            unidade,
-            responsavel,
-            produto,
-            quantidade: qtd,
+            unidade, responsavel, produto, quantidade: qtd,
             material: info ? info.material : "NÃO LISTADO",
             medida: document.getElementById("medida").value,
             observacao: document.getElementById("observacao").value
         });
-
         render();
         document.getElementById("produto").value = "";
         document.getElementById("quantidade").value = "";
-        document.getElementById("observacao").value = "";
-        mostrarToast("✅ Item adicionado!");
     }
 
     function render() {
         let tbody = document.querySelector("#tabela tbody");
-        tbody.innerHTML = "";
-        itens.forEach((item, i) => {
-            tbody.innerHTML += `<tr>
-                <td>${item.unidade}</td>
-                <td>${item.produto}</td>
-                <td>${item.quantidade}</td>
-                <td>${item.observacao || '—'}</td>
-                <td><button class="remover" onclick="itens.splice(${i},1);render()">✕</button></td>
-            </tr>`;
-        });
+        tbody.innerHTML = itens.map((item, i) => `<tr>
+            <td>${item.unidade}</td><td>${item.produto}</td><td>${item.quantidade}</td><td>${item.observacao}</td>
+            <td><button class="remover" onclick="itens.splice(${i},1);render()">✕</button></td>
+        </tr>`).join('');
     }
 
-    function limpar() {
-        if (itens.length === 0) return;
-        if (confirm("Deseja limpar toda a lista?")) {
-            itens = [];
-            render();
-        }
-    }
+    function limpar() { if(confirm("Limpar tudo?")) { itens = []; render(); } }
 
     async function baixarExcel() {
-        if (itens.length === 0) return alert("Adicione itens antes de finalizar!");
-        mostrarToast("🚀 Enviando para a nuvem...");
-
+        if (!itens.length) return;
+        mostrarToast("🚀 Enviando...");
         try {
-            await fetch(URL_API, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(itens)
-            });
-
-            // Gerar backup Excel local
-            const ws = XLSX.utils.json_to_sheet(itens.map(item => ({
-                'Tipo': tipo === 'contagem' ? 'Contagem' : 'Pedido',
-                'Unidade': item.unidade,
-                'Responsável': item.responsavel,
-                'Material': item.material,
-                'Produto': item.produto,
-                'Quantidade': item.quantidade,
-                'Medida': item.medida,
-                'Observação': item.observacao
-            })));
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, tipo === 'contagem' ? 'Contagem' : 'Pedido');
-            const nomeArquivo = `${tipo}_${document.getElementById('unidade').value || 'estoque'}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.xlsx`;
-            XLSX.writeFile(wb, nomeArquivo);
-
-            alert("✅ Dados sincronizados com sucesso! Backup Excel gerado.");
-            itens = [];
-            render();
-            voltar();
-        } catch (e) {
-            alert("❌ Erro na sincronização. Verifique sua conexão.");
-        }
+            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(itens) });
+            alert("✅ Sincronizado!");
+            itens = []; render(); voltar();
+        } catch(e) { alert("❌ Erro conexão."); }
     }
 
     function mostrarToast(msg) {
         let t = document.getElementById("toast");
-        t.innerText = msg;
-        t.style.display = "block";
-        setTimeout(() => { t.style.display = "none"; }, 2500);
+        t.innerText = msg; t.style.display = "block";
+        setTimeout(() => t.style.display = "none", 2500);
     }
 </script>
 </body>
