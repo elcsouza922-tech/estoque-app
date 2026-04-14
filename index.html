@@ -786,11 +786,74 @@
         setTimeout(() => t.style.display = "none", 3000);
     }
 
-    function exportarExcel(t) {
-        const data = db.filter(d => t === 'compras' ? d.tipo === 'pedido' : d.tipo === 'contagem');
-        const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Dados"); XLSX.writeFile(wb, `Relatorio_${t}.xlsx`);
+   function exportarExcel(t) {
+    if (t === 'compras') {
+        const uni = document.getElementById('f-comp-uni').value;
+        const dataF = document.getElementById('f-comp-data').value;
+        
+        let f = db.filter(d => d.tipo === 'pedido');
+        if(uni) f = f.filter(d => d.unidade === uni);
+        if(dataF) f = f.filter(d => d.data.startsWith(dataF));
+
+        // 1. AJUSTE DE CATEGORIA: Transforma "NÃO LISTADO" em "ATÍPICO"
+        f.forEach(p => {
+            if (!p.material || p.material === "NÃO LISTADO") {
+                p.material = "ATÍPICO";
+            }
+        });
+
+        // 2. ORDENAÇÃO: Coloca "ATÍPICO" sempre por último
+        f.sort((a, b) => {
+            if (a.material === "ATÍPICO" && b.material !== "ATÍPICO") return 1;
+            if (a.material !== "ATÍPICO" && b.material === "ATÍPICO") return -1;
+            return a.material.localeCompare(b.material);
+        });
+
+        // 3. MAPEAMENTO (Somente o que você pediu)
+        const dadosSimples = f.map((p, index) => {
+            const qReal = p.quantidadeReal !== undefined ? p.quantidadeReal : 0;
+            const precoUnit = p.precoEditado !== undefined ? p.precoEditado : 0;
+
+            return {
+                "ORDEM": index + 1,
+                "DESCRIÇÃO DO ITEM": p.produto,
+                "UNID.": p.medida || p.Medida || "Unid",
+                "QUANTIDADE": qReal,
+                "OBSERVAÇÃO": p.observacao || "",
+                "VALOR UNIT.": precoUnit,
+                "TOTAL": qReal * precoUnit,
+                "CATEGORIA": p.material // Mantive apenas para você conferir o agrupamento
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(dadosSimples);
+
+        // 4. LARGURA DAS COLUNAS
+        ws['!cols'] = [
+            { wch: 8 },  // ORDEM
+            { wch: 50 }, // DESCRIÇÃO
+            { wch: 10 }, // UNID.
+            { wch: 12 }, // QUANTIDADE
+            { wch: 35 }, // OBSERVAÇÃO
+            { wch: 15 }, // VALOR UNIT.
+            { wch: 15 }, // TOTAL
+            { wch: 15 }  // CATEGORIA
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Protocolo_Entrega");
+        const dataHoje = new Date().toLocaleDateString().replace(/\//g, '-');
+        XLSX.writeFile(wb, `Protocolo_${uni || 'Rede'}_${dataHoje}.xlsx`);
+
+    } else {
+        // Lógica para aba estoque (mantém o padrão)
+        const data = db.filter(d => d.tipo === 'contagem');
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Estoque");
+        XLSX.writeFile(wb, "Relatorio_Estoque.xlsx");
     }
+}
 
     window.onload = function () {
         const ultimaAba = localStorage.getItem('abaAtual');
