@@ -141,7 +141,6 @@
     const URL_API = "https://script.google.com/macros/s/AKfycbzfjrzu43dB5hP-xAtDfrgWJJBrBzKXJbblMZd8pbwVMx4gyRhuCEwsx_BzjE5FEIO48A/exec"; 
     const SENHA_DASH = "1234";
     const TODAS_UNIDADES = ['ANDORINHAS','BELA VISTA','BONFIM','CENTRO','CONQUISTA','CONSOLAÇÃO','CARATOÍRA','ITARARÉ','JARDIM CAMBURI','JARDIM DA PENHA','MARIA ORTIZ','QUADRO','ROMÃO','NOVA PALESTINA','SANTO ANDRÉ','SANTO ANTONIO','SÃO PEDRO','JABURU','NISP JABURU','SOLON BORGES','PRAIA DO SUÁ'];
-
     const BASE_PRODUTOS = [
        { material: "DIDÁTICO", nome: "Agôgo", Medida: "Unidade", preco: 250.00},
 { material: "DIDÁTICO", nome: "Agulha de mão nº 05", Medida: "Pacote", preco: 29.99},
@@ -588,6 +587,19 @@
         } catch(e) { alert("Erro ao enviar."); }
     }
 
+    function limparCamposFormulario() {
+        document.getElementById('responsavel').value = "";
+        document.getElementById('unidade').selectedIndex = 0;
+        document.getElementById('produto').value = "";
+        document.getElementById('quantidade').value = "";
+        document.getElementById('observacao').value = "";
+        document.getElementById('medida').selectedIndex = 0;
+        itensLocal = [];
+        document.getElementById('tbodyPreview').innerHTML = "";
+        document.getElementById('tblPreview').classList.add('hidden');
+        document.getElementById('btn-enviar').classList.add('hidden');
+    }
+
     async function syncDados() {
         try { const r = await fetch(URL_API + "?t=" + Date.now()); db = await r.json(); popularFiltros(); renderDash(); renderCompras(); renderEstoque(); } catch(e) { console.error("Erro sincronia"); }
     }
@@ -599,51 +611,91 @@ function voltarParaHome() {
     }
 }
     
-    function renderCompras() {
-        const uni = document.getElementById('f-comp-uni').value;
-        const dataF = document.getElementById('f-comp-data').value;
-        const tbody = document.getElementById('tbody-compras');
-        let f = db.filter(d => d.tipo === 'pedido');
-        if(uni) f = f.filter(d => d.unidade === uni);
-        if(dataF) f = f.filter(d => d.data.startsWith(dataF));
+   function renderCompras() {
+    const uni = document.getElementById('f-comp-uni').value;
+    const dataF = document.getElementById('f-comp-data').value;
+    const tbody = document.getElementById('tbody-compras');
+    
+    // Filtra apenas os registros do tipo 'pedido'
+    let f = db.filter(d => d.tipo === 'pedido');
+    if(uni) f = f.filter(d => d.unidade === uni);
+    if(dataF) f = f.filter(d => d.data.startsWith(dataF));
+    
+    tbody.innerHTML = f.map(p => {
+        // Busca o saldo da última contagem realizada para este produto nesta unidade
+        const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
+        const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
         
-        tbody.innerHTML = f.map(p => {
-            const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
-            const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-            return `<tr>
-                <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
-                <td>${p.medida}</td><td class="q-orig">${p.quantidade}</td>
-                <td><span class="badge-estoque">${ult ? ult.quantidade : 0} em estoque</span></td>
-                <td><input type="number" class="input-compra q-real" value="${p.quantidade}" oninput="calcCompras()"></td>
-                <td><input type="text" class="input-compra p-unit" placeholder="0,00" onblur="formatMoeda(this)" oninput="calcCompras()"></td>
-                <td class="sub-real">R$ 0,00</td>
-            </tr>`;
-        }).join('');
-        calcCompras();
+        // Busca o preço nativo na Base de Dados
+        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+        const precoSugerido = infoBase ? infoBase.preco : 0;
+
+        return `<tr>
+            <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
+            <td>${p.medida}</td>
+            <td class="q-orig">${p.quantidade}</td>
+            <td><span class="badge-estoque">${ult ? ult.quantidade : 0} em estoque</span></td>
+            <td><input type="number" class="input-compra q-real" value="${p.quantidade}" oninput="calcCompras()"></td>
+            <td><input type="text" class="input-compra p-unit" value="${precoSugerido.toFixed(2).replace('.',',')}" onblur="formatMoeda(this)" oninput="calcCompras()"></td>
+            <td class="sub-real">R$ 0,00</td>
+        </tr>`;
+    }).join('');
+    calcCompras();
+}
+
+function calcCompras() {
+    let totalOrig = 0; 
+    let totalReal = 0;
+    
+    document.querySelectorAll('#tbody-compras tr').forEach(tr => {
+        const pUnit = parseFloat(tr.querySelector('.p-unit').value.replace(',','.')) || 0;
+        const qOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
+        const qReal = parseFloat(tr.querySelector('.q-real').value) || 0;
+        
+        totalOrig += (qOrig * pUnit);
+        totalReal += (qReal * pUnit);
+        
+        tr.querySelector('.sub-real').innerText = (qReal * pUnit).toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+    });
+
+    // Atualiza os campos de resumo no rodapé da aba Compras
+    document.getElementById('total-orig-filtro').innerText = totalOrig.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+    document.getElementById('total-real-filtro').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+    
+    // Atualiza o Valor Rede no Topo
+    document.getElementById('topo-rede-total').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+}
+
+  function renderDash() {
+    // 1. LÓGICA DE UNIDADES PENDENTES (Mês Atual)
+    const mesAtual = new Date().toISOString().slice(0,7); // Formato YYYY-MM
+    
+    // Lista unidades que já enviaram pelo menos um dado este mês
+    const enviaram = [...new Set(db.filter(d => d.data.startsWith(mesAtual)).map(d => d.unidade))];
+    
+    // Filtra quem falta
+    const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u));
+    
+    // Renderiza os balões vermelhos de pendência
+    const containerFaltantes = document.getElementById('faltantes-lista');
+    if (faltam.length === 0) {
+        containerFaltantes.innerHTML = '<span style="color:var(--success); font-weight:bold;">✅ Todas as unidades enviaram os dados!</span>';
+    } else {
+        containerFaltantes.innerHTML = faltam.map(u => `
+            <span style="background:#fee2e2; color:#b91c1c; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; border:1px solid #fecaca;">
+                ${u}
+            </span>
+        `).join('');
     }
 
-    function calcCompras() {
-        let totalOrig = 0; let totalReal = 0;
-        document.querySelectorAll('#tbody-compras tr').forEach(tr => {
-            const pUnit = parseFloat(tr.querySelector('.p-unit').value.replace(',','.')) || 0;
-            const qOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
-            const qReal = parseFloat(tr.querySelector('.q-real').value) || 0;
-            totalOrig += (qOrig * pUnit); totalReal += (qReal * pUnit);
-            tr.querySelector('.sub-real').innerText = (qReal * pUnit).toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-        });
-        document.getElementById('total-orig-filtro').innerText = totalOrig.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-        document.getElementById('total-real-filtro').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-        document.getElementById('topo-rede-total').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-        document.getElementById('dash-orig-total').innerText = totalOrig.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-        document.getElementById('dash-real-total').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-    }
-
-    function renderDash() {
-        const mes = new Date().toISOString().slice(0,7);
-        const env = [...new Set(db.filter(d => d.data.startsWith(mes)).map(d => d.unidade))];
-        const faltam = TODAS_UNIDADES.filter(u => !env.includes(u));
-        document.getElementById('faltantes-lista').innerHTML = faltam.map(u => `<span style="background:#fee2e2; color:#b91c1c; padding:5px 10px; border-radius:15px; font-size:11px; font-weight:bold;">${u}</span>`).join('');
-    }
+    // 2. TOTAIS FINANCEIROS NO DASHBOARD
+    // Puxa os valores calculados na aba Compras para exibição nos cards principais do Dash
+    const valorOriginalRede = document.getElementById('total-orig-filtro').innerText;
+    const valorRealRede = document.getElementById('total-real-filtro').innerText;
+    
+    document.getElementById('dash-orig-total').innerText = valorOriginalRede;
+    document.getElementById('dash-real-total').innerText = valorRealRede;
+}
 
     function renderEstoque() {
         const uni = document.getElementById('f-est-uni').value; const cat = document.getElementById('f-est-cat').value;
@@ -664,21 +716,6 @@ function voltarParaHome() {
     function mostrarToast(m) { let t = document.getElementById('toast'); t.innerText = m; t.style.display="block"; setTimeout(()=>t.style.display="none", 3000); }
     function exportarExcel(t) { const data = db.filter(d => t === 'compras' ? d.tipo === 'pedido' : d.tipo === 'contagem'); const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados"); XLSX.writeFile(wb, `Relatorio_${t}.xlsx`); }
 
-    function limparCamposFormulario() {
-    // Limpa os inputs de texto e número
-    document.getElementById('responsavel').value = "";
-    document.getElementById('unidade').selectedIndex = 0;
-    document.getElementById('produto').value = "";
-    document.getElementById('quantidade').value = "";
-    document.getElementById('observacao').value = "";
-    document.getElementById('medida').selectedIndex = 0;
-    
-    // Limpa a lista temporária e esconde a tabela de preview
-    itensLocal = [];
-    document.getElementById('tbodyPreview').innerHTML = "";
-    document.getElementById('tblPreview').classList.add('hidden');
-    document.getElementById('btn-enviar').classList.add('hidden');
-}
 
 </script>
 </body>
