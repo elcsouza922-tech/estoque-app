@@ -546,13 +546,13 @@
         return parseFloat(String(str).replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
     }
 
-    function salvarEdicao(index, campo, valor) {
-        if (campo === 'precoEditado') {
-            db[index][campo] = parseMoedaBR(valor);
-        } else {
-            db[index][campo] = parseFloat(valor) || 0;
-        }
-    }
+   function salvarEdicao(index, campo, valor) {
+    // Se o valor for texto (preço), trata a moeda. Se for número (quantidade), converte pra float.
+    const num = campo === 'precoEditado' ? parseMoedaBR(valor) : parseFloat(valor) || 0;
+    
+    // Grava permanentemente na memória do app (enquanto não der F5)
+    db[index][campo] = num;
+}
 
     function switchSection(id, btn) {
         document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
@@ -640,34 +640,50 @@
         }
     }
 
-    function renderCompras() {
-        const uni = document.getElementById('f-comp-uni').value;
-        const dataF = document.getElementById('f-comp-data').value;
-        const tbody = document.getElementById('tbody-compras');
-        let f = db.filter(d => d.tipo === 'pedido');
-        if(uni) f = f.filter(d => d.unidade === uni);
-        if(dataF) f = f.filter(d => d.data && d.data.startsWith(dataF));
+   function renderCompras() {
+    const uni = document.getElementById('f-comp-uni').value;
+    const dataF = document.getElementById('f-comp-data').value;
+    const tbody = document.getElementById('tbody-compras');
+    
+    let f = db.filter(d => d.tipo === 'pedido');
+    if(uni) f = f.filter(d => d.unidade === uni);
+    if(dataF) f = f.filter(d => d.data.startsWith(dataF));
+    
+    tbody.innerHTML = f.map(p => {
+        // Pega o índice real do item no banco principal
+        const idxOriginal = db.indexOf(p);
         
-        tbody.innerHTML = f.map(p => {
-            const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
-            const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-            const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-            const precoSugerido = infoBase ? infoBase.preco : 0;
-            const qReal = p.quantidadeReal !== undefined ? p.quantidadeReal : 0;
-            const pReal = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
+        const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
+        const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
+        
+        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+        const precoSugerido = infoBase ? infoBase.preco : 0;
 
-            return `<tr>
-                <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
-                <td>${p.Medida || p.medida || "Unidade"}</td>
-                <td class="q-orig">${p.quantidade}</td>
-                <td><div class="badge-estoque" style="width: 50px; text-align: center; border: 1px solid #2563eb; background: white; color: #2563eb; padding:5px; border-radius:8px;">${ult ? ult.quantidade : 0}</div></td>
-                <td><input type="number" class="input-compra q-real" value="${qReal}" oninput="salvarEdicao(${db.indexOf(p)}, 'quantidadeReal', this.value); calcCompras()"></td>
-                <td><input type="text" class="input-compra p-unit" value="${pReal.toFixed(2).replace('.', ',')}" oninput="salvarEdicao(${db.indexOf(p)}, 'precoEditado', this.value); calcCompras()" onblur="formatMoeda(this)"></td>
-                <td class="sub-real" style="font-weight:bold; color:#16a34a">R$ 0,00</td>
-            </tr>`;
-        }).join('');
-        calcCompras();
-    }
+        // Recupera o que foi digitado anteriormente ou deixa 0
+        const qReal = p.quantidadeReal !== undefined ? p.quantidadeReal : 0;
+        const pReal = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
+
+        return `<tr>
+            <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
+            <td>${p.Medida || p.medida || "Unidade"}</td>
+            <td class="q-orig">${p.quantidade}</td>
+            <td><div class="badge-estoque" style="width: 50px; text-align: center; border: 1px solid #2563eb; background: white; color: #2563eb; padding:5px; border-radius:8px;">${ult ? ult.quantidade : 0}</div></td>
+            <td>
+                <input type="number" class="input-compra q-real" 
+                    value="${qReal}" 
+                    oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
+            </td>
+            <td>
+                <input type="text" class="input-compra p-unit" 
+                    value="${pReal.toFixed(2).replace('.', ',')}" 
+                    oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()" 
+                    onblur="formatMoeda(this)">
+            </td>
+            <td class="sub-real" style="font-weight:bold; color:#16a34a">R$ 0,00</td>
+        </tr>`;
+    }).join('');
+    calcCompras();
+}
 
     function calcCompras() {
         let tOrig = 0, tReal = 0;
