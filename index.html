@@ -115,7 +115,16 @@
                 <input type="month" id="f-comp-data" onchange="renderCompras()">
                 <button class="btn btn-outline" onclick="exportarExcel('compras')" style="margin-top:19px;">📥 Exportar</button>
             </div>
-            <table><thead><tr><th>Produto</th><th>Medida</th><th>Pedido Original</th><th>Última Contagem</th><th>Compra Real</th><th>Preço Unit.</th><th>Subtotal Real</th></tr></thead><tbody id="tbody-compras"></tbody></table>
+            <thead>
+    <tr>
+        <th>PRODUTO</th>
+        <th>MEDIDA</th>
+        <th>PEDIDO ORIGINAL</th>
+        <th>ÚLTIMA CONTAGEM</th>
+        <th>COMPRA REAL</th>
+        <th>PREÇO UNIT.</th>
+    </tr>
+</thead>
             <div style="margin-top:20px; display: flex; justify-content: flex-end; gap: 40px; border-top: 2px solid #eee; padding-top: 15px;">
                 <div style="text-align: right;"><label>TOTAL ORIGINAL:</label><div id="total-orig-filtro" style="font-weight:800; font-size:20px;">R$ 0,00</div></div>
                 <div style="text-align: right;"><label>TOTAL REAL:</label><div id="total-real-filtro" style="font-weight:800; font-size:20px; color:var(--success)">R$ 0,00</div></div>
@@ -682,7 +691,7 @@ const dataParaExcel = itensLocal.map(item => ({
         }
     }
 
-  function renderCompras() {
+ function renderCompras() {
     const uni = document.getElementById('f-comp-uni').value;
     const dataF = document.getElementById('f-comp-data').value;
     const tbody = document.getElementById('tbody-compras');
@@ -692,10 +701,16 @@ const dataParaExcel = itensLocal.map(item => ({
     if(dataF) f = f.filter(d => d.data.startsWith(dataF));
     
     tbody.innerHTML = f.map(p => {
+        // 1. Busca a contagem para a coluna "Última Contagem"
+        const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
+        const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
+        const qtdUltContagem = ult ? ult.quantidade : 0;
+
+        // 2. Busca o preço na base
         const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
         const precoSugerido = infoBase ? infoBase.preco : 0;
 
-        // LÓGICA FIXA: Se você digitou algo, mostra. Se não, fica 0 (não puxa o original).
+        // 3. Define os valores de exibição (mantendo fixo o que você digitar)
         const valorParaExibir = p.quantidadeReal !== undefined ? p.quantidadeReal : 0;
         const precoParaExibir = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
 
@@ -703,56 +718,46 @@ const dataParaExcel = itensLocal.map(item => ({
             <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
             <td>${p.Medida || p.medida || "Unidade"}</td>
             <td class="q-orig">${p.quantidade}</td>
+            <td><div class="badge-estoque" style="width: 60px; text-align: center; border: 1px solid #2563eb; padding: 5px; border-radius: 8px; background: white;">${qtdUltContagem}</div></td>
             <td>
                 <input type="number" class="input-compra q-real" 
                     value="${valorParaExibir}" 
+                    style="width: 70px;"
                     oninput="salvarEdicao(${db.indexOf(p)}, 'quantidadeReal', this.value); calcCompras()">
             </td>
-            <td>
+            <td class="p-unit-text">
                 <input type="text" class="input-compra p-unit" 
                     value="${precoParaExibir.toFixed(2).replace('.', ',')}" 
+                    style="width: 90px; border:none; background:none; font-weight:bold;"
                     oninput="salvarEdicao(${db.indexOf(p)}, 'precoEditado', this.value); calcCompras()"
                     onblur="formatMoeda(this)">
             </td>
-            <td class="sub-real">R$ 0,00</td>
         </tr>`;
     }).join('');
     calcCompras();
 }
 
-    function calcCompras() {
-        let totalOrig = 0;
-        let totalReal = 0;
+  function calcCompras() {
+    let totalOrig = 0;
+    let totalReal = 0;
 
-        document.querySelectorAll('#tbody-compras tr').forEach(tr => {
-            const precoUnit = parseMoedaBR(tr.querySelector('.p-unit').value);
-            const qtdOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
-            const qtdReal = parseFloat(tr.querySelector('.q-real').value) || 0;
+    document.querySelectorAll('#tbody-compras tr').forEach(tr => {
+        const inputPreco = tr.querySelector('.p-unit');
+        const precoUnit = parseFloat(inputPreco.value.replace('.', '').replace(',', '.')) || 0;
+        const qtdOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
+        const qtdReal = parseFloat(tr.querySelector('.q-real').value) || 0;
 
-            const subtotalReal = qtdReal * precoUnit;
-            totalOrig += qtdOrig * precoUnit;
-            totalReal += subtotalReal;
+        totalOrig += (qtdOrig * precoUnit);
+        totalReal += (qtdReal * precoUnit);
+    });
 
-            const celulaSubtotal = tr.querySelector('.sub-real');
-            if (celulaSubtotal) {
-                celulaSubtotal.innerText = subtotalReal.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-            }
-        });
-
-        const fmt = v => v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-
-        const elemOrig = document.getElementById('total-orig-filtro');
-        const elemReal = document.getElementById('total-real-filtro');
-        const elemRede = document.getElementById('topo-rede-total');
-        const dashOrig = document.getElementById('dash-orig-total');
-        const dashReal = document.getElementById('dash-real-total');
-
-        if (elemOrig) elemOrig.innerText = fmt(totalOrig);
-        if (elemReal) elemReal.innerText = fmt(totalReal);
-        if (elemRede) elemRede.innerText = fmt(totalReal);
-        if (dashOrig) dashOrig.innerText = fmt(totalOrig);
-        if (dashReal) dashReal.innerText = fmt(totalReal);
-    }
+    // Atualiza os cards de baixo (Igual à sua foto)
+    document.getElementById('total-orig-filtro').innerText = totalOrig.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+    document.getElementById('total-real-filtro').innerText = totalReal.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+    
+    // Atualiza o topo
+    document.getElementById('topo-rede-total').innerText = totalReal.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+}
 
     function renderDash() {
         const mesAtual = new Date().toISOString().slice(0, 7);
