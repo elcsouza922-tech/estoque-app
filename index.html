@@ -561,6 +561,11 @@
         document.getElementById('produto').value = ""; document.getElementById('quantidade').value = "";
     }
 
+    function salvarEdicaoReal(indexNoDb, valorDigitado) {
+    // Localiza o item exato no banco de dados e atualiza a propriedade 'quantidadeReal'
+    db[indexNoDb].quantidadeReal = parseFloat(valorDigitado) || 0;
+}
+
     function renderPreview() {
         const table = document.getElementById('tblPreview'); const tbody = document.getElementById('tbodyPreview');
         table.classList.remove('hidden'); 
@@ -624,25 +629,24 @@ function renderCompras() {
     if(uni) f = f.filter(d => d.unidade === uni);
     if(dataF) f = f.filter(d => d.data.startsWith(dataF));
     
-    tbody.innerHTML = f.map((p, index) => {
+  tbody.innerHTML = f.map(p => {
         const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
         const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
         
-        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-        const precoSugerido = infoBase ? infoBase.preco : 0;
-
-        // Se o item já tiver um valor real editado no banco local, mantém ele, senão usa a quantidade original
-        const valorRealAtual = p.quantidadeReal !== undefined ? p.quantidadeReal : p.quantidade;
+        // Se já existe uma edição, usa ela. Se não, usa a quantidade original do pedido.
+        const valorExibicao = p.quantidadeReal !== undefined ? p.quantidadeReal : p.quantidade;
 
         return `<tr>
-            <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
+            <td><strong>${p.produto}</strong></td>
             <td>${p.medida}</td>
             <td class="q-orig">${p.quantidade}</td>
             <td><span class="badge-estoque">${ult ? ult.quantidade : 0} em estoque</span></td>
-            <td><input type="number" class="input-compra q-real" value="${valorRealAtual}" 
-                oninput="atualizarValorNoBanco(${db.indexOf(p)}, this.value); calcCompras()"></td>
-            <td><input type="text" class="input-compra p-unit" value="${precoSugerido.toFixed(2).replace('.',',')}" 
-                onblur="formatMoeda(this)" oninput="calcCompras()"></td>
+            <td>
+                <input type="number" class="input-compra q-real" 
+                    value="${valorExibicao}" 
+                    oninput="salvarEdicaoReal(${db.indexOf(p)}, this.value); calcCompras()">
+            </td>
+            <td><input type="text" class="input-compra p-unit" value="0,00" oninput="calcCompras()"></td>
             <td class="sub-real">R$ 0,00</td>
         </tr>`;
     }).join('');
@@ -655,28 +659,76 @@ function atualizarValorNoBanco(index, valor) {
 }
 
 function calcCompras() {
-    let totalOrig = 0; 
+    let totalOrig = 0;
     let totalReal = 0;
-    
-    document.querySelectorAll('#tbody-compras tr').forEach(tr => {
-        const pUnit = parseFloat(tr.querySelector('.p-unit').value.replace(',','.')) || 0;
-        const qOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
-        const qReal = parseFloat(tr.querySelector('.q-real').value) || 0;
-        
-        totalOrig += (qOrig * pUnit);
-        totalReal += (qReal * pUnit);
-        
-        tr.querySelector('.sub-real').innerText = (qReal * pUnit).toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+
+    // Seleciona todas as linhas da tabela de compras que estão visíveis
+    const linhas = document.querySelectorAll('#tbody-compras tr');
+
+    linhas.forEach(tr => {
+        // 1. Captura o Preço Unitário (trata vírgula e ponto)
+        const inputPreco = tr.querySelector('.p-unit');
+        const precoUnit = parseFloat(inputPreco.value.replace('.', '').replace(',', '.')) || 0;
+
+        // 2. Captura a Quantidade Original (texto da célula)
+        const qtdOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
+
+        // 3. Captura a Quantidade Real (valor do input editável)
+        const qtdReal = parseFloat(tr.querySelector('.q-real').value) || 0;
+
+        // 4. Cálculos de Subtotais
+        const subtotalOriginal = qtdOrig * precoUnit;
+        const subtotalReal = qtdReal * precoUnit;
+
+        // 5. Acumula os Totais
+        totalOrig += subtotalOriginal;
+        totalReal += subtotalReal;
+
+        // 6. Atualiza o Subtotal visível na linha (apenas o Real para auditoria)
+        const celulaSubtotal = tr.querySelector('.sub-real');
+        if (celulaSubtotal) {
+            celulaSubtotal.innerText = subtotalReal.toLocaleString('pt-br', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
     });
 
-    // Atualiza os campos de resumo no rodapé da aba Compras
-    document.getElementById('total-orig-filtro').innerText = totalOrig.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-    document.getElementById('total-real-filtro').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+    // --- ATUALIZAÇÃO DOS CAMPOS DE RESUMO (FIM DA PÁGINA) ---
     
-    // Atualiza o Valor Rede no Topo
-    document.getElementById('topo-rede-total').innerText = totalReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
-}
+    const elemTotalOrig = document.getElementById('total-orig-filtro');
+    const elemTotalReal = document.getElementById('total-real-filtro');
 
+    if (elemTotalOrig) {
+        elemTotalOrig.innerText = totalOrig.toLocaleString('pt-br', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    }
+
+    if (elemTotalReal) {
+        elemTotalReal.innerText = totalReal.toLocaleString('pt-br', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    }
+
+    // --- ATUALIZAÇÃO DO VALOR REDE (TOPO DA PÁGINA) ---
+    // Este valor mostra o consolidado do que foi auditado (Total Real)
+    const elemRedeTotal = document.getElementById('topo-rede-total');
+    if (elemRedeTotal) {
+        elemRedeTotal.innerText = totalReal.toLocaleString('pt-br', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    }
+    
+    // Opcional: Atualiza também os cards do Dash se estiverem carregados
+    const dashOrig = document.getElementById('dash-orig-total');
+    const dashReal = document.getElementById('dash-real-total');
+    if (dashOrig) dashOrig.innerText = totalOrig.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+    if (dashReal) dashReal.innerText = totalReal.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+}
   function renderDash() {
     // 1. LÓGICA DE UNIDADES PENDENTES (Mês Atual)
     const mesAtual = new Date().toISOString().slice(0,7); // Formato YYYY-MM
