@@ -575,25 +575,40 @@
         dl.innerHTML = BASE_PRODUTOS.map(p => `<option value="${p.nome}">`).join('');
     }
 
-    function adicionarLocal() {
-        const prod = document.getElementById('produto').value;
-        const info = BASE_PRODUTOS.find(p => p.nome === prod);
-        const item = {
-            unidade: document.getElementById('unidade').value,
-            responsavel: document.getElementById('responsavel').value,
-            produto: prod,
-            quantidade: document.getElementById('quantidade').value,
-            material: info ? info.material : "NÃO LISTADO",
-            medida: document.getElementById('medida').value,
-            observacao: document.getElementById('observacao').value,
-            tipo: tipoAtual
-        };
-        if (!item.unidade || !item.produto || !item.quantidade) return alert("Erro! Preencha unidade, produto e quantidade.");
-        itensLocal.push(item);
-        renderPreview();
-        document.getElementById('produto').value = "";
-        document.getElementById('quantidade').value = "";
+function adicionarLocal() {
+    const prodDigitado = document.getElementById('produto').value.trim();
+    
+    // Versão inteligente: remove barras e espaços extras para comparar o nome real
+    const info = BASE_PRODUTOS.find(p => {
+        const nomeLimpoBase = p.nome.replace(/\\/g, "").toLowerCase();
+        const nomeLimpoDigitado = prodDigitado.replace(/\\/g, "").toLowerCase();
+        return nomeLimpoBase === nomeLimpoDigitado;
+    });
+    
+    const item = { 
+        unidade: document.getElementById('unidade').value, 
+        responsavel: document.getElementById('responsavel').value, 
+        produto: prodDigitado, 
+        quantidade: document.getElementById('quantidade').value, 
+        // Usa info.material ou info.Material (previne erro de maiúscula)
+        material: info ? (info.material || info.Material) : "NÃO LISTADO", 
+        // Usa info.Medida ou info.medida
+        Medida: info ? (info.Medida || info.medida) : document.getElementById('medida').value,
+        observacao: document.getElementById('observacao').value, 
+        tipo: tipoAtual 
+    };
+    
+    if(!item.unidade || !item.produto || !item.quantidade) {
+        return alert("Preencha Unidade, Produto e Quantidade!");
     }
+    
+    itensLocal.push(item); 
+    renderPreview();
+    
+    // Limpa apenas os campos de item, mantendo unidade e responsável
+    document.getElementById('produto').value = ""; 
+    document.getElementById('quantidade').value = "";
+}
 
     function renderPreview() {
         const table = document.getElementById('tblPreview');
