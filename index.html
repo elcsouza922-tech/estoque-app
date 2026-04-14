@@ -544,20 +544,23 @@
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    function switchSection(id, btn) {
-        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-        document.getElementById('sec-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        if (btn) btn.classList.add('active');
-        localStorage.setItem('abaAtual', id);
-        if (['dash', 'compras', 'estoque'].includes(id) && db.length === 0) {
-            syncDados();
-        } else {
-            if (id === 'compras') renderCompras();
-            if (id === 'estoque') renderEstoque();
-            if (id === 'dash') renderDash();
-        }
+function switchSection(id, btn) {
+    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('sec-' + id).classList.remove('hidden');
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    
+    localStorage.setItem('abaAtual', id);
+    
+    // SÓ baixa dados da internet se a lista 'db' estiver totalmente vazia
+    if(['dash', 'compras', 'estoque'].includes(id) && db.length === 0) {
+        syncDados();
+    } else {
+        // Se já tem dados na memória, apenas redesenha a tabela com o que você já digitou
+        if(id === 'compras') renderCompras();
+        if(id === 'estoque') renderEstoque();
     }
+}
 
     function acessoRestrito() {
         if (prompt("Senha:") === SENHA_DASH) {
@@ -679,54 +682,43 @@ const dataParaExcel = itensLocal.map(item => ({
         }
     }
 
-    function renderCompras() {
-        const uni = document.getElementById('f-comp-uni').value;
-        const dataF = document.getElementById('f-comp-data').value;
-        const tbody = document.getElementById('tbody-compras');
+  function renderCompras() {
+    const uni = document.getElementById('f-comp-uni').value;
+    const dataF = document.getElementById('f-comp-data').value;
+    const tbody = document.getElementById('tbody-compras');
+    
+    let f = db.filter(d => d.tipo === 'pedido');
+    if(uni) f = f.filter(d => d.unidade === uni);
+    if(dataF) f = f.filter(d => d.data.startsWith(dataF));
+    
+    tbody.innerHTML = f.map(p => {
+        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+        const precoSugerido = infoBase ? infoBase.preco : 0;
 
-        let f = db.filter(d => d.tipo === 'pedido');
-        if (uni) f = f.filter(d => d.unidade === uni);
-        if (dataF) f = f.filter(d => d.data && d.data.startsWith(dataF));
+        // LÓGICA FIXA: Se você digitou algo, mostra. Se não, fica 0 (não puxa o original).
+        const valorParaExibir = p.quantidadeReal !== undefined ? p.quantidadeReal : 0;
+        const precoParaExibir = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
 
-        tbody.innerHTML = f.map(p => {
-            const dbIndex = db.indexOf(p);
-            const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
-            const ult = hist.sort((a, b) => new Date(b.data) - new Date(a.data))[0];
-
-            const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-            const precoSugerido = infoBase ? infoBase.preco : 0;
-
-            // ─── LEITURA DO ESTADO PERSISTIDO ────────────────────────────────
-            // Usa o valor já editado que está em db[]; se nunca editado, usa o original.
-            const qtdReal = p.quantidadeReal !== undefined ? p.quantidadeReal : p.quantidade;
-            const precoUnit = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
-            // ─────────────────────────────────────────────────────────────────
-
-            // Formata preço para exibição no input (ex: 250,00)
-            const precoFormatado = precoUnit.toFixed(2).replace('.', ',');
-
-            return `<tr>
-                <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
-                <td>${p.medida}</td>
-                <td class="q-orig">${p.quantidade}</td>
-                <td><span class="badge-estoque">${ult ? ult.quantidade : 0}</span></td>
-                <td>
-                    <input type="number" class="input-compra q-real"
-                        value="${qtdReal}"
-                        oninput="salvarEdicao(${dbIndex}, 'quantidadeReal', this.value); calcCompras()">
-                </td>
-                <td>
-                    <input type="text" class="input-compra p-unit"
-                        value="${precoFormatado}"
-                        oninput="salvarEdicao(${dbIndex}, 'precoEditado', this.value); calcCompras()"
-                        onblur="formatMoeda(this)">
-                </td>
-                <td class="sub-real">R$ 0,00</td>
-            </tr>`;
-        }).join('');
-
-        calcCompras();
-    }
+        return `<tr>
+            <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
+            <td>${p.Medida || p.medida || "Unidade"}</td>
+            <td class="q-orig">${p.quantidade}</td>
+            <td>
+                <input type="number" class="input-compra q-real" 
+                    value="${valorParaExibir}" 
+                    oninput="salvarEdicao(${db.indexOf(p)}, 'quantidadeReal', this.value); calcCompras()">
+            </td>
+            <td>
+                <input type="text" class="input-compra p-unit" 
+                    value="${precoParaExibir.toFixed(2).replace('.', ',')}" 
+                    oninput="salvarEdicao(${db.indexOf(p)}, 'precoEditado', this.value); calcCompras()"
+                    onblur="formatMoeda(this)">
+            </td>
+            <td class="sub-real">R$ 0,00</td>
+        </tr>`;
+    }).join('');
+    calcCompras();
+}
 
     function calcCompras() {
         let totalOrig = 0;
