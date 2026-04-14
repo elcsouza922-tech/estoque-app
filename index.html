@@ -45,7 +45,7 @@
 <div id="toast"></div>
 
 <nav class="main-nav">
-    <div class="nav-brand">ESTOQUE PRO 2026</div>
+    <div class="nav-brand">ESTOQUE PRO</div>
     <div class="nav-links">
         <div class="nav-item active" id="nav-home" onclick="switchSection('home', this)">🏠 Início</div>
         <div id="admin-links" style="display: none; gap: 10px;">
@@ -53,13 +53,13 @@
             <div class="nav-item" id="nav-compras" onclick="switchSection('compras', this)">🛒 Compras</div>
             <div class="nav-item" id="nav-estoque" onclick="switchSection('estoque', this)">📦 Estoque</div>
         </div>
-        <div class="nav-item" onclick="acessoRestrito()" id="btn-login">🔓 Painel</div>
+        <div class="nav-item" onclick="acessoRestrito()" id="btn-login">🔓 Dash</div>
     </div>
 </nav>
 
 <div class="container">
     <section id="sec-home">
-        <h1 style="text-align: center; margin-top: 40px;">Sistema de Gestão e Auditoria</h1>
+        <h1 style="text-align: center; margin-top: 40px;">Escolha uma opção:</h1>
         <div class="op-grid">
             <div class="op-card" onclick="abrirForm('contagem')">
                 <div style="font-size: 45px; margin-bottom:15px;">📦</div>
@@ -576,26 +576,26 @@
     }
 
 function adicionarLocal() {
-    const prodDigitado = document.getElementById('produto').value.trim();
+    const prodInput = document.getElementById('produto');
+    const prodDigitado = prodInput.value.trim();
     
-    // Busca o produto na base ignorando aspas e maiúsculas
+    // FUNÇÃO DE LIMPEZA CRÍTICA: Remove aspas, barras e espaços para comparar
     const info = BASE_PRODUTOS.find(p => {
-        const nomeLimpoBase = p.nome.replace(/\\/g, "").toLowerCase();
-        const nomeLimpoDigitado = prodDigitado.replace(/\\/g, "").toLowerCase();
-        return nomeLimpoBase === nomeLimpoDigitado;
+        const limpar = (texto) => texto.replace(/["'\\\/]/g, "").toLowerCase().trim();
+        return limpar(p.nome) === limpar(prodDigitado);
     });
     
-    // Captura os dados previnindo erro de maiúscula/minúscula na BASE_PRODUTOS
+    // Captura os dados previnindo erro de Maiúscula/Minúscula (M ou m)
     const materialDetectado = info ? (info.material || info.Material || "NÃO LISTADO") : "NÃO LISTADO";
     const medidaDetectada = info ? (info.medida || info.Medida) : document.getElementById('medida').value;
 
     const item = { 
         unidade: document.getElementById('unidade').value, 
         responsavel: document.getElementById('responsavel').value, 
-        produto: prodDigitado, 
+        produto: info ? info.nome : prodDigitado, // Usa o nome exato da base se achar
         quantidade: document.getElementById('quantidade').value, 
         material: materialDetectado, 
-        medida: medidaDetectada, // Mantemos minúsculo aqui para o Sheets/Excel
+        medida: medidaDetectada, 
         observacao: document.getElementById('observacao').value, 
         tipo: tipoAtual 
     };
@@ -607,8 +607,8 @@ function adicionarLocal() {
     itensLocal.push(item); 
     renderPreview();
     
-    // Limpa apenas os campos do item para agilizar o próximo lançamento
-    document.getElementById('produto').value = ""; 
+    // Limpa campos de item
+    prodInput.value = ""; 
     document.getElementById('quantidade').value = "";
 }
     function renderPreview() {
