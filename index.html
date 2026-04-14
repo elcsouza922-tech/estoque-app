@@ -74,7 +74,7 @@
 
     <section id="sec-form" class="hidden">
         <div class="card" style="max-width: 800px; margin: auto;">
-            <button class="btn btn-outline" onclick="switchSection('home', document.getElementById('nav-home'))" style="margin-bottom: 20px;">← Voltar</button>
+            <button class="btn btn-outline" onclick="voltarParaHome()" style="margin-bottom: 20px;">← Voltar</button>
             <h2 id="form-titulo" style="text-align: center; margin-bottom: 25px;"></h2>
             <div class="form-group">
                 <div><label>Responsável</label><input type="text" id="responsavel"></div>
@@ -524,59 +524,84 @@
 { material: "UTENSÍLIOS DOMÉSTICOS", nome: "Vasilhames de plástico grande", Medida: "Unidade", preco: 24.99}
     ];
 
-    let db = []; let itensLocal = []; let tipoAtual = ""; let pagEstoque = 1;
+    let db = [];
+    let itensLocal = [];
+    let tipoAtual = "";
+    let pagEstoque = 1;
 
-  function switchSection(id, btn) {
-    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-    document.getElementById('sec-' + id).classList.remove('hidden');
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    if(btn) btn.classList.add('active');
-    
-    localStorage.setItem('abaAtual', id);
-    
-    // SÓ SINCRONIZA SE O BANCO ESTIVER VAZIO. 
-    // Assim, ao trocar de aba, ele não apaga suas edições manuais.
-    if(['dash', 'compras', 'estoque'].includes(id) && db.length === 0) {
-        syncDados();
-    } else {
-        // Se já tem dados, apenas renderiza a tela com o que já está na memória
-        if(id === 'compras') renderCompras();
-        if(id === 'estoque') renderEstoque();
+    // ─── CORREÇÃO PRINCIPAL ───────────────────────────────────────────────────
+    // Converte string de moeda BR (ex: "1.234,56" ou "1234,56") para float.
+    function parseMoedaBR(str) {
+        if (typeof str === 'number') return str;
+        // Remove pontos de milhar, substitui vírgula decimal por ponto
+        return parseFloat(String(str).replace(/\./g, '').replace(',', '.')) || 0;
     }
-}
+
+    // Salva qualquer campo editado diretamente no objeto db[] em memória.
+    // Assim, quando renderCompras() rodar novamente, lê de db[] e restaura o valor.
+    function salvarEdicao(index, campo, valor) {
+        db[index][campo] = parseMoedaBR(valor);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function switchSection(id, btn) {
+        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+        document.getElementById('sec-' + id).classList.remove('hidden');
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        localStorage.setItem('abaAtual', id);
+        if (['dash', 'compras', 'estoque'].includes(id) && db.length === 0) {
+            syncDados();
+        } else {
+            if (id === 'compras') renderCompras();
+            if (id === 'estoque') renderEstoque();
+            if (id === 'dash') renderDash();
+        }
+    }
 
     function acessoRestrito() {
-        if(prompt("Senha:") === SENHA_DASH) {
+        if (prompt("Senha:") === SENHA_DASH) {
             document.getElementById('admin-links').style.display = 'flex';
             document.getElementById('btn-login').style.display = 'none';
             switchSection('dash', document.getElementById('nav-dash'));
         }
     }
 
-    function abrirForm(t) { 
-        tipoAtual = t; document.getElementById('form-titulo').innerText = t === 'contagem' ? "📦 Nova Contagem" : "🛒 Novo Pedido";
-        switchSection('form'); const dl = document.getElementById('listaProdutos');
+    function abrirForm(t) {
+        tipoAtual = t;
+        document.getElementById('form-titulo').innerText = t === 'contagem' ? "📦 Nova Contagem" : "🛒 Novo Pedido";
+        switchSection('form');
+        const dl = document.getElementById('listaProdutos');
         dl.innerHTML = BASE_PRODUTOS.map(p => `<option value="${p.nome}">`).join('');
     }
 
     function adicionarLocal() {
         const prod = document.getElementById('produto').value;
         const info = BASE_PRODUTOS.find(p => p.nome === prod);
-        const item = { unidade: document.getElementById('unidade').value, responsavel: document.getElementById('responsavel').value, produto: prod, quantidade: document.getElementById('quantidade').value, material: info ? info.material : "NÃO LISTADO", medida: document.getElementById('medida').value, observacao: document.getElementById('observacao').value, tipo: tipoAtual };
-        if(!item.unidade || !item.produto || !item.quantidade) return alert("Erro! Preencha unidade, produto e quantidade.");
-        itensLocal.push(item); renderPreview();
-        document.getElementById('produto').value = ""; document.getElementById('quantidade').value = "";
+        const item = {
+            unidade: document.getElementById('unidade').value,
+            responsavel: document.getElementById('responsavel').value,
+            produto: prod,
+            quantidade: document.getElementById('quantidade').value,
+            material: info ? info.material : "NÃO LISTADO",
+            medida: document.getElementById('medida').value,
+            observacao: document.getElementById('observacao').value,
+            tipo: tipoAtual
+        };
+        if (!item.unidade || !item.produto || !item.quantidade) return alert("Erro! Preencha unidade, produto e quantidade.");
+        itensLocal.push(item);
+        renderPreview();
+        document.getElementById('produto').value = "";
+        document.getElementById('quantidade').value = "";
     }
 
-    function salvarEdicaoReal(indexNoDb, valorDigitado) {
-    // Localiza o item exato no banco de dados e atualiza a propriedade 'quantidadeReal'
-    db[indexNoDb].quantidadeReal = parseFloat(valorDigitado) || 0;
-}
-
     function renderPreview() {
-        const table = document.getElementById('tblPreview'); const tbody = document.getElementById('tbodyPreview');
-        table.classList.remove('hidden'); 
-        tbody.innerHTML = itensLocal.map((i, idx) => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td><button onclick="itensLocal.splice(${idx},1);renderPreview()" style="color:red; background:none; border:none; cursor:pointer;">✕</button></td></tr>`).join('');
+        const table = document.getElementById('tblPreview');
+        const tbody = document.getElementById('tbodyPreview');
+        table.classList.remove('hidden');
+        tbody.innerHTML = itensLocal.map((i, idx) =>
+            `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td><button onclick="itensLocal.splice(${idx},1);renderPreview()" style="color:red; background:none; border:none; cursor:pointer;">✕</button></td></tr>`
+        ).join('');
         document.getElementById('btn-enviar').classList.toggle('hidden', itensLocal.length === 0);
     }
 
@@ -585,22 +610,25 @@
         mostrarToast("🚀 Sincronizando e baixando Excel...");
         try {
             const dataParaExcel = itensLocal.map(item => ({
-                Data: new Date().toLocaleDateString(), Unidade: item.unidade, Responsável: item.responsavel,
-                Categoria: item.material, Produto: item.produto, Quantidade: item.quantidade,
-                Medida: item.medida, Observação: item.observacao, Tipo: item.tipo
+                Data: new Date().toLocaleDateString(),
+                Unidade: item.unidade,
+                Responsável: item.responsavel,
+                Categoria: item.material,
+                Produto: item.produto,
+                Quantidade: item.quantidade,
+                Medida: item.medida,
+                Observação: item.observacao,
+                Tipo: item.tipo
             }));
             const ws = XLSX.utils.json_to_sheet(dataParaExcel);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Lancamento");
             XLSX.writeFile(wb, `Estoque_${itensLocal[0].unidade}_${tipoAtual}.xlsx`);
-
             await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(itensLocal) });
             alert("✅ Dados enviados e Excel baixado!");
-            itensLocal = []; document.getElementById('tbodyPreview').innerHTML = "";
-            document.getElementById('tblPreview').classList.add('hidden');
-            limparCamposFormulario(); // <--- Adicione aqui
+            limparCamposFormulario();
             switchSection('home', document.getElementById('nav-home'));
-        } catch(e) { alert("Erro ao enviar."); }
+        } catch (e) { alert("Erro ao enviar."); }
     }
 
     function limparCamposFormulario() {
@@ -617,195 +645,192 @@
     }
 
     async function syncDados() {
-        try { const r = await fetch(URL_API + "?t=" + Date.now()); db = await r.json(); popularFiltros(); renderDash(); renderCompras(); renderEstoque(); } catch(e) { console.error("Erro sincronia"); }
+        try {
+            const r = await fetch(URL_API + "?t=" + Date.now());
+            db = await r.json();
+            popularFiltros();
+            renderDash();
+            renderCompras();
+            renderEstoque();
+        } catch (e) { console.error("Erro sincronia"); }
     }
 
-function voltarParaHome() {
-    if(confirm("Deseja sair? Os dados não salvos serão perdidos.")) {
-        limparCamposFormulario(); // <--- Adicione aqui
-        switchSection('home', document.getElementById('nav-home'));
-    }
-}
-    
-function renderCompras() {
-    const uni = document.getElementById('f-comp-uni').value;
-    const dataF = document.getElementById('f-comp-data').value;
-    const tbody = document.getElementById('tbody-compras');
-    
-    let f = db.filter(d => d.tipo === 'pedido');
-    if(uni) f = f.filter(d => d.unidade === uni);
-    if(dataF) f = f.filter(d => d.data.startsWith(dataF));
-    
-    tbody.innerHTML = f.map(p => {
-        const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
-        const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-        
-        // Busca preço na base
-        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-        const precoSugerido = infoBase ? infoBase.preco : 0;
-
-        // IMPORTANTE: Se o usuário já editou o preço ou a quantidade nesta sessão, usa o valor editado
-        const qtdParaExibir = p.quantidadeReal !== undefined ? p.quantidadeReal : p.quantidade;
-        const precoParaExibir = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
-
-        return `<tr>
-            <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
-            <td>${p.medida}</td>
-            <td class="q-orig">${p.quantidade}</td>
-            <td><span class="badge-estoque">${ult ? ult.quantidade : 0}</span></td>
-            <td>
-                <input type="number" class="input-compra q-real" 
-                    value="${qtdParaExibir}" 
-                    oninput="salvarEdicao(${db.indexOf(p)}, 'quantidadeReal', this.value); calcCompras()">
-            </td>
-            <td>
-                <input type="text" class="input-compra p-unit" 
-                    value="${precoParaExibir.toFixed(2).replace('.', ',')}" 
-                    oninput="salvarEdicao(${db.indexOf(p)}, 'precoEditado', this.value); calcCompras()"
-                    onblur="formatMoeda(this)">
-            </td>
-            <td class="sub-real">R$ 0,00</td>
-        </tr>`;
-    }).join('');
-    calcCompras();
-}
-
-// Função mestre para salvar qualquer edição (Preço ou Quantidade) no banco local
-function salvarEdicao(index, campo, valor) {
-    let num = valor.replace ? valor.replace(',', '.') : valor;
-    db[index][campo] = parseFloat(num) || 0;
-}
-
-function calcCompras() {
-    let totalOrig = 0;
-    let totalReal = 0;
-
-    // Seleciona todas as linhas da tabela de compras que estão visíveis
-    const linhas = document.querySelectorAll('#tbody-compras tr');
-
-    linhas.forEach(tr => {
-        // 1. Captura o Preço Unitário (trata vírgula e ponto)
-        const inputPreco = tr.querySelector('.p-unit');
-        const precoUnit = parseFloat(inputPreco.value.replace('.', '').replace(',', '.')) || 0;
-
-        // 2. Captura a Quantidade Original (texto da célula)
-        const qtdOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
-
-        // 3. Captura a Quantidade Real (valor do input editável)
-        const qtdReal = parseFloat(tr.querySelector('.q-real').value) || 0;
-
-        // 4. Cálculos de Subtotais
-        const subtotalOriginal = qtdOrig * precoUnit;
-        const subtotalReal = qtdReal * precoUnit;
-
-        // 5. Acumula os Totais
-        totalOrig += subtotalOriginal;
-        totalReal += subtotalReal;
-
-        // 6. Atualiza o Subtotal visível na linha (apenas o Real para auditoria)
-        const celulaSubtotal = tr.querySelector('.sub-real');
-        if (celulaSubtotal) {
-            celulaSubtotal.innerText = subtotalReal.toLocaleString('pt-br', {
-                style: 'currency',
-                currency: 'BRL'
-            });
+    function voltarParaHome() {
+        if (confirm("Deseja sair? Os dados não salvos serão perdidos.")) {
+            limparCamposFormulario();
+            switchSection('home', document.getElementById('nav-home'));
         }
-    });
+    }
 
-    // --- ATUALIZAÇÃO DOS CAMPOS DE RESUMO (FIM DA PÁGINA) ---
-    
-    const elemTotalOrig = document.getElementById('total-orig-filtro');
-    const elemTotalReal = document.getElementById('total-real-filtro');
+    function renderCompras() {
+        const uni = document.getElementById('f-comp-uni').value;
+        const dataF = document.getElementById('f-comp-data').value;
+        const tbody = document.getElementById('tbody-compras');
 
-    if (elemTotalOrig) {
-        elemTotalOrig.innerText = totalOrig.toLocaleString('pt-br', {
-            style: 'currency',
-            currency: 'BRL'
+        let f = db.filter(d => d.tipo === 'pedido');
+        if (uni) f = f.filter(d => d.unidade === uni);
+        if (dataF) f = f.filter(d => d.data && d.data.startsWith(dataF));
+
+        tbody.innerHTML = f.map(p => {
+            const dbIndex = db.indexOf(p);
+            const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
+            const ult = hist.sort((a, b) => new Date(b.data) - new Date(a.data))[0];
+
+            const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+            const precoSugerido = infoBase ? infoBase.preco : 0;
+
+            // ─── LEITURA DO ESTADO PERSISTIDO ────────────────────────────────
+            // Usa o valor já editado que está em db[]; se nunca editado, usa o original.
+            const qtdReal = p.quantidadeReal !== undefined ? p.quantidadeReal : p.quantidade;
+            const precoUnit = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
+            // ─────────────────────────────────────────────────────────────────
+
+            // Formata preço para exibição no input (ex: 250,00)
+            const precoFormatado = precoUnit.toFixed(2).replace('.', ',');
+
+            return `<tr>
+                <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
+                <td>${p.medida}</td>
+                <td class="q-orig">${p.quantidade}</td>
+                <td><span class="badge-estoque">${ult ? ult.quantidade : 0}</span></td>
+                <td>
+                    <input type="number" class="input-compra q-real"
+                        value="${qtdReal}"
+                        oninput="salvarEdicao(${dbIndex}, 'quantidadeReal', this.value); calcCompras()">
+                </td>
+                <td>
+                    <input type="text" class="input-compra p-unit"
+                        value="${precoFormatado}"
+                        oninput="salvarEdicao(${dbIndex}, 'precoEditado', this.value); calcCompras()"
+                        onblur="formatMoeda(this)">
+                </td>
+                <td class="sub-real">R$ 0,00</td>
+            </tr>`;
+        }).join('');
+
+        calcCompras();
+    }
+
+    function calcCompras() {
+        let totalOrig = 0;
+        let totalReal = 0;
+
+        document.querySelectorAll('#tbody-compras tr').forEach(tr => {
+            const precoUnit = parseMoedaBR(tr.querySelector('.p-unit').value);
+            const qtdOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
+            const qtdReal = parseFloat(tr.querySelector('.q-real').value) || 0;
+
+            const subtotalReal = qtdReal * precoUnit;
+            totalOrig += qtdOrig * precoUnit;
+            totalReal += subtotalReal;
+
+            const celulaSubtotal = tr.querySelector('.sub-real');
+            if (celulaSubtotal) {
+                celulaSubtotal.innerText = subtotalReal.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+            }
         });
+
+        const fmt = v => v.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+
+        const elemOrig = document.getElementById('total-orig-filtro');
+        const elemReal = document.getElementById('total-real-filtro');
+        const elemRede = document.getElementById('topo-rede-total');
+        const dashOrig = document.getElementById('dash-orig-total');
+        const dashReal = document.getElementById('dash-real-total');
+
+        if (elemOrig) elemOrig.innerText = fmt(totalOrig);
+        if (elemReal) elemReal.innerText = fmt(totalReal);
+        if (elemRede) elemRede.innerText = fmt(totalReal);
+        if (dashOrig) dashOrig.innerText = fmt(totalOrig);
+        if (dashReal) dashReal.innerText = fmt(totalReal);
     }
 
-    if (elemTotalReal) {
-        elemTotalReal.innerText = totalReal.toLocaleString('pt-br', {
-            style: 'currency',
-            currency: 'BRL'
-        });
-    }
+    function renderDash() {
+        const mesAtual = new Date().toISOString().slice(0, 7);
+        const enviaram = [...new Set(db.filter(d => d.data && d.data.startsWith(mesAtual)).map(d => d.unidade))];
+        const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u));
 
-    // --- ATUALIZAÇÃO DO VALOR REDE (TOPO DA PÁGINA) ---
-    // Este valor mostra o consolidado do que foi auditado (Total Real)
-    const elemRedeTotal = document.getElementById('topo-rede-total');
-    if (elemRedeTotal) {
-        elemRedeTotal.innerText = totalReal.toLocaleString('pt-br', {
-            style: 'currency',
-            currency: 'BRL'
-        });
-    }
-    
-    // Opcional: Atualiza também os cards do Dash se estiverem carregados
-    const dashOrig = document.getElementById('dash-orig-total');
-    const dashReal = document.getElementById('dash-real-total');
-    if (dashOrig) dashOrig.innerText = totalOrig.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-    if (dashReal) dashReal.innerText = totalReal.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-}
-  function renderDash() {
-    // 1. LÓGICA DE UNIDADES PENDENTES (Mês Atual)
-    const mesAtual = new Date().toISOString().slice(0,7); // Formato YYYY-MM
-    
-    // Lista unidades que já enviaram pelo menos um dado este mês
-    const enviaram = [...new Set(db.filter(d => d.data.startsWith(mesAtual)).map(d => d.unidade))];
-    
-    // Filtra quem falta
-    const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u));
-    
-    // Renderiza os balões vermelhos de pendência
-    const containerFaltantes = document.getElementById('faltantes-lista');
-    if (faltam.length === 0) {
-        containerFaltantes.innerHTML = '<span style="color:var(--success); font-weight:bold;">✅ Todas as unidades enviaram os dados!</span>';
-    } else {
-        containerFaltantes.innerHTML = faltam.map(u => `
-            <span style="background:#fee2e2; color:#b91c1c; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; border:1px solid #fecaca;">
-                ${u}
-            </span>
-        `).join('');
-    }
+        const containerFaltantes = document.getElementById('faltantes-lista');
+        if (faltam.length === 0) {
+            containerFaltantes.innerHTML = '<span style="color:var(--success); font-weight:bold;">✅ Todas as unidades enviaram os dados!</span>';
+        } else {
+            containerFaltantes.innerHTML = faltam.map(u =>
+                `<span style="background:#fee2e2; color:#b91c1c; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; border:1px solid #fecaca;">${u}</span>`
+            ).join('');
+        }
 
-    // 2. TOTAIS FINANCEIROS NO DASHBOARD
-    // Puxa os valores calculados na aba Compras para exibição nos cards principais do Dash
-    const valorOriginalRede = document.getElementById('total-orig-filtro').innerText;
-    const valorRealRede = document.getElementById('total-real-filtro').innerText;
-    
-    document.getElementById('dash-orig-total').innerText = valorOriginalRede;
-    document.getElementById('dash-real-total').innerText = valorRealRede;
-}
+        const elemOrig = document.getElementById('total-orig-filtro');
+        const elemReal = document.getElementById('total-real-filtro');
+        if (elemOrig) document.getElementById('dash-orig-total').innerText = elemOrig.innerText;
+        if (elemReal) document.getElementById('dash-real-total').innerText = elemReal.innerText;
+    }
 
     function renderEstoque() {
-        const uni = document.getElementById('f-est-uni').value; const cat = document.getElementById('f-est-cat').value;
-        const dataF = document.getElementById('f-est-data').value; const tbody = document.getElementById('tbody-estoque');
+        const uni = document.getElementById('f-est-uni').value;
+        const cat = document.getElementById('f-est-cat').value;
+        const dataF = document.getElementById('f-est-data').value;
+        const tbody = document.getElementById('tbody-estoque');
+
         let f = db.filter(d => d.tipo === 'contagem');
-        if(uni) f = f.filter(d => d.unidade === uni); if(cat) f = f.filter(d => d.material === cat); if(dataF) f = f.filter(d => d.data.startsWith(dataF));
-        tbody.innerHTML = f.slice((pagEstoque-1)*50, pagEstoque*50).map(d => `<tr><td>${new Date(d.data).toLocaleDateString()}</td><td>${d.unidade}</td><td>${d.material}</td><td>${d.produto}</td><td>${d.quantidade}</td><td>${d.medida}</td><td>${d.observacao}</td></tr>`).join('');
+        if (uni) f = f.filter(d => d.unidade === uni);
+        if (cat) f = f.filter(d => d.material === cat);
+        if (dataF) f = f.filter(d => d.data && d.data.startsWith(dataF));
+
+        tbody.innerHTML = f.slice((pagEstoque - 1) * 50, pagEstoque * 50).map(d =>
+            `<tr><td>${new Date(d.data).toLocaleDateString()}</td><td>${d.unidade}</td><td>${d.material}</td><td>${d.produto}</td><td>${d.quantidade}</td><td>${d.medida}</td><td>${d.observacao}</td></tr>`
+        ).join('');
         document.getElementById('est-pag-info').innerText = `Pág ${pagEstoque}`;
     }
 
-    function paginarEstoque(dir) { pagEstoque += dir; if(pagEstoque<1) pagEstoque=1; renderEstoque(); }
-    function formatMoeda(i) { if(!i.value) return; let v = i.value.replace(/[^\d,]/g, ""); if(!v.includes(',')) v += ",00"; i.value = v; }
+    function paginarEstoque(dir) {
+        pagEstoque += dir;
+        if (pagEstoque < 1) pagEstoque = 1;
+        renderEstoque();
+    }
+
+    // Formata o campo de preço ao sair do input (onblur).
+    // Garante formato "1234,56" sem pontos de milhar para não quebrar o parseMoedaBR.
+    function formatMoeda(input) {
+        const v = parseMoedaBR(input.value);
+        if (!isNaN(v)) {
+            input.value = v.toFixed(2).replace('.', ',');
+        }
+    }
+
     function popularFiltros() {
-        const unis = [...new Set(db.map(d => d.unidade))].sort(); const cats = [...new Set(db.map(d => d.material))].sort();
-        ['f-comp-uni', 'f-est-uni'].forEach(id => { const s = document.getElementById(id); if(s.options.length <= 1) unis.forEach(u => s.innerHTML += `<option>${u}</option>`); });
-        const sc = document.getElementById('f-est-cat'); if(sc.options.length <= 1) cats.forEach(c => sc.innerHTML += `<option>${c}</option>`);
+        const unis = [...new Set(db.map(d => d.unidade))].sort();
+        const cats = [...new Set(db.map(d => d.material))].sort();
+        ['f-comp-uni', 'f-est-uni'].forEach(id => {
+            const s = document.getElementById(id);
+            if (s.options.length <= 1) unis.forEach(u => s.innerHTML += `<option>${u}</option>`);
+        });
+        const sc = document.getElementById('f-est-cat');
+        if (sc.options.length <= 1) cats.forEach(c => sc.innerHTML += `<option>${c}</option>`);
     }
-    function mostrarToast(m) { let t = document.getElementById('toast'); t.innerText = m; t.style.display="block"; setTimeout(()=>t.style.display="none", 3000); }
-    function exportarExcel(t) { const data = db.filter(d => t === 'compras' ? d.tipo === 'pedido' : d.tipo === 'contagem'); const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados"); XLSX.writeFile(wb, `Relatorio_${t}.xlsx`); }
 
-    window.onload = function() {
-    const ultimaAba = localStorage.getItem('abaAtual');
-    if (ultimaAba) {
-        // Se houver uma senha salva ou se for a Home, ele volta pra onde estava
-        const btnCorrespondente = document.getElementById('nav-' + ultimaAba);
-        switchSection(ultimaAba, btnCorrespondente);
+    function mostrarToast(m) {
+        let t = document.getElementById('toast');
+        t.innerText = m;
+        t.style.display = "block";
+        setTimeout(() => t.style.display = "none", 3000);
     }
-};
 
+    function exportarExcel(t) {
+        const data = db.filter(d => t === 'compras' ? d.tipo === 'pedido' : d.tipo === 'contagem');
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Dados");
+        XLSX.writeFile(wb, `Relatorio_${t}.xlsx`);
+    }
+
+    window.onload = function () {
+        const ultimaAba = localStorage.getItem('abaAtual');
+        // Só restaura abas públicas automaticamente; as restritas exigem autenticação
+        if (ultimaAba && ultimaAba === 'home') {
+            switchSection('home', document.getElementById('nav-home'));
+        }
+        // Demais abas (dash, compras, estoque) ficam aguardando login
+    };
 </script>
 </body>
 </html>
