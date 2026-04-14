@@ -611,14 +611,60 @@
     }
 
     async function enviarTudo() {
-        mostrarToast("🚀 Sincronizando...");
-        try {
-            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(itensLocal) });
-            alert("✅ Sincronizado!");
-            limparCamposFormulario();
-            switchSection('home', document.getElementById('nav-home'));
-        } catch (e) { alert("Erro ao enviar."); }
+    if (itensLocal.length === 0) return alert("Adicione itens à lista primeiro!");
+    
+    mostrarToast("🚀 Sincronizando e baixando Excel...");
+    
+    try {
+        const dataAtual = new Date().toLocaleDateString().replace(/\//g, '-');
+        const unidade = itensLocal[0].unidade;
+        // Define o nome do arquivo conforme solicitado
+        const nomeArquivo = `${unidade}_${tipoAtual}_${dataAtual}.xlsx`;
+
+        // Prepara os dados para o Excel
+        const dataParaExcel = itensLocal.map(item => ({
+            Data: new Date().toLocaleDateString(),
+            Unidade: item.unidade,
+            Responsável: item.responsavel,
+            Categoria: item.material,
+            Produto: item.produto,
+            Quantidade: item.quantidade,
+            Medida: item.medida,
+            Observação: item.observacao,
+            Tipo: item.tipo
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataParaExcel);
+
+        // CONFIGURAÇÃO DE ESPAÇAMENTO (Largura das colunas)
+        // wch: 15 (Data), 20 (Unidade), 20 (Responsável), 20 (Categoria), 40 (Produto), 12 (Qtd), 12 (Medida), 40 (Obs), 15 (Tipo)
+        ws['!cols'] = [
+            { wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, 
+            { wch: 45 }, { wch: 12 }, { wch: 12 }, { wch: 45 }, { wch: 15 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Lançamento");
+
+        // Baixa o arquivo
+        XLSX.writeFile(wb, nomeArquivo);
+
+        // Envia para o Google Sheets
+        await fetch(URL_API, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(itensLocal) 
+        });
+
+        alert("✅ Dados enviados e Excel baixado!");
+        limparCamposFormulario();
+        switchSection('home', document.getElementById('nav-home'));
+
+    } catch (e) { 
+        console.error(e);
+        alert("Erro ao processar o envio."); 
     }
+}
 
     function limparCamposFormulario() {
         ['responsavel','produto','quantidade','observacao'].forEach(id => document.getElementById(id).value = "");
