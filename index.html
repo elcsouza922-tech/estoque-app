@@ -154,7 +154,9 @@
     const SENHA_DASH = "1234";
     const TODAS_UNIDADES = ['ANDORINHAS','BELA VISTA','BONFIM','CENTRO','CONQUISTA','CONSOLAÇÃO','CARATOÍRA','ITARARÉ','JARDIM CAMBURI','JARDIM DA PENHA','MARIA ORTIZ','QUADRO','ROMÃO','NOVA PALESTINA','SANTO ANDRÉ','SANTO ANTONIO','SÃO PEDRO','JABURU','NISP JABURU','SOLON BORGES','PRAIA DO SUÁ'];
     
-    const BASE_PRODUTOS = [{ material: "DIDÁTICO", nome: "Agôgo", Medida: "Unidade", preco: 250.00},
+    // BASE DE DADOS COM AS CORREÇÕES DE ASPAS E MINÚSCULAS
+    const BASE_PRODUTOS = [
+        { material: "DIDÁTICO", nome: "Agôgo", Medida: "Unidade", preco: 250.00},
 { material: "DIDÁTICO", nome: "Agulha de mão nº 05", Medida: "Pacote", preco: 29.99},
 { material: "DIDÁTICO", nome: "Agulha de mão nº 06", Medida: "Pacote", preco: 29.99},
 { material: "DIDÁTICO", nome: "Agulha pra vagonite", Medida: "Pacote", preco: 29.99},
@@ -587,8 +589,8 @@
             const limpar = (texto) => texto.replace(/["'\\\/]/g, "").toLowerCase().trim();
             return limpar(p.nome) === limpar(prodDigitado);
         });
-        const materialDetectado = info ? (info.material || info.Material || "NÃO LISTADO") : "NÃO LISTADO";
-        const medidaDetectada = info ? (info.medida || info.Medida) : document.getElementById('medida').value;
+        const materialDetectado = info ? (info.material || "NÃO LISTADO") : "NÃO LISTADO";
+        const medidaDetectada = info ? (info.medida) : document.getElementById('medida').value;
         const item = { unidade: document.getElementById('unidade').value, responsavel: document.getElementById('responsavel').value, produto: info ? info.nome : prodDigitado, quantidade: document.getElementById('quantidade').value, material: materialDetectado, medida: medidaDetectada, observacao: document.getElementById('observacao').value, tipo: tipoAtual };
         if(!item.unidade || !item.produto || !item.quantidade) return alert("Preencha Unidade, Produto e Quantidade!");
         itensLocal.push(item);
@@ -597,7 +599,8 @@
     }
 
     function renderPreview() {
-        document.getElementById('tblPreview').classList.remove('hidden');
+        const table = document.getElementById('tblPreview');
+        table.classList.remove('hidden');
         document.getElementById('tbodyPreview').innerHTML = itensLocal.map((i, idx) => `<tr><td>${i.produto}</td><td>${i.quantidade}</td><td><button onclick="itensLocal.splice(${idx},1);renderPreview()" style="color:red; background:none; border:none;">✕</button></td></tr>`).join('');
         document.getElementById('btn-enviar').classList.toggle('hidden', itensLocal.length === 0);
     }
@@ -635,11 +638,13 @@
     function renderCompras() {
         const uni = document.getElementById('f-comp-uni').value;
         const dataF = document.getElementById('f-comp-data').value;
+        const tbody = document.getElementById('tbody-compras');
+        
         let f = db.filter(d => d.tipo === 'pedido');
         if(uni) f = f.filter(d => d.unidade === uni);
         if(dataF) f = f.filter(d => d.data.startsWith(dataF));
         
-        document.getElementById('tbody-compras').innerHTML = f.map(p => {
+        tbody.innerHTML = f.map(p => {
             const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
             const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
             const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
@@ -649,9 +654,9 @@
 
             return `<tr>
                 <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
-                <td>${p.Medida || p.medida || "Unidade"}</td>
+                <td>${p.medida || "Unidade"}</td>
                 <td class="q-orig">${p.quantidade}</td>
-                <td><div class="badge-estoque" style="width: 50px; text-align: center; border: 1px solid #2563eb; background: white; color: #2563eb;">${ult ? ult.quantidade : 0}</div></td>
+                <td><div class="badge-estoque" style="width: 50px; text-align: center; border: 1px solid #2563eb; background: white; color: #2563eb; padding:5px; border-radius:8px;">${ult ? ult.quantidade : 0}</div></td>
                 <td><input type="number" class="input-compra q-real" value="${qReal}" oninput="salvarEdicao(${db.indexOf(p)}, 'quantidadeReal', this.value); calcCompras()"></td>
                 <td><input type="text" class="input-compra p-unit" value="${pReal.toFixed(2).replace('.', ',')}" oninput="salvarEdicao(${db.indexOf(p)}, 'precoEditado', this.value); calcCompras()" onblur="formatMoeda(this)"></td>
                 <td class="sub-real" style="font-weight:bold; color:#16a34a">R$ 0,00</td>
@@ -680,8 +685,11 @@
         const enviaram = [...new Set(db.filter(d => d.data && d.data.startsWith(mes)).map(d => d.unidade))];
         const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u));
         document.getElementById('faltantes-lista').innerHTML = faltam.map(u => `<span style="background:#fee2e2; color:#b91c1c; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; border:1px solid #fecaca;">${u}</span>`).join('');
-        document.getElementById('dash-orig-total').innerText = document.getElementById('total-orig-filtro').innerText;
-        document.getElementById('dash-real-total').innerText = document.getElementById('total-real-filtro').innerText;
+        
+        const dOrig = document.getElementById('total-orig-filtro').innerText;
+        const dReal = document.getElementById('total-real-filtro').innerText;
+        document.getElementById('dash-orig-total').innerText = dOrig;
+        document.getElementById('dash-real-total').innerText = dReal;
     }
 
     function renderEstoque() {
@@ -704,10 +712,10 @@
         const cats = [...new Set(db.map(d => d.material))].sort();
         ['f-comp-uni', 'f-est-uni'].forEach(id => {
             const s = document.getElementById(id);
-            if (s.options.length <= 1) unis.forEach(u => s.innerHTML += `<option>${u}</option>`);
+            if (s && s.options.length <= 1) unis.forEach(u => s.innerHTML += `<option>${u}</option>`);
         });
         const sc = document.getElementById('f-est-cat');
-        if (sc.options.length <= 1) cats.forEach(c => sc.innerHTML += `<option>${c}</option>`);
+        if (sc && sc.options.length <= 1) cats.forEach(c => sc.innerHTML += `<option>${c}</option>`);
     }
 
     function mostrarToast(m) {
