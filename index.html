@@ -526,13 +526,17 @@
 
     let db = []; let itensLocal = []; let tipoAtual = ""; let pagEstoque = 1;
 
-    function switchSection(id, btn) {
-        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-        document.getElementById('sec-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        if(btn) btn.classList.add('active');
-        if(['dash', 'compras', 'estoque'].includes(id)) syncDados();
-    }
+   function switchSection(id, btn) {
+    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('sec-' + id).classList.remove('hidden');
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    
+    // NOVO: Salva a aba atual para não perder no F5
+    localStorage.setItem('abaAtual', id);
+    
+    if(['dash', 'compras', 'estoque'].includes(id)) syncDados();
+}
 
     function acessoRestrito() {
         if(prompt("Senha:") === SENHA_DASH) {
@@ -611,36 +615,43 @@ function voltarParaHome() {
     }
 }
     
-   function renderCompras() {
+function renderCompras() {
     const uni = document.getElementById('f-comp-uni').value;
     const dataF = document.getElementById('f-comp-data').value;
     const tbody = document.getElementById('tbody-compras');
     
-    // Filtra apenas os registros do tipo 'pedido'
     let f = db.filter(d => d.tipo === 'pedido');
     if(uni) f = f.filter(d => d.unidade === uni);
     if(dataF) f = f.filter(d => d.data.startsWith(dataF));
     
-    tbody.innerHTML = f.map(p => {
-        // Busca o saldo da última contagem realizada para este produto nesta unidade
+    tbody.innerHTML = f.map((p, index) => {
         const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
         const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
         
-        // Busca o preço nativo na Base de Dados
         const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
         const precoSugerido = infoBase ? infoBase.preco : 0;
+
+        // Se o item já tiver um valor real editado no banco local, mantém ele, senão usa a quantidade original
+        const valorRealAtual = p.quantidadeReal !== undefined ? p.quantidadeReal : p.quantidade;
 
         return `<tr>
             <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
             <td>${p.medida}</td>
             <td class="q-orig">${p.quantidade}</td>
             <td><span class="badge-estoque">${ult ? ult.quantidade : 0} em estoque</span></td>
-            <td><input type="number" class="input-compra q-real" value="${p.quantidade}" oninput="calcCompras()"></td>
-            <td><input type="text" class="input-compra p-unit" value="${precoSugerido.toFixed(2).replace('.',',')}" onblur="formatMoeda(this)" oninput="calcCompras()"></td>
+            <td><input type="number" class="input-compra q-real" value="${valorRealAtual}" 
+                oninput="atualizarValorNoBanco(${db.indexOf(p)}, this.value); calcCompras()"></td>
+            <td><input type="text" class="input-compra p-unit" value="${precoSugerido.toFixed(2).replace('.',',')}" 
+                onblur="formatMoeda(this)" oninput="calcCompras()"></td>
             <td class="sub-real">R$ 0,00</td>
         </tr>`;
     }).join('');
     calcCompras();
+}
+
+// Função auxiliar para manter o dado salvo enquanto você edita a tabela
+function atualizarValorNoBanco(index, valor) {
+    db[index].quantidadeReal = valor;
 }
 
 function calcCompras() {
@@ -716,6 +727,14 @@ function calcCompras() {
     function mostrarToast(m) { let t = document.getElementById('toast'); t.innerText = m; t.style.display="block"; setTimeout(()=>t.style.display="none", 3000); }
     function exportarExcel(t) { const data = db.filter(d => t === 'compras' ? d.tipo === 'pedido' : d.tipo === 'contagem'); const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Dados"); XLSX.writeFile(wb, `Relatorio_${t}.xlsx`); }
 
+    window.onload = function() {
+    const ultimaAba = localStorage.getItem('abaAtual');
+    if (ultimaAba) {
+        // Se houver uma senha salva ou se for a Home, ele volta pra onde estava
+        const btnCorrespondente = document.getElementById('nav-' + ultimaAba);
+        switchSection(ultimaAba, btnCorrespondente);
+    }
+};
 
 </script>
 </body>
