@@ -578,22 +578,24 @@
 function adicionarLocal() {
     const prodDigitado = document.getElementById('produto').value.trim();
     
-    // Versão inteligente: remove barras e espaços extras para comparar o nome real
+    // Busca o produto na base ignorando aspas e maiúsculas
     const info = BASE_PRODUTOS.find(p => {
         const nomeLimpoBase = p.nome.replace(/\\/g, "").toLowerCase();
         const nomeLimpoDigitado = prodDigitado.replace(/\\/g, "").toLowerCase();
         return nomeLimpoBase === nomeLimpoDigitado;
     });
     
+    // Captura os dados previnindo erro de maiúscula/minúscula na BASE_PRODUTOS
+    const materialDetectado = info ? (info.material || info.Material || "NÃO LISTADO") : "NÃO LISTADO";
+    const medidaDetectada = info ? (info.medida || info.Medida) : document.getElementById('medida').value;
+
     const item = { 
         unidade: document.getElementById('unidade').value, 
         responsavel: document.getElementById('responsavel').value, 
         produto: prodDigitado, 
         quantidade: document.getElementById('quantidade').value, 
-        // Usa info.material ou info.Material (previne erro de maiúscula)
-        material: info ? (info.material || info.Material) : "NÃO LISTADO", 
-        // Usa info.Medida ou info.medida
-        Medida: info ? (info.Medida || info.medida) : document.getElementById('medida').value,
+        material: materialDetectado, 
+        medida: medidaDetectada, // Mantemos minúsculo aqui para o Sheets/Excel
         observacao: document.getElementById('observacao').value, 
         tipo: tipoAtual 
     };
@@ -605,11 +607,10 @@ function adicionarLocal() {
     itensLocal.push(item); 
     renderPreview();
     
-    // Limpa apenas os campos de item, mantendo unidade e responsável
+    // Limpa apenas os campos do item para agilizar o próximo lançamento
     document.getElementById('produto').value = ""; 
     document.getElementById('quantidade').value = "";
 }
-
     function renderPreview() {
         const table = document.getElementById('tblPreview');
         const tbody = document.getElementById('tbodyPreview');
@@ -624,16 +625,17 @@ function adicionarLocal() {
         if (itensLocal.length === 0) return alert("Adicione itens à lista primeiro!");
         mostrarToast("🚀 Sincronizando e baixando Excel...");
         try {
-            const dataParaExcel = itensLocal.map(item => ({
-                Data: new Date().toLocaleDateString(),
-                Unidade: item.unidade,
-                Responsável: item.responsavel,
-                Categoria: item.material,
-                Produto: item.produto,
-                Quantidade: item.quantidade,
-                Medida: item.medida,
-                Observação: item.observacao,
-                Tipo: item.tipo
+            // ... dentro do try da função enviarTudo
+const dataParaExcel = itensLocal.map(item => ({
+    Data: new Date().toLocaleDateString(),
+    Unidade: item.unidade,
+    Responsável: item.responsavel,
+    Categoria: item.material,
+    Produto: item.produto,
+    Quantidade: item.quantidade,
+    Medida: item.medida, // Certifique-se que aqui é item.medida
+    Observação: item.observacao,
+    Tipo: item.tipo
             }));
             const ws = XLSX.utils.json_to_sheet(dataParaExcel);
             const wb = XLSX.utils.book_new();
