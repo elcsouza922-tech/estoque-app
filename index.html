@@ -526,16 +526,23 @@
 
     let db = []; let itensLocal = []; let tipoAtual = ""; let pagEstoque = 1;
 
-   function switchSection(id, btn) {
+  function switchSection(id, btn) {
     document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
     document.getElementById('sec-' + id).classList.remove('hidden');
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     if(btn) btn.classList.add('active');
     
-    // NOVO: Salva a aba atual para não perder no F5
     localStorage.setItem('abaAtual', id);
     
-    if(['dash', 'compras', 'estoque'].includes(id)) syncDados();
+    // SÓ SINCRONIZA SE O BANCO ESTIVER VAZIO. 
+    // Assim, ao trocar de aba, ele não apaga suas edições manuais.
+    if(['dash', 'compras', 'estoque'].includes(id) && db.length === 0) {
+        syncDados();
+    } else {
+        // Se já tem dados, apenas renderiza a tela com o que já está na memória
+        if(id === 'compras') renderCompras();
+        if(id === 'estoque') renderEstoque();
+    }
 }
 
     function acessoRestrito() {
@@ -629,33 +636,44 @@ function renderCompras() {
     if(uni) f = f.filter(d => d.unidade === uni);
     if(dataF) f = f.filter(d => d.data.startsWith(dataF));
     
-  tbody.innerHTML = f.map(p => {
+    tbody.innerHTML = f.map(p => {
         const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
         const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
         
-        // Se já existe uma edição, usa ela. Se não, usa a quantidade original do pedido.
-        const valorExibicao = p.quantidadeReal !== undefined ? p.quantidadeReal : p.quantidade;
+        // Busca preço na base
+        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+        const precoSugerido = infoBase ? infoBase.preco : 0;
+
+        // IMPORTANTE: Se o usuário já editou o preço ou a quantidade nesta sessão, usa o valor editado
+        const qtdParaExibir = p.quantidadeReal !== undefined ? p.quantidadeReal : p.quantidade;
+        const precoParaExibir = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
 
         return `<tr>
-            <td><strong>${p.produto}</strong></td>
+            <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
             <td>${p.medida}</td>
             <td class="q-orig">${p.quantidade}</td>
-            <td><span class="badge-estoque">${ult ? ult.quantidade : 0} em estoque</span></td>
+            <td><span class="badge-estoque">${ult ? ult.quantidade : 0}</span></td>
             <td>
                 <input type="number" class="input-compra q-real" 
-                    value="${valorExibicao}" 
-                    oninput="salvarEdicaoReal(${db.indexOf(p)}, this.value); calcCompras()">
+                    value="${qtdParaExibir}" 
+                    oninput="salvarEdicao(${db.indexOf(p)}, 'quantidadeReal', this.value); calcCompras()">
             </td>
-            <td><input type="text" class="input-compra p-unit" value="0,00" oninput="calcCompras()"></td>
+            <td>
+                <input type="text" class="input-compra p-unit" 
+                    value="${precoParaExibir.toFixed(2).replace('.', ',')}" 
+                    oninput="salvarEdicao(${db.indexOf(p)}, 'precoEditado', this.value); calcCompras()"
+                    onblur="formatMoeda(this)">
+            </td>
             <td class="sub-real">R$ 0,00</td>
         </tr>`;
     }).join('');
     calcCompras();
 }
 
-// Função auxiliar para manter o dado salvo enquanto você edita a tabela
-function atualizarValorNoBanco(index, valor) {
-    db[index].quantidadeReal = valor;
+// Função mestre para salvar qualquer edição (Preço ou Quantidade) no banco local
+function salvarEdicao(index, campo, valor) {
+    let num = valor.replace ? valor.replace(',', '.') : valor;
+    db[index][campo] = parseFloat(num) || 0;
 }
 
 function calcCompras() {
