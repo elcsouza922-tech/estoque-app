@@ -100,51 +100,71 @@
         </div>
     </section>
 
-    <section id="sec-form" class="hidden">
-        <div class="card" style="max-width: 800px; margin: auto;">
-            <button class="btn btn-outline" onclick="voltarParaHome()" style="margin-bottom: 20px;">← Voltar</button>
-            <h2 id="form-titulo" style="text-align: center; margin-bottom: 25px;"></h2>
-            <div class="form-group">
-                <div><label>Responsável</label><input type="text" id="responsavel"></div>
-                <div><label>Unidade</label><select id="unidade">
-    <option value="">Selecione...</option>
-    <option>ANDORINHAS</option>
-    <option>BELA VISTA</option>
-    <option>BONFIM</option>
-    <option>CARATOIRA</option>
-    <option>CCTI CENTRO</option>
-    <option>CCTI JARDIM CAMBURI</option>
-    <option>CCTI JARDIM DA PENHA</option>
-    <option>CCTI MARIA ORTIZ</option>
-    <option>CONQUISTA</option>
-    <option>CONSOLAÇÃO</option>
-    <option>ENG. ITARARÉ</option>
-    <option>NISP JABURU</option>
-    <option>NISP SANTO ANTONIO</option>
-    <option>NISP SÃO PEDRO</option>
-    <option>PRAIA DO SUÁ</option>
-    <option>QUADRO</option>
-    <option>ROMÃO</option>
-    <option>SANTO ANDRÉ</option>
-    <option>SOLON BORGES</option>
-</select></div>
+   <section id="sec-form" class="hidden">
+    <div class="card" style="max-width: 800px; margin: auto;">
+        <button class="btn btn-outline" onclick="voltarParaHome()" style="margin-bottom: 20px;">← Voltar</button>
+        <h2 id="form-titulo" style="text-align: center; margin-bottom: 25px;"></h2>
+        
+        <div class="form-group">
+            <div><label>Responsável</label><input type="text" id="responsavel"></div>
+            <div>
+                <label>Unidade</label>
+                <select id="unidade">
+                    <option value="">Selecione...</option>
+                    <option>ANDORINHAS</option>
+                    <option>BELA VISTA</option>
+                    <option>BONFIM</option>
+                    <option>CARATOIRA</option>
+                    <option>CCTI CENTRO</option>
+                    <option>CCTI JARDIM CAMBURI</option>
+                    <option>CCTI JARDIM DA PENHA</option>
+                    <option>CCTI MARIA ORTIZ</option>
+                    <option>CONQUISTA</option>
+                    <option>CONSOLAÇÃO</option>
+                    <option>ENG. ITARARÉ</option>
+                    <option>NISP JABURU</option>
+                    <option>NISP SANTO ANTONIO</option>
+                    <option>NISP SÃO PEDRO</option>
+                    <option>PRAIA DO SUÁ</option>
+                    <option>QUADRO</option>
+                    <option>ROMÃO</option>
+                    <option>SANTO ANDRÉ</option>
+                    <option>SOLON BORGES</option>
+                </select>
             </div>
-            <div class="form-group" style="grid-template-columns: 2fr 1fr;">
-                <div><label>Produto</label><input type="text" id="produto" list="listaProdutos"><datalist id="listaProdutos"></datalist></div>
-                <div><label>Quantidade</label><input type="number" id="quantidade"></div>
-            </div>
-            <div class="form-group" style="grid-template-columns: 2fr 1fr;">
-                <div><label>Observação</label><input type="text" id="observacao" placeholder="Opcional..."></div>
-                <div><label>Medida</label><select id="unidade">
-   </div>
-            </div>
-            <button class="btn btn-blue" onclick="adicionarLocal()" style="width: 100%;">➕ Adicionar à Lista</button>
-            <div id="preview-lista" style="margin-top:20px; border-top: 1px solid #eee; padding-top:10px;">
-                <table id="tblPreview" class="hidden"><thead><tr><th>Produto</th><th>Qtd</th><th>Excluir</th></tr></thead><tbody id="tbodyPreview"></tbody></table>
-            </div>
-            <button id="btn-enviar" class="btn btn-green hidden" onclick="enviarTudo()" style="width: 100%; margin-top: 20px;">🚀 FINALIZAR E SINCRONIZAR</button>
         </div>
-    </section>
+
+        <div class="form-group" style="grid-template-columns: 2fr 1fr;">
+            <div><label>Produto</label><input type="text" id="produto" list="listaProdutos"><datalist id="listaProdutos"></datalist></div>
+            <div><label>Quantidade</label><input type="number" id="quantidade"></div>
+        </div>
+
+        <div class="form-group" style="grid-template-columns: 2fr 1fr;">
+            <div><label>Observação</label><input type="text" id="observacao" placeholder="Opcional..."></div>
+            <div>
+                <label>Medida</label>
+                <select id="medida">
+                    <option>Unidade</option>
+                    <option>Pacote</option>
+                    <option>Caixa</option>
+                    <option>LT</option>
+                    <option>KG</option>
+                    <option>Metro</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn btn-blue" onclick="adicionarLocal()" style="width: 100%;">➕ Adicionar à Lista</button>
+        
+        <div id="preview-lista" style="margin-top:20px; border-top: 1px solid #eee; padding-top:10px;">
+            <table id="tblPreview" class="hidden">
+                <thead><tr><th>Produto</th><th>Qtd</th><th>Excluir</th></tr></thead>
+                <tbody id="tbodyPreview"></tbody>
+            </table>
+        </div>
+        <button id="btn-enviar" class="btn btn-green hidden" onclick="enviarTudo()" style="width: 100%; margin-top: 20px;">🚀 FINALIZAR E SINCRONIZAR</button>
+    </div>
+</section>
 
     <section id="sec-dash" class="hidden">
         <div class="card">
@@ -765,14 +785,37 @@
         itensLocal = []; renderPreview(); document.getElementById('tblPreview').classList.add('hidden');
     }
 
-  async function syncDados() {
+ async function syncDados() {
     try {
         const r = await fetch(URL_API + "?t=" + Date.now());
         const resposta = await r.json();
-        db = resposta.dados || resposta;
+        
+        // Ajuste para aceitar tanto o formato novo quanto o antigo do Google Script
+        db = resposta.dados || resposta; 
         window.edicoesGlobais = resposta.edicoes || {};
-        popularFiltros(); renderDash(); renderCompras(); renderEstoque();
-    } catch (e) { console.error("Erro sincronia"); }
+        
+        popularFiltros(); 
+        renderDash(); 
+        renderCompras(); 
+        renderEstoque();
+    } catch (e) { 
+        console.error("Erro sincronia:", e); 
+        mostrarToast("❌ Erro ao carregar dados.");
+    }
+}
+
+function popularFiltros() {
+    // Usa a lista unificada para os filtros baterem com o Dash
+    const unis = TODAS_UNIDADES.sort();
+    const cats = [...new Set(db.map(d => d.material))].sort();
+
+    ['f-comp-uni', 'f-est-uni'].forEach(id => {
+        const s = document.getElementById(id);
+        if (s) {
+            s.innerHTML = '<option value="">Todas Unidades</option>'; 
+            unis.forEach(u => s.innerHTML += `<option value="${u}">${u}</option>`);
+        }
+    });
 }
 
     function voltarParaHome() {
