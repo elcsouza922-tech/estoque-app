@@ -766,23 +766,27 @@ const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal 
 const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
 
         return `<tr>
-            <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
-            <td>${p.Medida || p.medida || "Unidade"}</td>
-            <td class="q-orig">${p.quantidade}</td>
-            <td><div class="badge-estoque" style="width: 50px; text-align: center; border: 1px solid #2563eb; background: white; color: #2563eb; padding:5px; border-radius:8px;">${ult ? ult.quantidade : 0}</div></td>
-            <td>
-                <input type="number" class="input-compra q-real" 
-                    value="${qReal}" 
-                    oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
-            </td>
-            <td>
-                <input type="text" class="input-compra p-unit" 
-                    value="${pReal.toFixed(2).replace('.', ',')}" 
-                    oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()" 
-                    onblur="formatMoeda(this)">
-            </td>
-            <td class="sub-real" style="font-weight:bold; color:#16a34a">R$ 0,00</td>
-        </tr>`;
+    <td style="line-height: 1.4;">
+        <small style="color: #64748b; font-weight: 600; text-transform: uppercase;">${p.unidade}</small><br>
+        <strong style="font-size: 14px; color: var(--text);">${p.produto}</strong><br>
+        <small style="color: #64748b;">Obs.: ${p.observacao || "---"}</small>
+    </td>
+    <td>${p.Medida || p.medida || "Unidade"}</td>
+    <td class="q-orig">${p.quantidade}</td>
+    <td><div class="badge-estoque" style="width: 50px; text-align: center; border: 1px solid #2563eb; background: white; color: #2563eb; padding:5px; border-radius:8px;">${ult ? ult.quantidade : 0}</div></td>
+    <td>
+        <input type="number" class="input-compra q-real" 
+            value="${qReal}" 
+            oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
+    </td>
+    <td>
+        <input type="text" class="input-compra p-unit" 
+            value="${pReal.toFixed(2).replace('.', ',')}" 
+            oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()" 
+            onblur="formatMoeda(this)">
+    </td>
+    <td class="sub-real" style="font-weight:bold; color:#16a34a">R$ 0,00</td>
+</tr>`;
     }).join('');
     calcCompras();
 }
