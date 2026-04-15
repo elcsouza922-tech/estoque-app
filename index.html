@@ -167,14 +167,23 @@
 </section>
 
     <section id="sec-dash" class="hidden">
-        <div class="card">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div class="card" style="margin:0; border-left: 5px solid var(--primary);"><label style="color:#64748b; font-size:11px;">TOTAL PEDIDO ORIGINAL (REDE)</label><div class="val-total" id="dash-orig-total" style="color:var(--primary)">R$ 0,00</div></div>
-                <div class="card" style="margin:0; border-left: 5px solid var(--success);"><label style="color:#64748b; font-size:11px;">TOTAL PEDIDO REAL (REDE)</label><div class="val-total" id="dash-real-total">R$ 0,00</div></div>
+    <div class="card">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card" style="margin:0; border-left: 5px solid var(--primary);">
+                <label style="color:#64748b; font-size:11px;">VALOR TOTAL MENSAL (ORÇAMENTO)</label>
+                <div class="val-total" style="color:var(--primary)">R$ 42.884,56</div>
+            </div>
+            <div class="card" style="margin:0; border-left: 5px solid var(--success);">
+                <label style="color:#64748b; font-size:11px;">TOTAL PEDIDO REAL (REDE)</label>
+                <div class="val-total" id="dash-real-total">R$ 0,00</div>
             </div>
         </div>
-        <div class="card"><h3>⚠️ Pendentes de Envio (Mês Atual)</h3><div id="faltantes-lista" style="display: flex; flex-wrap: wrap; gap: 8px;"></div></div>
-    </section>
+    </div>
+    <div class="card">
+        <h3>⚠️ Pendentes de Envio (Mês Atual)</h3>
+        <div id="faltantes-lista" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+    </div>
+</section>
 
    <section id="sec-compras" class="hidden">
     <div class="total-banner">
@@ -890,14 +899,24 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
         document.getElementById('topo-rede-total').innerText = tReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
     }
 
-    function renderDash() {
-        const mes = new Date().toISOString().slice(0, 7);
-        const enviaram = [...new Set(db.filter(d => d.data && d.data.startsWith(mes)).map(d => d.unidade))];
-        const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u));
-        document.getElementById('faltantes-lista').innerHTML = faltam.map(u => `<span style="background:#fee2e2; color:#b91c1c; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; border:1px solid #fecaca;">${u}</span>`).join('');
-        document.getElementById('dash-orig-total').innerText = document.getElementById('total-orig-filtro').innerText;
-        document.getElementById('dash-real-total').innerText = document.getElementById('total-real-filtro').innerText;
-    }
+   function renderDash() {
+    const mesAtual = new Date().toISOString().slice(0, 7);
+    
+    // 1. Identifica quem já enviou no mês para listar as pendências
+    const enviaram = [...new Set(db.filter(d => d.data && d.data.startsWith(mesAtual))
+                                   .map(d => d.unidade.toUpperCase().trim()))];
+    
+    const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u.toUpperCase().trim()));
+
+    // 2. Atualiza a lista visual de pendências
+    document.getElementById('faltantes-lista').innerHTML = faltam.map(u => 
+        `<span style="background:#fee2e2; color:#b91c1c; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; border:1px solid #fecaca;">${u}</span>`
+    ).join('');
+    
+    // 3. Atualiza APENAS o Valor Real. O valor de orçamento fica fixo no HTML.
+    const totalRealFormatado = document.getElementById('total-real-filtro').innerText;
+    document.getElementById('dash-real-total').innerText = totalRealFormatado;
+}
 
     function renderEstoque() {
         const uni = document.getElementById('f-est-uni').value, cat = document.getElementById('f-est-cat').value, dataF = document.getElementById('f-est-data').value;
