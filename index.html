@@ -66,6 +66,12 @@
         justify-content: space-around;
     }
 }
+        input[readonly], select[disabled] {
+    background-color: #f1f5f9 !important;
+    color: #64748b;
+    cursor: not-allowed;
+    border: 1px solid #e2e8f0;
+}
     </style>
 </head>
 <body>
@@ -711,20 +717,48 @@
         document.getElementById('listaProdutos').innerHTML = BASE_PRODUTOS.map(p => `<option value="${p.nome}">`).join('');
     }
 
-    function adicionarLocal() {
-        const prodInput = document.getElementById('produto');
-        const prodDigitado = prodInput.value.trim();
-        const info = BASE_PRODUTOS.find(p => {
-            const limpar = (texto) => texto.replace(/["'\\\/]/g, "").toLowerCase().trim();
-            return limpar(p.nome) === limpar(prodDigitado);
-        });
-        const materialDetectado = info ? (info.material || "NÃO LISTADO") : "NÃO LISTADO";
-        const medidaDetectada = info ? (info.Medida || info.medida) : document.getElementById('medida').value;
-        const item = { unidade: document.getElementById('unidade').value, responsavel: document.getElementById('responsavel').value, produto: info ? info.nome : prodDigitado, quantidade: document.getElementById('quantidade').value, material: materialDetectado, medida: medidaDetectada, observacao: document.getElementById('observacao').value, tipo: tipoAtual };
-        if(!item.unidade || !item.produto || !item.quantidade) return alert("Preencha Unidade, Produto e Quantidade!");
-        itensLocal.push(item); renderPreview();
-        prodInput.value = ""; document.getElementById('quantidade').value = "";
-    }
+   function adicionarLocal() {
+    const resp = document.getElementById('responsavel').value.trim();
+    const uni = document.getElementById('unidade').value;
+    const prodInput = document.getElementById('produto');
+    const prodNome = prodInput.value.trim();
+    const qtd = document.getElementById('quantidade').value;
+    const med = document.getElementById('medida').value;
+    const obs = document.getElementById('observacao').value;
+
+    if (!resp) return alert("Responsável é obrigatório!");
+    if (!uni || !prodNome || !qtd) return alert("Preencha Unidade, Produto e Quantidade!");
+
+    // TRAVA A UNIDADE E RESPONSÁVEL
+    document.getElementById('unidade').disabled = true;
+    document.getElementById('responsavel').readOnly = true; 
+    document.getElementById('unidade').style.backgroundColor = "#f1f5f9";
+
+    // BUSCA NA BASE PARA PEGAR CATEGORIA
+    const infoBase = BASE_PRODUTOS.find(p => p.nome.toUpperCase() === prodNome.toUpperCase());
+    const categoria = infoBase ? infoBase.material : "ATÍPICOS";
+
+    const item = {
+        responsavel: resp,
+        unidade: uni,
+        produto: infoBase ? infoBase.nome : prodNome, // Usa o nome oficial se achar
+        quantidade: qtd,
+        material: categoria, // Puxa da base!
+        medida: med,
+        observacao: obs,
+        tipo: tipoAtual,
+        data: new Date().toISOString()
+    };
+
+    itensLocal.push(item);
+    renderPreview();
+
+    // LIMPEZA (Mantém Unidade e Responsável)
+    prodInput.value = "";
+    document.getElementById('quantidade').value = "";
+    document.getElementById('observacao').value = "";
+    prodInput.focus();
+}
 
     function renderPreview() {
         document.getElementById('tblPreview').classList.remove('hidden');
@@ -779,6 +813,11 @@
         });
 
         alert("✅ Dados enviados e Excel baixado!");
+        // Dentro do try da função enviarTudo, após o sucesso:
+document.getElementById('unidade').disabled = false;
+document.getElementById('unidade').style.backgroundColor = "#fff";
+document.getElementById('responsavel').readOnly = false;
+document.getElementById('responsavel').style.backgroundColor = "#fff";
         limparCamposFormulario();
         switchSection('home', document.getElementById('nav-home'));
 
@@ -827,11 +866,18 @@ function popularFiltros() {
     });
 }
 
-    function voltarParaHome() {
-        if (confirm("Sair? Dados não salvos serão perdidos.")) {
-            limparCamposFormulario(); switchSection('home', document.getElementById('nav-home'));
-        }
+  function voltarParaHome() {
+    if (confirm("Sair? Dados não salvos serão perdidos.")) {
+        limparCamposFormulario(); 
+        // DESTRAVA OS CAMPOS
+        document.getElementById('unidade').disabled = false;
+        document.getElementById('unidade').style.backgroundColor = "#fff";
+        document.getElementById('responsavel').readOnly = false;
+        document.getElementById('responsavel').style.backgroundColor = "#fff";
+        
+        switchSection('home', document.getElementById('nav-home'));
     }
+}
 
    function renderCompras() {
     const uni = document.getElementById('f-comp-uni').value;
@@ -1177,6 +1223,25 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
     }
 }
 
+// --- COPIE A PARTIR DAQUI ---
+// ITEM 1: LISTENER PARA PREENCHIMENTO AUTOMÁTICO DE MEDIDA
+document.addEventListener('input', function(e) {
+    // Verifica se o usuário está digitando no campo de produto
+    if (e.target && e.target.id === 'produto') {
+        const nomeDigitado = e.target.value.trim().toUpperCase();
+        const campoMedida = document.getElementById('medida');
+        
+        // Procura o produto na sua base de dados existente
+        const produtoEncontrado = BASE_PRODUTOS.find(p => p.nome.toUpperCase() === nomeDigitado);
+
+        if (produtoEncontrado) {
+            // Se encontrar, muda a medida automaticamente no formulário
+            campoMedida.value = produtoEncontrado.Medida || produtoEncontrado.medida;
+        }
+    }
+});
+// --- ATÉ AQUI ---
+    
     window.onload = function () {
         const ultimaAba = localStorage.getItem('abaAtual');
         if (ultimaAba === 'home' || !ultimaAba) switchSection('home', document.getElementById('nav-home'));
