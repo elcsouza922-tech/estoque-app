@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Estoque Pro</title>
+    <title>Sistema de Estoque</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -45,7 +45,7 @@
 <div id="toast"></div>
 
 <nav class="main-nav">
-    <div class="nav-brand">ESTOQUE PRO 2026</div>
+    <div class="nav-brand">ESTOQUE PRO</div>
     <div class="nav-links">
         <div class="nav-item active" id="nav-home" onclick="switchSection('home', this)">🏠 Início</div>
         <div id="admin-links" style="display: none; gap: 10px;">
@@ -53,7 +53,7 @@
             <div class="nav-item" id="nav-compras" onclick="switchSection('compras', this)">🛒 Compras</div>
             <div class="nav-item" id="nav-estoque" onclick="switchSection('estoque', this)">📦 Estoque</div>
         </div>
-        <div class="nav-item" onclick="acessoRestrito()" id="btn-login">🔓 Painel</div>
+        <div class="nav-item" onclick="acessoRestrito()" id="btn-login">🔓 Dash</div>
     </div>
 </nav>
 
@@ -546,12 +546,16 @@
         return parseFloat(String(str).replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
     }
 
-   function salvarEdicao(index, campo, valor) {
-    // Se o valor for texto (preço), trata a moeda. Se for número (quantidade), converte pra float.
+  function salvarEdicao(index, campo, valor) {
     const num = campo === 'precoEditado' ? parseMoedaBR(valor) : parseFloat(valor) || 0;
-    
-    // Grava permanentemente na memória do app (enquanto não der F5)
     db[index][campo] = num;
+
+    // Persiste no localStorage usando uma chave única por item
+    const item = db[index];
+    const chave = `edit_${item.unidade}_${item.produto}_${item.data}`;
+    const salvo = JSON.parse(localStorage.getItem(chave) || '{}');
+    salvo[campo] = num;
+    localStorage.setItem(chave, JSON.stringify(salvo));
 }
 
     function switchSection(id, btn) {
@@ -577,10 +581,12 @@
         }
     }
 
-    function forcarAtualizacao() {
-        mostrarToast("🔄 Sincronizando dados novos...");
-        db = []; syncDados();
-    }
+  function forcarAtualizacao() {
+    mostrarToast("🔄 Sincronizando dados novos...");
+    // Não limpa o localStorage, só o db em memória
+    db = [];
+    syncDados();
+}
 
     function abrirForm(t) {
         tipoAtual = t;
@@ -706,8 +712,10 @@
         const precoSugerido = infoBase ? infoBase.preco : 0;
 
         // Recupera o que foi digitado anteriormente ou deixa 0
-        const qReal = p.quantidadeReal !== undefined ? p.quantidadeReal : 0;
-        const pReal = p.precoEditado !== undefined ? p.precoEditado : precoSugerido;
+        const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+const editSalvo = JSON.parse(localStorage.getItem(chave) || '{}');
+const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
 
         return `<tr>
             <td><strong>${p.produto}</strong><br><small>${p.unidade}</small></td>
