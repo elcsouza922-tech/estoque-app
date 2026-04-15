@@ -106,16 +106,7 @@
             <h2 id="form-titulo" style="text-align: center; margin-bottom: 25px;"></h2>
             <div class="form-group">
                 <div><label>Responsável</label><input type="text" id="responsavel"></div>
-                <div><label>Unidade</label><select id="unidade"><option value="">Selecione...</option><option>ANDORINHAS</option><option>BELA VISTA</option><option>BONFIM</option><option>CENTRO</option><option>CONQUISTA</option><option>CONSOLAÇÃO</option><option>CARATOÍRA</option><option>ITARARÉ</option><option>JARDIM CAMBURI</option><option>JARDIM DA PENHA</option><option>MARIA ORTIZ</option><option>QUADRO</option><option>ROMÃO</option><option>NOVA PALESTINA</option><option>SANTO ANDRÉ</option><option>SANTO ANTÔNIO</option><option>SÃO PEDRO</option><option>JABURU</option><option>NISP JABURU</option><option>SOLON BORGES</option><option>PRAIA DO SUÁ</option></select></div>
-            </div>
-            <div class="form-group" style="grid-template-columns: 2fr 1fr;">
-                <div><label>Produto</label><input type="text" id="produto" list="listaProdutos"><datalist id="listaProdutos"></datalist></div>
-                <div><label>Quantidade</label><input type="number" id="quantidade"></div>
-            </div>
-            <div class="form-group" style="grid-template-columns: 2fr 1fr;">
-                <div><label>Observação</label><input type="text" id="observacao" placeholder="Opcional..."></div>
-                <div><label>Medida</label><select id="unidade">
-   <select id="unidade">
+                <div><label>Unidade</label><select id="unidade">
     <option value="">Selecione...</option>
     <option>ANDORINHAS</option>
     <option>BELA VISTA</option>
@@ -137,6 +128,15 @@
     <option>SANTO ANDRÉ</option>
     <option>SOLON BORGES</option>
 </select></div>
+            </div>
+            <div class="form-group" style="grid-template-columns: 2fr 1fr;">
+                <div><label>Produto</label><input type="text" id="produto" list="listaProdutos"><datalist id="listaProdutos"></datalist></div>
+                <div><label>Quantidade</label><input type="number" id="quantidade"></div>
+            </div>
+            <div class="form-group" style="grid-template-columns: 2fr 1fr;">
+                <div><label>Observação</label><input type="text" id="observacao" placeholder="Opcional..."></div>
+                <div><label>Medida</label><select id="unidade">
+   </div>
             </div>
             <button class="btn btn-blue" onclick="adicionarLocal()" style="width: 100%;">➕ Adicionar à Lista</button>
             <div id="preview-lista" style="margin-top:20px; border-top: 1px solid #eee; padding-top:10px;">
