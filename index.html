@@ -802,72 +802,222 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
         setTimeout(() => t.style.display = "none", 3000);
     }
 
-   function exportarExcel(t) {
+  function exportarExcel(t) {
     if (t === 'compras') {
         const uni = document.getElementById('f-comp-uni').value;
         const dataF = document.getElementById('f-comp-data').value;
-        
+
         let f = db.filter(d => d.tipo === 'pedido');
-        if(uni) f = f.filter(d => d.unidade === uni);
-        if(dataF) f = f.filter(d => d.data.startsWith(dataF));
+        if (uni) f = f.filter(d => d.unidade === uni);
+        if (dataF) f = f.filter(d => d.data.startsWith(dataF));
 
-        // 1. AJUSTE DE CATEGORIA: Transforma "NÃO LISTADO" em "ATÍPICO"
-        f.forEach(p => {
-            if (!p.material || p.material === "NÃO LISTADO") {
-                p.material = "ATÍPICO";
-            }
+        // Separa normais e atípicos
+        const normais = f.filter(p => p.material && p.material !== "NÃO LISTADO" && p.material !== "ATÍPICO");
+        const atipicos = f.filter(p => !p.material || p.material === "NÃO LISTADO" || p.material === "ATÍPICO");
+
+        // Agrupa normais por categoria
+        const categorias = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
+        const porCategoria = {};
+        categorias.forEach(c => porCategoria[c] = []);
+        normais.forEach(p => {
+            const cat = categorias.includes(p.material) ? p.material : "DIDÁTICO";
+            porCategoria[cat].push(p);
         });
 
-        // 2. ORDENAÇÃO: Coloca "ATÍPICO" sempre por último
-        f.sort((a, b) => {
-            if (a.material === "ATÍPICO" && b.material !== "ATÍPICO") return 1;
-            if (a.material !== "ATÍPICO" && b.material === "ATÍPICO") return -1;
-            return a.material.localeCompare(b.material);
-        });
+        // ── Estilos ──────────────────────────────────────────────────────────
+        const HDR_DARK   = { fgColor: { rgb: "2E4057" } };
+        const CAT_FILL   = { fgColor: { rgb: "C8D6E0" } };
+        const TOTAL_FILL = { fgColor: { rgb: "F0F0F0" } };
+        const WHITE      = { fgColor: { rgb: "FFFFFF" } };
 
-        // 3. MAPEAMENTO (Somente o que você pediu)
-        const dadosSimples = f.map((p, index) => {
-            const qReal = p.quantidadeReal !== undefined ? p.quantidadeReal : 0;
-            const precoUnit = p.precoEditado !== undefined ? p.precoEditado : 0;
+        const thinBorder = {
+            top:    { style: "thin" }, bottom: { style: "thin" },
+            left:   { style: "thin" }, right:  { style: "thin" }
+        };
 
-            return {
-                "ORDEM": index + 1,
-                "DESCRIÇÃO DO ITEM": p.produto,
-                "UNID.": p.medida || p.Medida || "Unid",
-                "QUANTIDADE": qReal,
-                "OBSERVAÇÃO": p.observacao || "",
-                "VALOR UNIT.": precoUnit,
-                "TOTAL": qReal * precoUnit,
-                "CATEGORIA": p.material // Mantive apenas para você conferir o agrupamento
+        function cellStyle(bold=false, sz=9, color="000000", hz="center", fill=null) {
+            const s = {
+                font: { name: "Arial", sz, bold, color: { rgb: color } },
+                alignment: { horizontal: hz, vertical: "center", wrapText: true },
+                border: thinBorder
             };
+            if (fill) s.fill = { patternType: "solid", ...fill };
+            return s;
+        }
+
+        // ── Monta a planilha ─────────────────────────────────────────────────
+        const wb = XLSX.utils.book_new();
+        const ws = {};
+        const merge = [];
+        let R = 0; // linha atual (0-based)
+
+        function mc(r, c1, c2) { merge.push({ s:{r,c:c1}, e:{r,c:c2} }); }
+        function setCell(r, c, v, style) {
+            const addr = XLSX.utils.encode_cell({r, c});
+            ws[addr] = { v, t: typeof v === 'number' ? 'n' : 's', s: style };
+        }
+        function emptyRow(r) {
+            for (let c = 0; c < 10; c++) ws[XLSX.utils.encode_cell({r,c})] = {v:"", s:{}};
+        }
+
+        // ── CABEÇALHO ────────────────────────────────────────────────────────
+        mc(R,0,1); setCell(R,0,"Instituto\nGênesis", cellStyle(true,11,"1F6B2E","center",WHITE));
+        mc(R,2,7); setCell(R,2,"INSTITUTO GÊNESIS", cellStyle(true,11,"000000","center",WHITE));
+        mc(R,8,9); setCell(R,8,"Prefeitura de\nVITÓRIA", cellStyle(true,10,"1A3A6B","center",{fgColor:{rgb:"E8EFF7"}}));
+        R++;
+        mc(R,0,1); setCell(R,0,"",{});
+        mc(R,2,7); setCell(R,2,"SECRETARIA MUNICIPAL DE ASSISTÊNCIA SOCIAL", cellStyle(false,8,"000000","center"));
+        mc(R,8,9); setCell(R,8,"",{});
+        R++;
+        mc(R,0,1);
+        mc(R,2,7); setCell(R,2,"GERÊNCIA DOS SERVIÇOS DE CONVIVÊNCIA E FORTALECIMENTO DE VÍNCULOS", cellStyle(false,8,"000000","center"));
+        R++;
+        mc(R,0,1);
+        mc(R,2,7); setCell(R,2,"Protocolo de Recebimento de Materiais Expediente/Didáticos\nSCFV", cellStyle(true,9,"000000","center"));
+        R++;
+        // linha em branco
+        emptyRow(R); R++;
+
+        // ── INFO ─────────────────────────────────────────────────────────────
+        mc(R,0,9); setCell(R,0,"Coordenador: Juliana", cellStyle(false,9,"000000","left"));  R++;
+        mc(R,0,9); setCell(R,0,"Telefones: (27) 3315-3808 / (27) 98141-0271", cellStyle(false,9,"000000","left")); R++;
+        mc(R,0,9); setCell(R,0,"Endereço de entrega: AV. Leitão da Silva, 3.383 - Vitoria/ES", cellStyle(false,9,"000000","left")); R++;
+        emptyRow(R); R++;
+
+        // ── DECLARAÇÃO ───────────────────────────────────────────────────────
+        const nomeUni = uni || "{{UNIDADE}}";
+        mc(R,0,9);
+        setCell(R,0,
+            `Eu______________________________ Portador do RG ________________________ declaro ter recebido os itens abaixo citados nas quantidades especificadas, a fim de serem utilizados para o melhor funcionamento do SCFV CRIAD de ${nomeUni}.`,
+            cellStyle(false,9,"000000","left")
+        ); R++;
+        emptyRow(R); R++;
+
+        // ── CABEÇALHO TABELA ─────────────────────────────────────────────────
+        const hdrLabels = ["Ordem","Descrição do item","Unid.","Quant.","Entregue","Falta","Data","Observações","Valor","Total"];
+        hdrLabels.forEach((h,c) => setCell(R,c,h, cellStyle(true,9,"FFFFFF","center",HDR_DARK)));
+        R++;
+
+        // ── DADOS POR CATEGORIA ───────────────────────────────────────────────
+        let ordem = 1;
+        let totalOrders = []; // guarda linhas com valor para o TOTAL
+
+        categorias.forEach(cat => {
+            const itens = porCategoria[cat];
+            if (itens.length === 0) return;
+
+            // Linha de categoria
+            mc(R,0,9);
+            for(let c=0;c<10;c++) setCell(R,c,"", cellStyle(true,9,"000000","center",CAT_FILL));
+            setCell(R,0, cat, cellStyle(true,9,"000000","center",CAT_FILL));
+            R++;
+
+            itens.forEach(p => {
+                const idxOriginal = db.indexOf(p);
+                const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+                const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+                const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+                const precoSugerido = infoBase ? infoBase.preco : 0;
+                const qReal  = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+                const pReal  = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
+                const medida = p.medida || p.Medida || "Unid";
+                const total  = qReal * pReal;
+
+                setCell(R,0, ordem,        cellStyle(false,9,"000000","center"));
+                setCell(R,1, p.produto,    cellStyle(false,9,"000000","left"));
+                setCell(R,2, medida,       cellStyle(false,9,"000000","center"));
+                setCell(R,3, qReal,        cellStyle(false,9,"000000","center"));
+                setCell(R,4, "",           cellStyle(false,9,"000000","center")); // Entregue – em branco
+                setCell(R,5, "",           cellStyle(false,9,"000000","center")); // Falta – em branco
+                setCell(R,6, "",           cellStyle(false,9,"000000","center")); // Data – em branco
+                setCell(R,7, p.observacao || "", cellStyle(false,9,"000000","left"));
+                setCell(R,8, pReal,        { ...cellStyle(false,9,"000000","right"), z: '"R$"#,##0.00' });
+                setCell(R,9, total,        { ...cellStyle(false,9,"000000","right"), z: '"R$"#,##0.00' });
+
+                ws[XLSX.utils.encode_cell({r:R,c:8})].t = 'n';
+                ws[XLSX.utils.encode_cell({r:R,c:9})].t = 'n';
+                ws[XLSX.utils.encode_cell({r:R,c:3})].t = 'n';
+
+                totalOrders.push(total);
+                ordem++;
+                R++;
+            });
         });
 
-        const ws = XLSX.utils.json_to_sheet(dadosSimples);
+        // ── TOTAL PRINCIPAL ───────────────────────────────────────────────────
+        const totalGeral = totalOrders.reduce((a,b)=>a+b,0);
+        for(let c=0;c<9;c++) setCell(R,c,"", cellStyle(true,9,"000000","right",TOTAL_FILL));
+        setCell(R,8,"TOTAL", cellStyle(true,9,"000000","right",TOTAL_FILL));
+        setCell(R,9, totalGeral, { ...cellStyle(true,9,"000000","right",TOTAL_FILL), t:'n', z:'"R$"#,##0.00' });
+        R += 2;
 
-        // 4. LARGURA DAS COLUNAS
+        // ── ATÍPICOS ──────────────────────────────────────────────────────────
+        if (atipicos.length > 0) {
+            mc(R,0,9);
+            for(let c=0;c<10;c++) setCell(R,c,"", cellStyle(true,9,"000000","center",CAT_FILL));
+            setCell(R,0,"ATÍPICOS", cellStyle(true,9,"000000","center",CAT_FILL));
+            R++;
+
+            let totalAtip = 0;
+            atipicos.forEach((p, i) => {
+                const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+                const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+                const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+                const precoSugerido = infoBase ? infoBase.preco : 0;
+                const qReal  = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+                const pReal  = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
+                const total  = qReal * pReal;
+                const medida = p.medida || p.Medida || "Unid";
+
+                setCell(R,0, i+1,         cellStyle(false,9,"000000","center"));
+                setCell(R,1, p.produto,   cellStyle(false,9,"000000","left"));
+                setCell(R,2, medida,      cellStyle(false,9,"000000","center"));
+                setCell(R,3, qReal,       cellStyle(false,9,"000000","center"));
+                setCell(R,4, "",          cellStyle(false,9,"000000","center"));
+                setCell(R,5, "",          cellStyle(false,9,"000000","center"));
+                setCell(R,6, "  /  /",    cellStyle(false,9,"000000","center"));
+                setCell(R,7, p.observacao || "", cellStyle(false,9,"000000","left"));
+                setCell(R,8, pReal,       { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
+                setCell(R,9, total,       { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
+
+                ws[XLSX.utils.encode_cell({r:R,c:3})].t = 'n';
+                totalAtip += total;
+                R++;
+            });
+
+            // Total atípicos
+            for(let c=0;c<9;c++) setCell(R,c,"", cellStyle(true,9,"000000","right",TOTAL_FILL));
+            setCell(R,8,"TOTAL", cellStyle(true,9,"000000","right",TOTAL_FILL));
+            setCell(R,9, totalAtip, { ...cellStyle(true,9,"000000","right",TOTAL_FILL), t:'n', z:'"R$"#,##0.00' });
+            R += 2;
+        }
+
+        // ── ASSINATURA E RODAPÉ ───────────────────────────────────────────────
+        mc(R,0,9); setCell(R,0,"Assinatura:", cellStyle(true,9,"000000","left")); R++;
+        mc(R,0,4); setCell(R,0,"_".repeat(45), cellStyle(false,9,"000000","left")); R+=2;
+        mc(R,0,9); setCell(R,0,"Atenção fornecedor, favor  imprimir em duas vias.", cellStyle(false,8,"000000","center")); R++;
+        mc(R,0,9); setCell(R,0,"1ª via Instituto Genesis/ PMV.", cellStyle(false,8,"000000","left")); R++;
+        mc(R,0,9); setCell(R,0,"2ª via Fornecedor.", cellStyle(false,8,"000000","left")); R+=2;
+        mc(R,0,9); setCell(R,0,"Observações Gerais:", cellStyle(true,9,"000000","left")); R++;
+
+        // ── APLICA MERGES E DIMENSÕES ──────────────────────────────────────────
+        ws['!merges'] = merge;
         ws['!cols'] = [
-            { wch: 8 },  // ORDEM
-            { wch: 50 }, // DESCRIÇÃO
-            { wch: 10 }, // UNID.
-            { wch: 12 }, // QUANTIDADE
-            { wch: 35 }, // OBSERVAÇÃO
-            { wch: 15 }, // VALOR UNIT.
-            { wch: 15 }, // TOTAL
-            { wch: 15 }  // CATEGORIA
+            {wch:7},{wch:35},{wch:7},{wch:8},{wch:10},{wch:8},{wch:10},{wch:25},{wch:12},{wch:12}
         ];
+        ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:R,c:9}});
 
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Protocolo_Entrega");
-        const dataHoje = new Date().toLocaleDateString().replace(/\//g, '-');
+        XLSX.utils.book_append_sheet(wb, ws, "Protocolo");
+        const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
         XLSX.writeFile(wb, `Protocolo_${uni || 'Rede'}_${dataHoje}.xlsx`);
 
     } else {
-        // Lógica para aba estoque (mantém o padrão)
+        // Estoque — mantém igual
         const data = db.filter(d => d.tipo === 'contagem');
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Estoque");
-        XLSX.writeFile(wb, "Relatorio_Estoque.xlsx");
+        const ws2 = XLSX.utils.json_to_sheet(data);
+        const wb2 = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb2, ws2, "Estoque");
+        XLSX.writeFile(wb2, "Relatorio_Estoque.xlsx");
     }
 }
 
