@@ -115,28 +115,27 @@
             <div class="form-group" style="grid-template-columns: 2fr 1fr;">
                 <div><label>Observação</label><input type="text" id="observacao" placeholder="Opcional..."></div>
                 <div><label>Medida</label><select id="unidade">
+   <select id="unidade">
     <option value="">Selecione...</option>
     <option>ANDORINHAS</option>
     <option>BELA VISTA</option>
     <option>BONFIM</option>
-    <option>CENTRO</option>
+    <option>CARATOIRA</option>
+    <option>CCTI CENTRO</option>
+    <option>CCTI JARDIM CAMBURI</option>
+    <option>CCTI JARDIM DA PENHA</option>
+    <option>CCTI MARIA ORTIZ</option>
     <option>CONQUISTA</option>
     <option>CONSOLAÇÃO</option>
-    <option>CARATOÍRA</option>
-    <option>ITARARÉ</option>
-    <option>JARDIM CAMBURI</option>
-    <option>JARDIM DA PENHA</option>
-    <option>MARIA ORTIZ</option>
+    <option>ENG. ITARARÉ</option>
+    <option>NISP JABURU</option>
+    <option>NISP SANTO ANTONIO</option>
+    <option>NISP SÃO PEDRO</option>
+    <option>PRAIA DO SUÁ</option>
     <option>QUADRO</option>
     <option>ROMÃO</option>
-    <option>NOVA PALESTINA</option>
     <option>SANTO ANDRÉ</option>
-    <option>SANTO ANTÔNIO</option>
-    <option>SÃO PEDRO</option>
-    <option>JABURU</option>
-    <option>NISP JABURU</option>
     <option>SOLON BORGES</option>
-    <option>PRAIA DO SUÁ</option>
 </select></div>
             </div>
             <button class="btn btn-blue" onclick="adicionarLocal()" style="width: 100%;">➕ Adicionar à Lista</button>
@@ -217,7 +216,27 @@
 <script>
     const URL_API = "https://script.google.com/macros/s/AKfycbxCchSkeQ_V70BdDzGSX9UinQ36X--4oJpK6UGFJchTmpcGMLxZXc8vZGimLuvqVs9wiQ/exec"; 
     const SENHA_DASH = "1234";
-    const TODAS_UNIDADES = ['ANDORINHAS','BELA VISTA','BONFIM','CENTRO','CONQUISTA','CONSOLAÇÃO','CARATOÍRA','ITARARÉ','JARDIM CAMBURI','JARDIM DA PENHA','MARIA ORTIZ','QUADRO','ROMÃO','NOVA PALESTINA','SANTO ANDRÉ','SANTO ANTÔNIO','SÃO PEDRO','JABURU','NISP JABURU','SOLON BORGES','PRAIA DO SUÁ'];
+    const TODAS_UNIDADES = [
+    'ANDORINHAS', 
+    'BELA VISTA', 
+    'BONFIM', 
+    'CARATOIRA', 
+    'CCTI CENTRO', 
+    'CCTI JARDIM CAMBURI', 
+    'CCTI JARDIM DA PENHA', 
+    'CCTI MARIA ORTIZ', 
+    'CONQUISTA', 
+    'CONSOLAÇÃO', 
+    'ENG. ITARARÉ', 
+    'NISP JABURU', 
+    'NISP SANTO ANTONIO', 
+    'NISP SÃO PEDRO', 
+    'PRAIA DO SUÁ', 
+    'QUADRO', 
+    'ROMÃO', 
+    'SANTO ANDRÉ', 
+    'SOLON BORGES'
+];
     const BASE_PRODUTOS = [
         { material: "DIDÁTICO", nome: "Agôgo", Medida: "Unidade", preco: 250.00},
 { material: "DIDÁTICO", nome: "Agulha de mão nº 05", Medida: "Pacote", preco: 29.99},
@@ -853,24 +872,22 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
     }
 
     function popularFiltros() {
-    // Tenta pegar unidades dos dados do banco, se não tiver, usa a lista mestra
-    const unidadesData = [...new Set(db.map(d => d.unidade))];
-    const unis = unidadesData.length > 0 ? unidadesData.sort() : TODAS_UNIDADES.sort();
-    
+    // Força o uso da lista oficial para evitar divergências
+    const unis = TODAS_UNIDADES.sort();
     const cats = [...new Set(db.map(d => d.material))].sort();
 
     ['f-comp-uni', 'f-est-uni'].forEach(id => {
         const s = document.getElementById(id);
         if (s) {
-            s.innerHTML = '<option value="">Todas Unidades</option>'; // Limpa e coloca o padrão
-            unis.forEach(u => s.innerHTML += `<option>${u}</option>`);
+            s.innerHTML = '<option value="">Todas Unidades</option>'; 
+            unis.forEach(u => s.innerHTML += `<option value="${u}">${u}</option>`);
         }
     });
 
     const sc = document.getElementById('f-est-cat');
     if (sc) {
         sc.innerHTML = '<option value="">Todas Categorias</option>';
-        cats.forEach(c => sc.innerHTML += `<option>${c}</option>`);
+        cats.forEach(c => { if(c) sc.innerHTML += `<option value="${c}">${c}</option>`; });
     }
 }
 
