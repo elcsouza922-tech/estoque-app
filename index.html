@@ -38,6 +38,34 @@
         .op-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
         .op-card { padding: 40px; text-align: center; cursor: pointer; background: #fff; border-radius: 25px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; transition: 0.3s; }
         .op-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        /* Estilo para o Rodapé Flutuante */
+.footer-compras {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    padding: 15px 40px;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 50px;
+    z-index: 1500;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Ajuste para o conteúdo não ficar escondido atrás do rodapé */
+#sec-compras {
+    padding-bottom: 80px;
+}
+
+@media (max-width: 600px) {
+    .footer-compras { 
+        gap: 15px; 
+        padding: 10px 20px; 
+        justify-content: space-around;
+    }
+}
     </style>
 </head>
 <body>
@@ -106,35 +134,47 @@
         <div class="card"><h3>⚠️ Pendentes de Envio (Mês Atual)</h3><div id="faltantes-lista" style="display: flex; flex-wrap: wrap; gap: 8px;"></div></div>
     </section>
 
-    <section id="sec-compras" class="hidden">
-        <div class="total-banner"><label style="color:#cbd5e1; font-size:10px;">VALOR REDE (TODAS UNIDADES)</label><div id="topo-rede-total" style="font-weight:800; font-size:22px; color:#4ade80;">R$ 0,00</div></div>
-        <div class="card">
-            <div class="form-group" style="grid-template-columns: 1fr 1fr auto auto;">
-                <select id="f-comp-uni" onchange="renderCompras()"><option value="">Todas Unidades</option></select>
-                <input type="month" id="f-comp-data" onchange="renderCompras()">
-                <button class="btn btn-outline" onclick="exportarExcel('compras')" style="margin-top:19px;">📥 Exportar</button>
-                <button class="btn btn-blue" onclick="forcarAtualizacao()" style="margin-top:19px;">🔄 Atualizar</button>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>PRODUTO</th>
-                        <th>MEDIDA</th>
-                        <th>PEDIDO ORIGINAL</th>
-                        <th>ÚLTIMA CONTAGEM</th>
-                        <th>COMPRA REAL</th>
-                        <th>PREÇO UNIT.</th>
-                        <th>SUBTOTAL</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-compras"></tbody>
-            </table>
-            <div style="margin-top:20px; display: flex; justify-content: flex-end; gap: 40px; border-top: 2px solid #eee; padding-top: 15px;">
-                <div style="text-align: right;"><label>TOTAL ORIGINAL:</label><div id="total-orig-filtro" style="font-weight:800; font-size:20px;">R$ 0,00</div></div>
-                <div style="text-align: right;"><label>TOTAL REAL:</label><div id="total-real-filtro" style="font-weight:800; font-size:20px; color:var(--success)">R$ 0,00</div></div>
-            </div>
+   <section id="sec-compras" class="hidden">
+    <div class="total-banner">
+        <label style="color:#cbd5e1; font-size:10px;">VALOR REDE (TODAS UNIDADES)</label>
+        <div id="topo-rede-total" style="font-weight:800; font-size:22px; color:#4ade80;">R$ 0,00</div>
+    </div>
+    
+    <div class="card">
+        <div class="form-group" style="grid-template-columns: 1fr 1fr auto auto;">
+            <select id="f-comp-uni" onchange="renderCompras()"><option value="">Todas Unidades</option></select>
+            <input type="month" id="f-comp-data" onchange="renderCompras()">
+            <button class="btn btn-outline" onclick="exportarExcel('compras')" style="margin-top:19px;">📥 Exportar</button>
+            <button class="btn btn-blue" onclick="forcarAtualizacao()" style="margin-top:19px;">🔄 Atualizar</button>
         </div>
-    </section>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>PRODUTO</th>
+                    <th>MEDIDA</th>
+                    <th>PEDIDO ORIGINAL</th>
+                    <th>ÚLTIMA CONTAGEM</th>
+                    <th>COMPRA REAL</th>
+                    <th>PREÇO UNIT.</th>
+                    <th>SUBTOTAL</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-compras"></tbody>
+        </table>
+    </div>
+
+    <div class="footer-compras">
+        <div style="text-align: right;">
+            <label style="font-size: 10px; font-weight: 700; color: #64748b;">TOTAL ORIGINAL:</label>
+            <div id="total-orig-filtro" style="font-weight:800; font-size:18px;">R$ 0,00</div>
+        </div>
+        <div style="text-align: right;">
+            <label style="font-size: 10px; font-weight: 700; color: #64748b;">TOTAL REAL:</label>
+            <div id="total-real-filtro" style="font-weight:800; font-size:18px; color:var(--success)">R$ 0,00</div>
+        </div>
+    </div>
+</section>
 
     <section id="sec-estoque" class="hidden">
         <div class="card">
