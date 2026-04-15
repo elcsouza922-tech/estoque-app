@@ -152,7 +152,7 @@
 </div>
 
 <script>
-    const URL_API = "https://script.google.com/macros/s/AKfycbzfjrzu43dB5hP-xAtDfrgWJJBrBzKXJbblMZd8pbwVMx4gyRhuCEwsx_BzjE5FEIO48A/exec"; 
+    const URL_API = "https://script.google.com/macros/s/AKfycbxCchSkeQ_V70BdDzGSX9UinQ36X--4oJpK6UGFJchTmpcGMLxZXc8vZGimLuvqVs9wiQ/exec"; 
     const SENHA_DASH = "1234";
     const TODAS_UNIDADES = ['ANDORINHAS','BELA VISTA','BONFIM','CENTRO','CONQUISTA','CONSOLAÇÃO','CARATOÍRA','ITARARÉ','JARDIM CAMBURI','JARDIM DA PENHA','MARIA ORTIZ','QUADRO','ROMÃO','NOVA PALESTINA','SANTO ANDRÉ','SANTO ANTONIO','SÃO PEDRO','JABURU','NISP JABURU','SOLON BORGES','PRAIA DO SUÁ'];
     
@@ -546,16 +546,22 @@
         return parseFloat(String(str).replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
     }
 
-  function salvarEdicao(index, campo, valor) {
+ function salvarEdicao(index, campo, valor) {
     const num = campo === 'precoEditado' ? parseMoedaBR(valor) : parseFloat(valor) || 0;
     db[index][campo] = num;
 
-    // Persiste no localStorage usando uma chave única por item
     const item = db[index];
     const chave = `edit_${item.unidade}_${item.produto}_${item.data}`;
-    const salvo = JSON.parse(localStorage.getItem(chave) || '{}');
-    salvo[campo] = num;
-    localStorage.setItem(chave, JSON.stringify(salvo));
+
+    if (!window.edicoesGlobais) window.edicoesGlobais = {};
+    if (!window.edicoesGlobais[chave]) window.edicoesGlobais[chave] = {};
+    window.edicoesGlobais[chave][campo] = num;
+
+    fetch(URL_API, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ tipo: 'edicao', chave, campo, valor: num })
+    });
 }
 
     function switchSection(id, btn) {
@@ -678,13 +684,15 @@
         itensLocal = []; renderPreview(); document.getElementById('tblPreview').classList.add('hidden');
     }
 
-    async function syncDados() {
-        try {
-            const r = await fetch(URL_API + "?t=" + Date.now());
-            db = await r.json();
-            popularFiltros(); renderDash(); renderCompras(); renderEstoque();
-        } catch (e) { console.error("Erro sincronia"); }
-    }
+  async function syncDados() {
+    try {
+        const r = await fetch(URL_API + "?t=" + Date.now());
+        const resposta = await r.json();
+        db = resposta.dados || resposta;
+        window.edicoesGlobais = resposta.edicoes || {};
+        popularFiltros(); renderDash(); renderCompras(); renderEstoque();
+    } catch (e) { console.error("Erro sincronia"); }
+}
 
     function voltarParaHome() {
         if (confirm("Sair? Dados não salvos serão perdidos.")) {
@@ -712,8 +720,8 @@
         const precoSugerido = infoBase ? infoBase.preco : 0;
 
         // Recupera o que foi digitado anteriormente ou deixa 0
-        const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-const editSalvo = JSON.parse(localStorage.getItem(chave) || '{}');
+const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+const editSalvo = (window.edicoesGlobais || {})[chave] || {};
 const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
 const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
 
