@@ -1287,7 +1287,125 @@ function exportarExcelTodas() {
     const wb = XLSX.utils.book_new();
     const CATS_VALIDAS = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
     const unidadesComPedido = [...new Set(pedidos.map(p => p.unidade))].sort();
+//
+// ── ABA RESUMO (primeira aba) ─────────────────────────────────────────────
+const wsResumo = {};
+const mergeResumo = [];
+let RR = 0;
 
+function mcR(r, c1, c2) { mergeResumo.push({ s:{r,c:c1}, e:{r,c:c2} }); }
+function setCellR(r, c, v, style) {
+    const addr = XLSX.utils.encode_cell({r,c});
+    wsResumo[addr] = { v, t: typeof v === 'number' ? 'n' : 's', s: style };
+}
+
+const AZUL_HEADER = { fgColor: { rgb: "2E4057" } };
+const AZUL_CLARO  = { fgColor: { rgb: "DBEAFE" } };
+const VERDE_CLARO = { fgColor: { rgb: "DCFCE7" } };
+const AMARELO     = { fgColor: { rgb: "FEF9C3" } };
+const VERMELHO    = { fgColor: { rgb: "FEE2E2" } };
+const CINZA       = { fgColor: { rgb: "F1F5F9" } };
+const BRANCO      = { fgColor: { rgb: "FFFFFF" } };
+
+// Título
+mcR(RR,0,4);
+setCellR(RR,0,"RESUMO GERAL DE PEDIDOS - " + dataF, cellStyle(true,12,"FFFFFF","center",AZUL_HEADER));
+RR++;
+mcR(RR,0,4);
+setCellR(RR,0,"Instituto Gênesis — SCFV/CRIAD", cellStyle(false,9,"64748b","center",CINZA));
+RR+=2;
+
+// Cabeçalho da tabela
+["PROGRAMA","UNIDADE","VALOR PEDIDO","P. ATÍPICOS","VALOR TOTAL"].forEach((h,c) => {
+    setCellR(RR, c, h, cellStyle(true,9,"FFFFFF","center",AZUL_HEADER));
+});
+RR++;
+
+// Dados por unidade
+let somaTotal = 0;
+let somaAtip  = 0;
+
+// Detecta programa por unidade (CRIAD vs IDOSO — ajuste conforme sua lógica)
+const programaMap = {
+    'ANDORINHAS':'CRIAD','BELA VISTA':'CRIAD','BONFIM':'CRIAD','CARATOIRA':'CRIAD',
+    'CCTI CENTRO':'CRIAD','CCTI JARDIM CAMBURI':'CRIAD','CCTI JARDIM DA PENHA':'CRIAD',
+    'CCTI MARIA ORTIZ':'CRIAD','CONQUISTA':'CRIAD','CONSOLAÇÃO':'CRIAD',
+    'ENG. ITARARÉ':'CRIAD','NISP JABURU':'IDOSO','NISP SANTO ANTONIO':'IDOSO',
+    'NISP SÃO PEDRO':'IDOSO','PRAIA DO SUÁ':'CRIAD','QUADRO':'CRIAD',
+    'ROMÃO':'CRIAD','SANTO ANDRÉ':'CRIAD','SOLON BORGES':'CRIAD'
+};
+
+unidadesComPedido.forEach((uni, i) => {
+    const itensUni = pedidos.filter(p => p.unidade === uni);
+    const CATS_VALIDAS_R = ["DIDÁTICO","EXPEDIENTE","UTENSÍLIOS DOMÉSTICOS","LIMPEZA/DESCARTÁVEIS"];
+
+    let totalUni = 0;
+    let totalAtipUni = 0;
+
+    itensUni.forEach(p => {
+        const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+        const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+        const precoSugerido = infoBase ? infoBase.preco : 0;
+        const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+        const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
+        const sub = qReal * pReal;
+
+        totalUni += sub;
+        if (!p.material || !CATS_VALIDAS_R.includes(p.material)) totalAtipUni += sub;
+    });
+
+    const fillLinha = i % 2 === 0 ? BRANCO : CINZA;
+    const programa = programaMap[uni] || "CRIAD";
+
+    setCellR(RR, 0, programa,                    cellStyle(false,9,"000000","center", fillLinha));
+    setCellR(RR, 1, uni,                          cellStyle(false,9,"000000","left",   fillLinha));
+    setCellR(RR, 2, totalUni - totalAtipUni,      { ...cellStyle(false,9,"000000","right", fillLinha), t:'n', z:'"R$"#,##0.00' });
+    setCellR(RR, 3, totalAtipUni,                 { ...cellStyle(false,9,"000000","right", fillLinha), t:'n', z:'"R$"#,##0.00' });
+    setCellR(RR, 4, totalUni,                     { ...cellStyle(false,9,"000000","right", fillLinha), t:'n', z:'"R$"#,##0.00' });
+
+    somaTotal += totalUni;
+    somaAtip  += totalAtipUni;
+    RR++;
+});
+
+// Linha de total
+setCellR(RR,0,"",    cellStyle(true,9,"000000","center",AZUL_HEADER));
+setCellR(RR,1,"TOTAL:", cellStyle(true,9,"FFFFFF","right",AZUL_HEADER));
+setCellR(RR,2, somaTotal - somaAtip, { ...cellStyle(true,9,"FFFFFF","right",AZUL_HEADER), t:'n', z:'"R$"#,##0.00' });
+setCellR(RR,3, somaAtip,             { ...cellStyle(true,9,"FFFFFF","right",AZUL_HEADER), t:'n', z:'"R$"#,##0.00' });
+setCellR(RR,4, somaTotal,            { ...cellStyle(true,9,"FFFFFF","right",AZUL_HEADER), t:'n', z:'"R$"#,##0.00' });
+RR += 2;
+
+// ── BLOCO DE TOTALIZADORES ────────────────────────────────────────────────
+const ORCAMENTO_MENSAL = 42884.56; // mesmo valor fixo do Dash
+const mediaPorUnidade  = unidadesComPedido.length > 0 ? somaTotal / unidadesComPedido.length : 0;
+const diferenca        = ORCAMENTO_MENSAL - somaTotal;
+const corDiferenca     = diferenca >= 0 ? VERDE_CLARO : VERMELHO;
+const corTextoDif      = diferenca >= 0 ? "166534"    : "991B1B";
+
+const totalizadores = [
+    ["Valor Total Realizado",    somaTotal,         VERDE_CLARO, "166534"],
+    ["Valor Total Mensal (Orç.)",ORCAMENTO_MENSAL,  AZUL_CLARO,  "1E40AF"],
+    ["Valor Mensal Cada Unidade",mediaPorUnidade,    AMARELO,     "854D0E"],
+    ["Diferença (Orç. - Real)",  diferenca,          corDiferenca, corTextoDif],
+];
+
+totalizadores.forEach(([label, valor, fill, cor]) => {
+    mcR(RR,0,1);
+    setCellR(RR, 0, label, cellStyle(true,9,cor,"left", fill));
+    setCellR(RR, 1, "",    cellStyle(true,9,cor,"left", fill)); // célula merged
+    setCellR(RR, 2, valor, { ...cellStyle(true,10,cor,"right", fill), t:'n', z:'"R$"#,##0.00' });
+    RR++;
+});
+
+wsResumo['!merges'] = mergeResumo;
+wsResumo['!cols']   = [{wch:10},{wch:25},{wch:18},{wch:15},{wch:15}];
+wsResumo['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:RR,c:4}});
+
+// Insere como PRIMEIRA aba
+XLSX.utils.book_append_sheet(wb, wsResumo, "RESUMO");
+  //  
     // ── Estilos (igual ao exportarExcel individual) ──────────────────────
     const HDR_DARK   = { fgColor: { rgb: "2E4057" } };
     const CAT_FILL   = { fgColor: { rgb: "C8D6E0" } };
