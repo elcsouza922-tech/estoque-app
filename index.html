@@ -209,12 +209,13 @@
             <thead>
                 <tr>
                     <th>PRODUTO</th>
-                    <th>MEDIDA</th>
-                    <th>PEDIDO ORIGINAL</th>
-                    <th>ÚLTIMA CONTAGEM</th>
-                    <th>COMPRA REAL</th>
-                    <th>PREÇO UNIT.</th>
-                    <th>SUBTOTAL</th>
+<th>MEDIDA</th>
+<th style="background:#dbeafe; color:#1e40af;">ÚLT. PEDIDO</th>
+<th style="background:#fef9c3; color:#854d0e;">PED. ORIGINAL</th>
+<th style="background:#fef9c3; color:#854d0e;">SUBTOTAL ORIG.</th>
+<th style="background:#dcfce7; color:#166534;">COMPRA REAL</th>
+<th style="background:#dcfce7; color:#166534;">PREÇO UNIT.</th>
+<th style="background:#dcfce7; color:#166534;">SUBTOTAL REAL</th>
                 </tr>
             </thead>
             <tbody id="tbody-compras"></tbody>
@@ -907,43 +908,68 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
         return `<tr>
     <td style="line-height: 1.4;">
         <small style="color: #64748b; font-weight: 600; text-transform: uppercase;">${p.unidade}</small><br>
-        <strong style="font-size: 14px; color: var(--text);">${p.produto}</strong><br>
+        <strong style="font-size: 14px;">${p.produto}</strong><br>
         <small style="color: #64748b;">Obs.: ${p.observacao || "---"}</small>
     </td>
     <td>${p.Medida || p.medida || "Unidade"}</td>
-    <td class="q-orig">${p.quantidade}</td>
-    <td><div class="badge-estoque" style="width: 50px; text-align: center; border: 1px solid #2563eb; background: white; color: #2563eb; padding:5px; border-radius:8px;">${ult ? ult.quantidade : 0}</div></td>
-    <td>
-        <input type="number" class="input-compra q-real" 
-            value="${qReal}" 
+
+    <!-- ÚLTIMO PEDIDO: busca o pedido mais recente ANTERIOR ao atual -->
+    <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
+        ${(() => {
+            const anterior = db.filter(d =>
+                d.tipo === 'pedido' &&
+                d.unidade === p.unidade &&
+                d.produto === p.produto &&
+                d.data !== p.data
+            ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
+            return anterior ? anterior.quantidade : '<span style="color:#94a3b8">—</span>';
+        })()}
+    </td>
+
+    <!-- PEDIDO ORIGINAL -->
+    <td style="background:#fefce8; text-align:center; font-weight:700; color:#a16207;" class="q-orig">${p.quantidade}</td>
+
+    <!-- SUBTOTAL ORIGINAL -->
+    <td style="background:#fefce8; text-align:center; color:#a16207;" class="sub-orig">R$ 0,00</td>
+
+    <!-- COMPRA REAL -->
+    <td style="background:#f0fdf4;">
+        <input type="number" class="input-compra q-real"
+            value="${qReal}"
             oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
     </td>
-    <td>
-        <input type="text" class="input-compra p-unit" 
-            value="${pReal.toFixed(2).replace('.', ',')}" 
-            oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()" 
+
+    <!-- PREÇO UNIT -->
+    <td style="background:#f0fdf4;">
+        <input type="text" class="input-compra p-unit"
+            value="${pReal.toFixed(2).replace('.', ',')}"
+            oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()"
             onblur="formatMoeda(this)">
     </td>
-    <td class="sub-real" style="font-weight:bold; color:#16a34a">R$ 0,00</td>
+
+    <!-- SUBTOTAL REAL -->
+    <td class="sub-real" style="background:#f0fdf4; font-weight:bold; color:#16a34a">R$ 0,00</td>
 </tr>`;
     }).join('');
     calcCompras();
 }
 
-    function calcCompras() {
-        let tOrig = 0, tReal = 0;
-        document.querySelectorAll('#tbody-compras tr').forEach(tr => {
-            const preco = parseMoedaBR(tr.querySelector('.p-unit').value);
-            const qOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
-            const qReal = parseFloat(tr.querySelector('.q-real').value) || 0;
-            const sub = qReal * preco;
-            tOrig += (qOrig * preco); tReal += sub;
-            tr.querySelector('.sub-real').innerText = sub.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-        });
-        document.getElementById('total-orig-filtro').innerText = tOrig.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-        document.getElementById('total-real-filtro').innerText = tReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-        document.getElementById('topo-rede-total').innerText = tReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-    }
+   function calcCompras() {
+    let tOrig = 0, tReal = 0;
+    document.querySelectorAll('#tbody-compras tr').forEach(tr => {
+        const preco = parseMoedaBR(tr.querySelector('.p-unit').value);
+        const qOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
+        const qReal = parseFloat(tr.querySelector('.q-real').value) || 0;
+        const subOrig = qOrig * preco;
+        const subReal = qReal * preco;
+        tOrig += subOrig; tReal += subReal;
+        tr.querySelector('.sub-orig').innerText = subOrig.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
+        tr.querySelector('.sub-real').innerText = subReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
+    });
+    document.getElementById('total-orig-filtro').innerText = tOrig.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
+    document.getElementById('total-real-filtro').innerText = tReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
+    document.getElementById('topo-rede-total').innerText = tReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
+}
 
    function renderDash() {
     const mesAtual = new Date().toISOString().slice(0, 7);
