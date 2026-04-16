@@ -1014,8 +1014,9 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
         if (dataF) f = f.filter(d => d.data.startsWith(dataF));
 
         // Separa normais e atípicos
-        const normais = f.filter(p => p.material && p.material !== "NÃO LISTADO" && p.material !== "ATÍPICO");
-        const atipicos = f.filter(p => !p.material || p.material === "NÃO LISTADO" || p.material === "ATÍPICO");
+       const CATS_VALIDAS = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
+const normais = f.filter(p => p.material && CATS_VALIDAS.includes(p.material));
+const atipicos = f.filter(p => !p.material || !CATS_VALIDAS.includes(p.material));
 
         // Agrupa normais por categoria
         const categorias = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
