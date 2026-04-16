@@ -1029,23 +1029,27 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
     }
 
     function popularFiltros() {
-    // Força o uso da lista oficial para evitar divergências
     const unis = TODAS_UNIDADES.sort();
-    const cats = [...new Set(db.map(d => d.material))].sort();
+    // Categorias fixas + o que vier do banco
+    const CATS_FIXAS = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
+    const catsDoBanco = [...new Set(db.map(d => d.material))].filter(Boolean);
+    const cats = [...new Set([...CATS_FIXAS, ...catsDoBanco])].sort();
 
     ['f-comp-uni', 'f-est-uni'].forEach(id => {
         const s = document.getElementById(id);
         if (s) {
-            s.innerHTML = '<option value="">Todas Unidades</option>'; 
+            s.innerHTML = '<option value="">Todas Unidades</option>';
             unis.forEach(u => s.innerHTML += `<option value="${u}">${u}</option>`);
         }
     });
 
-    const sc = document.getElementById('f-est-cat');
-    if (sc) {
-        sc.innerHTML = '<option value="">Todas Categorias</option>';
-        cats.forEach(c => { if(c) sc.innerHTML += `<option value="${c}">${c}</option>`; });
-    }
+    ['f-comp-cat', 'f-est-cat'].forEach(id => {
+        const s = document.getElementById(id);
+        if (s) {
+            s.innerHTML = '<option value="">Todas Categorias</option>';
+            cats.forEach(c => s.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+    });
 }
 
     function mostrarToast(m) {
@@ -1282,67 +1286,193 @@ function exportarExcelTodas() {
 
     const wb = XLSX.utils.book_new();
     const CATS_VALIDAS = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
-
-    // Pega unidades que têm pedido no mês
     const unidadesComPedido = [...new Set(pedidos.map(p => p.unidade))].sort();
 
+    // ── Estilos (igual ao exportarExcel individual) ──────────────────────
+    const HDR_DARK   = { fgColor: { rgb: "2E4057" } };
+    const CAT_FILL   = { fgColor: { rgb: "C8D6E0" } };
+    const TOTAL_FILL = { fgColor: { rgb: "F0F0F0" } };
+    const WHITE      = { fgColor: { rgb: "FFFFFF" } };
+    const thinBorder = {
+        top: {style:"thin"}, bottom: {style:"thin"},
+        left: {style:"thin"}, right: {style:"thin"}
+    };
+    function cellStyle(bold=false, sz=9, color="000000", hz="center", fill=null) {
+        const s = {
+            font: { name:"Arial", sz, bold, color:{rgb:color} },
+            alignment: { horizontal:hz, vertical:"center", wrapText:true },
+            border: thinBorder
+        };
+        if (fill) s.fill = { patternType:"solid", ...fill };
+        return s;
+    }
+
     unidadesComPedido.forEach(uni => {
-        const itensDaUni = pedidos.filter(p => p.unidade === uni);
+        const f = pedidos.filter(p => p.unidade === uni);
+        const normais = f.filter(p => CATS_VALIDAS.includes(p.material));
+        const atipicos = f.filter(p => !p.material || !CATS_VALIDAS.includes(p.material));
 
-        const linhas = itensDaUni.map(p => {
-            const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-            const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-            const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-            const precoSugerido = infoBase ? infoBase.preco : 0;
-            const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
-            const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
-
-            // Último pedido anterior
-            const ultPedido = db.filter(d =>
-                d.tipo === 'pedido' && d.unidade === uni &&
-                d.produto === p.produto && d.data !== p.data
-            ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-
-            // Estoque atual
-            const ultContagem = db.filter(d =>
-                d.tipo === 'contagem' && d.unidade === uni && d.produto === p.produto
-            ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-
-            return {
-                'Categoria':        p.material || 'ATÍPICOS',
-                'Produto':          p.produto,
-                'Medida':           p.medida || p.Medida || 'Unidade',
-                'Últ. Pedido':      ultPedido ? ultPedido.quantidade : 0,
-                'Em Estoque':       ultContagem ? ultContagem.quantidade : 0,
-                'Ped. Original':    p.quantidade,
-                'Subtotal Orig.':   parseFloat(p.quantidade) * pReal,
-                'Compra Real':      qReal,
-                'Preço Unit.':      pReal,
-                'Subtotal Real':    qReal * pReal,
-                'Observação':       p.observacao || ''
-            };
+        const porCategoria = {};
+        CATS_VALIDAS.forEach(c => porCategoria[c] = []);
+        normais.forEach(p => {
+            const cat = CATS_VALIDAS.includes(p.material) ? p.material : "DIDÁTICO";
+            porCategoria[cat].push(p);
         });
 
-        // Ordena por categoria
-        linhas.sort((a,b) => {
-            const ia = CATS_VALIDAS.indexOf(a.Categoria);
-            const ib = CATS_VALIDAS.indexOf(b.Categoria);
-            return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+        const ws = {};
+        const merge = [];
+        let R = 0;
+
+        function mc(r, c1, c2) { merge.push({ s:{r,c:c1}, e:{r,c:c2} }); }
+        function setCell(r, c, v, style) {
+            const addr = XLSX.utils.encode_cell({r,c});
+            ws[addr] = { v, t: typeof v === 'number' ? 'n' : 's', s: style };
+        }
+        function emptyRow(r) {
+            for (let c = 0; c < 10; c++) ws[XLSX.utils.encode_cell({r,c})] = {v:"", s:{}};
+        }
+
+        // ── CABEÇALHO ────────────────────────────────────────────────────
+        mc(R,0,1); setCell(R,0,"Instituto\nGênesis", cellStyle(true,11,"1F6B2E","center",WHITE));
+        mc(R,2,7); setCell(R,2,"INSTITUTO GÊNESIS", cellStyle(true,11,"000000","center",WHITE));
+        mc(R,8,9); setCell(R,8,"Prefeitura de\nVITÓRIA", cellStyle(true,10,"1A3A6B","center",{fgColor:{rgb:"E8EFF7"}}));
+        R++;
+        mc(R,0,1); setCell(R,0,"",{});
+        mc(R,2,7); setCell(R,2,"SECRETARIA MUNICIPAL DE ASSISTÊNCIA SOCIAL", cellStyle(false,8,"000000","center"));
+        mc(R,8,9); setCell(R,8,"",{});
+        R++;
+        mc(R,0,1);
+        mc(R,2,7); setCell(R,2,"GERÊNCIA DOS SERVIÇOS DE CONVIVÊNCIA E FORTALECIMENTO DE VÍNCULOS", cellStyle(false,8,"000000","center"));
+        R++;
+        mc(R,0,1);
+        mc(R,2,7); setCell(R,2,"Protocolo de Recebimento de Materiais Expediente/Didáticos\nSCFV", cellStyle(true,9,"000000","center"));
+        R++;
+        emptyRow(R); R++;
+
+        // ── INFO ─────────────────────────────────────────────────────────
+        mc(R,0,9); setCell(R,0,"Coordenador: Juliana", cellStyle(false,9,"000000","left")); R++;
+        mc(R,0,9); setCell(R,0,"Telefones: (27) 3315-3808 / (27) 98141-0271", cellStyle(false,9,"000000","left")); R++;
+        mc(R,0,9); setCell(R,0,"Endereço de entrega: AV. Leitão da Silva, 3.383 - Vitoria/ES", cellStyle(false,9,"000000","left")); R++;
+        emptyRow(R); R++;
+
+        // ── DECLARAÇÃO ───────────────────────────────────────────────────
+        mc(R,0,9);
+        setCell(R,0,
+            `Eu______________________________ Portador do RG ________________________ declaro ter recebido os itens abaixo citados nas quantidades especificadas, a fim de serem utilizados para o melhor funcionamento do SCFV CRIAD de ${uni}.`,
+            cellStyle(false,9,"000000","left")
+        ); R++;
+        emptyRow(R); R++;
+
+        // ── CABEÇALHO TABELA ─────────────────────────────────────────────
+        const hdrLabels = ["Ordem","Descrição do item","Unid.","Quant.","Entregue","Falta","Data","Observações","Valor","Total"];
+        hdrLabels.forEach((h,c) => setCell(R,c,h, cellStyle(true,9,"FFFFFF","center",HDR_DARK)));
+        R++;
+
+        // ── DADOS POR CATEGORIA ───────────────────────────────────────────
+        let ordem = 1;
+        let totalGeral = 0;
+
+        CATS_VALIDAS.forEach(cat => {
+            const itens = porCategoria[cat];
+            if (itens.length === 0) return;
+
+            mc(R,0,9);
+            for(let c=0;c<10;c++) setCell(R,c,"", cellStyle(true,9,"000000","center",CAT_FILL));
+            setCell(R,0, cat, cellStyle(true,9,"000000","center",CAT_FILL));
+            R++;
+
+            itens.forEach(p => {
+                const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+                const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+                const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+                const precoSugerido = infoBase ? infoBase.preco : 0;
+                const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+                const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
+                const total = qReal * pReal;
+                const medida = p.medida || p.Medida || "Unid";
+
+                setCell(R,0, ordem,               cellStyle(false,9,"000000","center"));
+                setCell(R,1, p.produto,           cellStyle(false,9,"000000","left"));
+                setCell(R,2, medida,              cellStyle(false,9,"000000","center"));
+                setCell(R,3, qReal,               cellStyle(false,9,"000000","center"));
+                setCell(R,4, "",                  cellStyle(false,9,"000000","center"));
+                setCell(R,5, "",                  cellStyle(false,9,"000000","center"));
+                setCell(R,6, "",                  cellStyle(false,9,"000000","center"));
+                setCell(R,7, p.observacao || "",  cellStyle(false,9,"000000","left"));
+                setCell(R,8, pReal,               { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
+                setCell(R,9, total,               { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
+
+                ws[XLSX.utils.encode_cell({r:R,c:3})].t = 'n';
+                totalGeral += total;
+                ordem++;
+                R++;
+            });
         });
 
-        const ws = XLSX.utils.json_to_sheet(linhas);
-        ws['!cols'] = [
-            {wch:22},{wch:40},{wch:10},{wch:12},{wch:12},
-            {wch:14},{wch:15},{wch:13},{wch:12},{wch:14},{wch:25}
-        ];
+        // ── TOTAL GERAL ───────────────────────────────────────────────────
+        for(let c=0;c<9;c++) setCell(R,c,"", cellStyle(true,9,"000000","right",TOTAL_FILL));
+        setCell(R,8,"TOTAL", cellStyle(true,9,"000000","right",TOTAL_FILL));
+        setCell(R,9, totalGeral, { ...cellStyle(true,9,"000000","right",TOTAL_FILL), t:'n', z:'"R$"#,##0.00' });
+        R += 2;
 
-        // Nome da aba: máx 31 chars (limite do Excel)
+        // ── ATÍPICOS ──────────────────────────────────────────────────────
+        if (atipicos.length > 0) {
+            mc(R,0,9);
+            for(let c=0;c<10;c++) setCell(R,c,"", cellStyle(true,9,"000000","center",CAT_FILL));
+            setCell(R,0,"ATÍPICOS", cellStyle(true,9,"000000","center",CAT_FILL));
+            R++;
+
+            let totalAtip = 0;
+            atipicos.forEach((p, i) => {
+                const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+                const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+                const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+                const precoSugerido = infoBase ? infoBase.preco : 0;
+                const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+                const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
+                const total = qReal * pReal;
+                const medida = p.medida || p.Medida || "Unid";
+
+                setCell(R,0, i+1,              cellStyle(false,9,"000000","center"));
+                setCell(R,1, p.produto,        cellStyle(false,9,"000000","left"));
+                setCell(R,2, medida,           cellStyle(false,9,"000000","center"));
+                setCell(R,3, qReal,            cellStyle(false,9,"000000","center"));
+                setCell(R,4, "",               cellStyle(false,9,"000000","center"));
+                setCell(R,5, "",               cellStyle(false,9,"000000","center"));
+                setCell(R,6, "  /  /",         cellStyle(false,9,"000000","center"));
+                setCell(R,7, p.observacao||"", cellStyle(false,9,"000000","left"));
+                setCell(R,8, pReal,            { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
+                setCell(R,9, total,            { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
+                ws[XLSX.utils.encode_cell({r:R,c:3})].t = 'n';
+                totalAtip += total;
+                R++;
+            });
+
+            for(let c=0;c<9;c++) setCell(R,c,"", cellStyle(true,9,"000000","right",TOTAL_FILL));
+            setCell(R,8,"TOTAL", cellStyle(true,9,"000000","right",TOTAL_FILL));
+            setCell(R,9, totalAtip, { ...cellStyle(true,9,"000000","right",TOTAL_FILL), t:'n', z:'"R$"#,##0.00' });
+            R += 2;
+        }
+
+        // ── ASSINATURA ────────────────────────────────────────────────────
+        mc(R,0,9); setCell(R,0,"Assinatura:", cellStyle(true,9,"000000","left")); R++;
+        mc(R,0,4); setCell(R,0,"_".repeat(45), cellStyle(false,9,"000000","left")); R+=2;
+        mc(R,0,9); setCell(R,0,"Atenção fornecedor, favor imprimir em duas vias.", cellStyle(false,8,"000000","center")); R++;
+        mc(R,0,9); setCell(R,0,"1ª via Instituto Genesis/ PMV.", cellStyle(false,8,"000000","left")); R++;
+        mc(R,0,9); setCell(R,0,"2ª via Fornecedor.", cellStyle(false,8,"000000","left")); R+=2;
+        mc(R,0,9); setCell(R,0,"Observações Gerais:", cellStyle(true,9,"000000","left")); R++;
+
+        // ── APLICA ────────────────────────────────────────────────────────
+        ws['!merges'] = merge;
+        ws['!cols'] = [{wch:7},{wch:35},{wch:7},{wch:8},{wch:10},{wch:8},{wch:10},{wch:25},{wch:12},{wch:12}];
+        ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:R,c:9}});
+
         const nomeAba = uni.substring(0, 31);
         XLSX.utils.book_append_sheet(wb, ws, nomeAba);
     });
 
     const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-    XLSX.writeFile(wb, `Pedidos_Todas_Unidades_${dataF}_${dataHoje}.xlsx`);
+    XLSX.writeFile(wb, `Protocolo_Todas_Unidades_${dataF}_${dataHoje}.xlsx`);
     mostrarToast(`✅ Excel com ${unidadesComPedido.length} unidades gerado!`);
 }
     
