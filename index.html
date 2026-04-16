@@ -1406,24 +1406,7 @@ wsResumo['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:RR,c:4}});
 // Insere como PRIMEIRA aba
 XLSX.utils.book_append_sheet(wb, wsResumo, "RESUMO");
   //  
-    // ── Estilos (igual ao exportarExcel individual) ──────────────────────
-    const HDR_DARK   = { fgColor: { rgb: "2E4057" } };
-    const CAT_FILL   = { fgColor: { rgb: "C8D6E0" } };
-    const TOTAL_FILL = { fgColor: { rgb: "F0F0F0" } };
-    const WHITE      = { fgColor: { rgb: "FFFFFF" } };
-    const thinBorder = {
-        top: {style:"thin"}, bottom: {style:"thin"},
-        left: {style:"thin"}, right: {style:"thin"}
-    };
-    function cellStyle(bold=false, sz=9, color="000000", hz="center", fill=null) {
-        const s = {
-            font: { name:"Arial", sz, bold, color:{rgb:color} },
-            alignment: { horizontal:hz, vertical:"center", wrapText:true },
-            border: thinBorder
-        };
-        if (fill) s.fill = { patternType:"solid", ...fill };
-        return s;
-    }
+   
 
     unidadesComPedido.forEach(uni => {
         const f = pedidos.filter(p => p.unidade === uni);
