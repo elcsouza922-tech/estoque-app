@@ -890,80 +890,91 @@ function popularFiltros() {
     }
 }
 
-  function renderCompras() {
+   function renderCompras() {
     const uni = document.getElementById('f-comp-uni').value;
     const dataF = document.getElementById('f-comp-data').value;
-    const catF = document.getElementById('f-comp-cat').value;
     const tbody = document.getElementById('tbody-compras');
     
-    // Mostra um aviso rápido se demorar (bom para o Sheets)
-    if(db.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px;">Carregando dados do Google Sheets...</td></tr>';
-    }
+   let f = db.filter(d => d.tipo === 'pedido');
+if(uni) f = f.filter(d => d.unidade === uni);
+const cat = document.getElementById('f-comp-cat').value;
+if(cat) f = f.filter(d => d.material === cat);
 
-    const dataRef = dataF ? new Date(dataF + "-02") : new Date();
-    const mesAntStr = new Date(dataRef.getFullYear(), dataRef.getMonth() - 1, 1).toISOString().slice(0, 7);
-
-    // --- BLOCO DE ALTA PERFORMANCE (INDEXAÇÃO) ---
-    const mapaContagem = new Map();
-    const mapaMesAnterior = new Map();
-
-    db.forEach(d => {
-        const chave = `${d.unidade}_${d.produto}`;
-        if (d.tipo === 'contagem') {
-            const existente = mapaContagem.get(chave);
-            if (!existente || new Date(d.data) > new Date(existente.data)) {
-                mapaContagem.set(chave, d);
-            }
-        } else if (d.tipo === 'pedido' && d.data && d.data.startsWith(mesAntStr)) {
-            mapaMesAnterior.set(chave, (mapaMesAnterior.get(chave) || 0) + (parseFloat(d.quantidade) || 0));
-        }
-    });
-
-    let pedidos = db.filter(d => d.tipo === 'pedido');
-    if(uni) pedidos = pedidos.filter(d => d.unidade === uni);
-    if(dataF) pedidos = pedidos.filter(d => d.data.startsWith(dataF));
-    if(catF) {
-        if(catF === "ATÍPICOS") pedidos = pedidos.filter(d => !d.material || d.material === "ATÍPICOS" || d.material === "NÃO LISTADO");
-        else pedidos = pedidos.filter(d => d.material === catF);
-    }
-
-    // Montagem ultra-rápida de string (Buffer)
-    let htmlBuffer = "";
-    pedidos.forEach(p => {
-        const idxOrig = db.indexOf(p);
-        const chave = `${p.unidade}_${p.produto}`;
+if(dataF) f = f.filter(d => d.data.startsWith(dataF));
+    
+    tbody.innerHTML = f.map(p => {
+        // Pega o índice real do item no banco principal
+        const idxOriginal = db.indexOf(p);
         
-        const ultC = mapaContagem.get(chave);
-        const pedAnt = mapaMesAnterior.get(chave) || 0;
-
+        const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
+        const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
+        
         const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-        const precoSug = infoBase ? infoBase.preco : 0;
-        const chaveEdit = `edit_${p.unidade}_${p.produto}_${p.data}`;
-        const edit = (window.edicoesGlobais || {})[chaveEdit] || {};
-        
-        const qReal = edit.quantidadeReal !== undefined ? edit.quantidadeReal : (p.quantidadeReal || 0);
-        const pReal = edit.precoEditado !== undefined ? edit.precoEditado : (p.precoEditado || precoSug);
+        const precoSugerido = infoBase ? infoBase.preco : 0;
 
-        htmlBuffer += `<tr>
-            <td style="line-height: 1.3; min-width: 250px;">
-                <small style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px;">${p.unidade}</small><br>
-                <strong style="font-size: 13px;">${p.produto}</strong><br>
-                <small style="color: #94a3b8; font-size: 11px;">${p.observacao || ''}</small>
-            </td>
-            <td style="text-align:center;">${p.medida || "Unid"}</td>
-            <td style="text-align:center; color:#1d4ed8; font-weight:700; background:#f0f9ff;">${pedAnt > 0 ? pedAnt : '-'}</td>
-            <td style="text-align:center;"><span class="badge-estoque" style="background:#fff; border:1px solid #2563eb; color:#2563eb;">${ultC ? ultC.quantidade : 0}</span></td>
-            <td style="text-align:center; font-weight:bold; background:#fffbeb;">${p.quantidade}</td>
-            <td class="sub-orig" style="text-align:right; background:#fffbeb;">R$ 0,00</td>
-            <td style="background:#f0fdf4;"><input type="number" class="input-compra q-real" value="${qReal}" oninput="salvarEdicao(${idxOrig}, 'quantidadeReal', this.value); calcCompras()"></td>
-            <td style="background:#f0fdf4;"><input type="text" class="input-compra p-unit" value="${pReal.toFixed(2).replace('.',',')}" oninput="salvarEdicao(${idxOrig}, 'precoEditado', this.value); calcCompras()" onblur="formatMoeda(this)"></td>
-            <td class="sub-real" style="text-align:right; font-weight:bold; color:var(--success); background:#f0fdf4;">R$ 0,00</td>
-        </tr>`;
-    });
+        // Recupera o que foi digitado anteriormente ou deixa 0
+const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
 
-    tbody.innerHTML = htmlBuffer;
-    calcCompras(); // Atualiza os totais da tela
+        return `<tr>
+    <td style="line-height: 1.4;">
+        <small style="color: #64748b; font-weight: 600; text-transform: uppercase;">${p.unidade}</small><br>
+        <strong style="font-size: 14px;">${p.produto}</strong><br>
+        <small style="color: #64748b;">Obs.: ${p.observacao || "---"}</small>
+    </td>
+    <td>${p.Medida || p.medida || "Unidade"}</td>
+
+    <!-- ÚLTIMO PEDIDO: busca o pedido mais recente ANTERIOR ao atual -->
+    <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
+        ${(() => {
+            const anterior = db.filter(d =>
+                d.tipo === 'pedido' &&
+                d.unidade === p.unidade &&
+                d.produto === p.produto &&
+                d.data !== p.data
+            ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
+            return anterior ? anterior.quantidade : '<span style="color:#94a3b8">—</span>';
+        })()}
+    </td>
+
+<td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
+    ${(() => {
+        const contagem = db.filter(d =>
+            d.tipo === 'contagem' &&
+            d.unidade === p.unidade &&
+            d.produto === p.produto
+        ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
+        return contagem ? contagem.quantidade : '<span style="color:#94a3b8">—</span>';
+    })()}
+</td>
+    <!-- PEDIDO ORIGINAL -->
+    <td style="background:#fefce8; text-align:center; font-weight:700; color:#a16207;" class="q-orig">${p.quantidade}</td>
+
+    <!-- SUBTOTAL ORIGINAL -->
+    <td style="background:#fefce8; text-align:center; color:#a16207;" class="sub-orig">R$ 0,00</td>
+
+    <!-- COMPRA REAL -->
+    <td style="background:#f0fdf4;">
+        <input type="number" class="input-compra q-real"
+            value="${qReal}"
+            oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
+    </td>
+
+    <!-- PREÇO UNIT -->
+    <td style="background:#f0fdf4;">
+        <input type="text" class="input-compra p-unit"
+            value="${pReal.toFixed(2).replace('.', ',')}"
+            oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()"
+            onblur="formatMoeda(this)">
+    </td>
+
+    <!-- SUBTOTAL REAL -->
+    <td class="sub-real" style="background:#f0fdf4; font-weight:bold; color:#16a34a">R$ 0,00</td>
+</tr>`;
+    }).join('');
+    calcCompras();
 }
 
    function calcCompras() {
@@ -1276,126 +1287,25 @@ function exportarExcelTodas() {
     const wb = XLSX.utils.book_new();
     const CATS_VALIDAS = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
     const unidadesComPedido = [...new Set(pedidos.map(p => p.unidade))].sort();
-//
-// ── ABA RESUMO (primeira aba) ─────────────────────────────────────────────
-const wsResumo = {};
-const mergeResumo = [];
-let RR = 0;
-
-function mcR(r, c1, c2) { mergeResumo.push({ s:{r,c:c1}, e:{r,c:c2} }); }
-function setCellR(r, c, v, style) {
-    const addr = XLSX.utils.encode_cell({r,c});
-    wsResumo[addr] = { v, t: typeof v === 'number' ? 'n' : 's', s: style };
-}
-
-const AZUL_HEADER = { fgColor: { rgb: "2E4057" } };
-const AZUL_CLARO  = { fgColor: { rgb: "DBEAFE" } };
-const VERDE_CLARO = { fgColor: { rgb: "DCFCE7" } };
-const AMARELO     = { fgColor: { rgb: "FEF9C3" } };
-const VERMELHO    = { fgColor: { rgb: "FEE2E2" } };
-const CINZA       = { fgColor: { rgb: "F1F5F9" } };
-const BRANCO      = { fgColor: { rgb: "FFFFFF" } };
-
-// Título
-mcR(RR,0,4);
-setCellR(RR,0,"RESUMO GERAL DE PEDIDOS - " + dataF, cellStyle(true,12,"FFFFFF","center",AZUL_HEADER));
-RR++;
-mcR(RR,0,4);
-setCellR(RR,0,"Instituto Gênesis — SCFV/CRIAD", cellStyle(false,9,"64748b","center",CINZA));
-RR+=2;
-
-// Cabeçalho da tabela
-["PROGRAMA","UNIDADE","VALOR PEDIDO","P. ATÍPICOS","VALOR TOTAL"].forEach((h,c) => {
-    setCellR(RR, c, h, cellStyle(true,9,"FFFFFF","center",AZUL_HEADER));
-});
-RR++;
-
-// Dados por unidade
-let somaTotal = 0;
-let somaAtip  = 0;
-
-// Detecta programa por unidade (CRIAD vs IDOSO — ajuste conforme sua lógica)
-const programaMap = {
-    'ANDORINHAS':'CRIAD','BELA VISTA':'CRIAD','BONFIM':'CRIAD','CARATOIRA':'CRIAD',
-    'CCTI CENTRO':'CRIAD','CCTI JARDIM CAMBURI':'CRIAD','CCTI JARDIM DA PENHA':'CRIAD',
-    'CCTI MARIA ORTIZ':'CRIAD','CONQUISTA':'CRIAD','CONSOLAÇÃO':'CRIAD',
-    'ENG. ITARARÉ':'CRIAD','NISP JABURU':'IDOSO','NISP SANTO ANTONIO':'IDOSO',
-    'NISP SÃO PEDRO':'IDOSO','PRAIA DO SUÁ':'CRIAD','QUADRO':'CRIAD',
-    'ROMÃO':'CRIAD','SANTO ANDRÉ':'CRIAD','SOLON BORGES':'CRIAD'
-};
-
-unidadesComPedido.forEach((uni, i) => {
-    const itensUni = pedidos.filter(p => p.unidade === uni);
-    const CATS_VALIDAS_R = ["DIDÁTICO","EXPEDIENTE","UTENSÍLIOS DOMÉSTICOS","LIMPEZA/DESCARTÁVEIS"];
-
-    let totalUni = 0;
-    let totalAtipUni = 0;
-
-    itensUni.forEach(p => {
-        const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-        const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-        const precoSugerido = infoBase ? infoBase.preco : 0;
-        const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
-        const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
-        const sub = qReal * pReal;
-
-        totalUni += sub;
-        if (!p.material || !CATS_VALIDAS_R.includes(p.material)) totalAtipUni += sub;
-    });
-
-    const fillLinha = i % 2 === 0 ? BRANCO : CINZA;
-    const programa = programaMap[uni] || "CRIAD";
-
-    setCellR(RR, 0, programa,                    cellStyle(false,9,"000000","center", fillLinha));
-    setCellR(RR, 1, uni,                          cellStyle(false,9,"000000","left",   fillLinha));
-    setCellR(RR, 2, totalUni - totalAtipUni,      { ...cellStyle(false,9,"000000","right", fillLinha), t:'n', z:'"R$"#,##0.00' });
-    setCellR(RR, 3, totalAtipUni,                 { ...cellStyle(false,9,"000000","right", fillLinha), t:'n', z:'"R$"#,##0.00' });
-    setCellR(RR, 4, totalUni,                     { ...cellStyle(false,9,"000000","right", fillLinha), t:'n', z:'"R$"#,##0.00' });
-
-    somaTotal += totalUni;
-    somaAtip  += totalAtipUni;
-    RR++;
-});
-
-// Linha de total
-setCellR(RR,0,"",    cellStyle(true,9,"000000","center",AZUL_HEADER));
-setCellR(RR,1,"TOTAL:", cellStyle(true,9,"FFFFFF","right",AZUL_HEADER));
-setCellR(RR,2, somaTotal - somaAtip, { ...cellStyle(true,9,"FFFFFF","right",AZUL_HEADER), t:'n', z:'"R$"#,##0.00' });
-setCellR(RR,3, somaAtip,             { ...cellStyle(true,9,"FFFFFF","right",AZUL_HEADER), t:'n', z:'"R$"#,##0.00' });
-setCellR(RR,4, somaTotal,            { ...cellStyle(true,9,"FFFFFF","right",AZUL_HEADER), t:'n', z:'"R$"#,##0.00' });
-RR += 2;
-
-// ── BLOCO DE TOTALIZADORES ────────────────────────────────────────────────
-const ORCAMENTO_MENSAL = 42884.56; // mesmo valor fixo do Dash
-const mediaPorUnidade  = unidadesComPedido.length > 0 ? somaTotal / unidadesComPedido.length : 0;
-const diferenca        = ORCAMENTO_MENSAL - somaTotal;
-const corDiferenca     = diferenca >= 0 ? VERDE_CLARO : VERMELHO;
-const corTextoDif      = diferenca >= 0 ? "166534"    : "991B1B";
-
-const totalizadores = [
-    ["Valor Total Realizado",    somaTotal,         VERDE_CLARO, "166534"],
-    ["Valor Total Mensal (Orç.)",ORCAMENTO_MENSAL,  AZUL_CLARO,  "1E40AF"],
-    ["Valor Mensal Cada Unidade",mediaPorUnidade,    AMARELO,     "854D0E"],
-    ["Diferença (Orç. - Real)",  diferenca,          corDiferenca, corTextoDif],
-];
-
-totalizadores.forEach(([label, valor, fill, cor]) => {
-    mcR(RR,0,1);
-    setCellR(RR, 0, label, cellStyle(true,9,cor,"left", fill));
-    setCellR(RR, 1, "",    cellStyle(true,9,cor,"left", fill)); // célula merged
-    setCellR(RR, 2, valor, { ...cellStyle(true,10,cor,"right", fill), t:'n', z:'"R$"#,##0.00' });
-    RR++;
-});
-
-wsResumo['!merges'] = mergeResumo;
-wsResumo['!cols']   = [{wch:10},{wch:25},{wch:18},{wch:15},{wch:15}];
-wsResumo['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:RR,c:4}});
-
-// Insere como PRIMEIRA aba
-XLSX.utils.book_append_sheet(wb, wsResumo, "RESUMO");
-  //  
-   
+ 
+    // ── Estilos (igual ao exportarExcel individual) ──────────────────────
+    const HDR_DARK   = { fgColor: { rgb: "2E4057" } };
+    const CAT_FILL   = { fgColor: { rgb: "C8D6E0" } };
+    const TOTAL_FILL = { fgColor: { rgb: "F0F0F0" } };
+    const WHITE      = { fgColor: { rgb: "FFFFFF" } };
+    const thinBorder = {
+        top: {style:"thin"}, bottom: {style:"thin"},
+        left: {style:"thin"}, right: {style:"thin"}
+    };
+    function cellStyle(bold=false, sz=9, color="000000", hz="center", fill=null) {
+        const s = {
+            font: { name:"Arial", sz, bold, color:{rgb:color} },
+            alignment: { horizontal:hz, vertical:"center", wrapText:true },
+            border: thinBorder
+        };
+        if (fill) s.fill = { patternType:"solid", ...fill };
+        return s;
+    }
 
     unidadesComPedido.forEach(uni => {
         const f = pedidos.filter(p => p.unidade === uni);
