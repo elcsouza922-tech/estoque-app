@@ -915,7 +915,8 @@ if(dataF) f = f.filter(d => d.data.startsWith(dataF));
         // Recupera o que foi digitado anteriormente ou deixa 0
 const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
 const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+        const qReal = parseFloat(p.quantidade) || 0;
+//depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
 const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
 
         return `<tr>
@@ -1386,7 +1387,8 @@ function exportarExcelTodas() {
                 const editSalvo = (window.edicoesGlobais || {})[chave] || {};
                 const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
                 const precoSugerido = infoBase ? infoBase.preco : 0;
-                const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+                 const qReal = parseFloat(p.quantidade) || 0;
+//depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
                 const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
                 const total = qReal * pReal;
                 const medida = p.medida || p.Medida || "Unid";
@@ -1428,7 +1430,8 @@ function exportarExcelTodas() {
                 const editSalvo = (window.edicoesGlobais || {})[chave] || {};
                 const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
                 const precoSugerido = infoBase ? infoBase.preco : 0;
-                const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
+                 const qReal = parseFloat(p.quantidade) || 0;
+//depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
                 const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
                 const total = qReal * pReal;
                 const medida = p.medida || p.Medida || "Unid";
