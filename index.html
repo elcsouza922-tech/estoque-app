@@ -890,91 +890,80 @@ function popularFiltros() {
     }
 }
 
-   function renderCompras() {
+  function renderCompras() {
     const uni = document.getElementById('f-comp-uni').value;
     const dataF = document.getElementById('f-comp-data').value;
+    const catF = document.getElementById('f-comp-cat').value;
     const tbody = document.getElementById('tbody-compras');
     
-   let f = db.filter(d => d.tipo === 'pedido');
-if(uni) f = f.filter(d => d.unidade === uni);
-const cat = document.getElementById('f-comp-cat').value;
-if(cat) f = f.filter(d => d.material === cat);
+    // Mostra um aviso rápido se demorar (bom para o Sheets)
+    if(db.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px;">Carregando dados do Google Sheets...</td></tr>';
+    }
 
-if(dataF) f = f.filter(d => d.data.startsWith(dataF));
-    
-    tbody.innerHTML = f.map(p => {
-        // Pega o índice real do item no banco principal
-        const idxOriginal = db.indexOf(p);
+    const dataRef = dataF ? new Date(dataF + "-02") : new Date();
+    const mesAntStr = new Date(dataRef.getFullYear(), dataRef.getMonth() - 1, 1).toISOString().slice(0, 7);
+
+    // --- BLOCO DE ALTA PERFORMANCE (INDEXAÇÃO) ---
+    const mapaContagem = new Map();
+    const mapaMesAnterior = new Map();
+
+    db.forEach(d => {
+        const chave = `${d.unidade}_${d.produto}`;
+        if (d.tipo === 'contagem') {
+            const existente = mapaContagem.get(chave);
+            if (!existente || new Date(d.data) > new Date(existente.data)) {
+                mapaContagem.set(chave, d);
+            }
+        } else if (d.tipo === 'pedido' && d.data && d.data.startsWith(mesAntStr)) {
+            mapaMesAnterior.set(chave, (mapaMesAnterior.get(chave) || 0) + (parseFloat(d.quantidade) || 0));
+        }
+    });
+
+    let pedidos = db.filter(d => d.tipo === 'pedido');
+    if(uni) pedidos = pedidos.filter(d => d.unidade === uni);
+    if(dataF) pedidos = pedidos.filter(d => d.data.startsWith(dataF));
+    if(catF) {
+        if(catF === "ATÍPICOS") pedidos = pedidos.filter(d => !d.material || d.material === "ATÍPICOS" || d.material === "NÃO LISTADO");
+        else pedidos = pedidos.filter(d => d.material === catF);
+    }
+
+    // Montagem ultra-rápida de string (Buffer)
+    let htmlBuffer = "";
+    pedidos.forEach(p => {
+        const idxOrig = db.indexOf(p);
+        const chave = `${p.unidade}_${p.produto}`;
         
-        const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
-        const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-        
+        const ultC = mapaContagem.get(chave);
+        const pedAnt = mapaMesAnterior.get(chave) || 0;
+
         const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-        const precoSugerido = infoBase ? infoBase.preco : 0;
+        const precoSug = infoBase ? infoBase.preco : 0;
+        const chaveEdit = `edit_${p.unidade}_${p.produto}_${p.data}`;
+        const edit = (window.edicoesGlobais || {})[chaveEdit] || {};
+        
+        const qReal = edit.quantidadeReal !== undefined ? edit.quantidadeReal : (p.quantidadeReal || 0);
+        const pReal = edit.precoEditado !== undefined ? edit.precoEditado : (p.precoEditado || precoSug);
 
-        // Recupera o que foi digitado anteriormente ou deixa 0
-const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
-const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
+        htmlBuffer += `<tr>
+            <td style="line-height: 1.3; min-width: 250px;">
+                <small style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px;">${p.unidade}</small><br>
+                <strong style="font-size: 13px;">${p.produto}</strong><br>
+                <small style="color: #94a3b8; font-size: 11px;">${p.observacao || ''}</small>
+            </td>
+            <td style="text-align:center;">${p.medida || "Unid"}</td>
+            <td style="text-align:center; color:#1d4ed8; font-weight:700; background:#f0f9ff;">${pedAnt > 0 ? pedAnt : '-'}</td>
+            <td style="text-align:center;"><span class="badge-estoque" style="background:#fff; border:1px solid #2563eb; color:#2563eb;">${ultC ? ultC.quantidade : 0}</span></td>
+            <td style="text-align:center; font-weight:bold; background:#fffbeb;">${p.quantidade}</td>
+            <td class="sub-orig" style="text-align:right; background:#fffbeb;">R$ 0,00</td>
+            <td style="background:#f0fdf4;"><input type="number" class="input-compra q-real" value="${qReal}" oninput="salvarEdicao(${idxOrig}, 'quantidadeReal', this.value); calcCompras()"></td>
+            <td style="background:#f0fdf4;"><input type="text" class="input-compra p-unit" value="${pReal.toFixed(2).replace('.',',')}" oninput="salvarEdicao(${idxOrig}, 'precoEditado', this.value); calcCompras()" onblur="formatMoeda(this)"></td>
+            <td class="sub-real" style="text-align:right; font-weight:bold; color:var(--success); background:#f0fdf4;">R$ 0,00</td>
+        </tr>`;
+    });
 
-        return `<tr>
-    <td style="line-height: 1.4;">
-        <small style="color: #64748b; font-weight: 600; text-transform: uppercase;">${p.unidade}</small><br>
-        <strong style="font-size: 14px;">${p.produto}</strong><br>
-        <small style="color: #64748b;">Obs.: ${p.observacao || "---"}</small>
-    </td>
-    <td>${p.Medida || p.medida || "Unidade"}</td>
-
-    <!-- ÚLTIMO PEDIDO: busca o pedido mais recente ANTERIOR ao atual -->
-    <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
-        ${(() => {
-            const anterior = db.filter(d =>
-                d.tipo === 'pedido' &&
-                d.unidade === p.unidade &&
-                d.produto === p.produto &&
-                d.data !== p.data
-            ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-            return anterior ? anterior.quantidade : '<span style="color:#94a3b8">—</span>';
-        })()}
-    </td>
-
-<td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
-    ${(() => {
-        const contagem = db.filter(d =>
-            d.tipo === 'contagem' &&
-            d.unidade === p.unidade &&
-            d.produto === p.produto
-        ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-        return contagem ? contagem.quantidade : '<span style="color:#94a3b8">—</span>';
-    })()}
-</td>
-    <!-- PEDIDO ORIGINAL -->
-    <td style="background:#fefce8; text-align:center; font-weight:700; color:#a16207;" class="q-orig">${p.quantidade}</td>
-
-    <!-- SUBTOTAL ORIGINAL -->
-    <td style="background:#fefce8; text-align:center; color:#a16207;" class="sub-orig">R$ 0,00</td>
-
-    <!-- COMPRA REAL -->
-    <td style="background:#f0fdf4;">
-        <input type="number" class="input-compra q-real"
-            value="${qReal}"
-            oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
-    </td>
-
-    <!-- PREÇO UNIT -->
-    <td style="background:#f0fdf4;">
-        <input type="text" class="input-compra p-unit"
-            value="${pReal.toFixed(2).replace('.', ',')}"
-            oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()"
-            onblur="formatMoeda(this)">
-    </td>
-
-    <!-- SUBTOTAL REAL -->
-    <td class="sub-real" style="background:#f0fdf4; font-weight:bold; color:#16a34a">R$ 0,00</td>
-</tr>`;
-    }).join('');
-    calcCompras();
+    tbody.innerHTML = htmlBuffer;
+    calcCompras(); // Atualiza os totais da tela
 }
 
    function calcCompras() {
