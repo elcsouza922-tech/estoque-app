@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Estoque</title>
+    <title>Sistema de Estoque PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2563eb; --success: #16a34a; --bg: #f8fafc; --text: #1e293b; --danger: #ef4444; --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         * { box-sizing: border-box; }
@@ -29,19 +28,16 @@
         .btn-green { background: var(--success); color: white; }
         .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
         .total-banner { background: #1e293b; color: white; padding: 15px 20px; border-radius: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .val-total { font-size: 22px; font-weight: 800; color: #4ade80; }
-        .input-compra { width: 75px; text-align: center; border: 1px solid var(--primary); font-weight: 700; border-radius: 6px; padding: 5px; }
-        .badge-estoque { background: #fef3c7; color: #b45309; padding: 3px 7px; border-radius: 5px; font-weight: 700; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        .input-compra { width: 70px; text-align: center; border: 1px solid var(--primary); font-weight: 700; border-radius: 6px; padding: 5px; }
+        .badge-estoque { background: #eff6ff; color: #1d4ed8; padding: 3px 7px; border-radius: 5px; font-weight: 700; font-size: 11px; border: 1px solid #dbeafe; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { text-align: left; padding: 10px; background: #f8fafc; color: #64748b; font-size: 10px; text-transform: uppercase; }
+        td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .footer-compras { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; padding: 10px 40px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); display: flex; justify-content: flex-end; gap: 50px; z-index: 1500; border-top: 1px solid #e2e8f0; }
+        input[readonly], select[disabled] { background-color: #f1f5f9 !important; color: #64748b; cursor: not-allowed; border: 1px solid #e2e8f0; }
         .op-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
         .op-card { padding: 40px; text-align: center; cursor: pointer; background: #fff; border-radius: 25px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; transition: 0.3s; }
         .op-card:hover { transform: translateY(-5px); border-color: var(--primary); }
-        .footer-compras { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; padding: 15px 40px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); display: flex; justify-content: flex-end; gap: 50px; z-index: 1500; border-top: 1px solid #e2e8f0; }
-        #sec-compras { padding-bottom: 80px; }
-        @media (max-width: 600px) { .footer-compras { gap: 15px; padding: 10px 20px; justify-content: space-around; } }
-        input[readonly], select[disabled] { background-color: #f1f5f9 !important; color: #64748b; cursor: not-allowed; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
@@ -57,7 +53,7 @@
             <div class="nav-item" id="nav-compras" onclick="switchSection('compras', this)">🛒 Compras</div>
             <div class="nav-item" id="nav-estoque" onclick="switchSection('estoque', this)">📦 Estoque</div>
         </div>
-        <div class="nav-item" onclick="acessoRestrito()" id="btn-login">🔓 Dash</div>
+        <div class="nav-item" onclick="acessoRestrito()" id="btn-login">🔓 Login</div>
     </div>
 </nav>
 
@@ -115,27 +111,44 @@
     </section>
 
     <section id="sec-dash" class="hidden">
-        <div class="card">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div class="card" style="margin:0; border-left: 5px solid var(--primary);">
-                    <label style="color:#64748b; font-size:11px;">VALOR TOTAL MENSAL (ORÇAMENTO)</label>
-                    <div class="val-total" style="color:var(--primary)">R$ 42.884,56</div>
-                </div>
-                <div class="card" style="margin:0; border-left: 5px solid var(--success);">
-                    <label style="color:#64748b; font-size:11px;">TOTAL PEDIDO REAL (TODAS UNIDADES)</label>
-                    <div class="val-total" id="dash-real-total">R$ 0,00</div>
-                </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="card" style="margin:0; border-left: 5px solid var(--primary);">
+                <label style="color:#64748b; font-size:10px;">ORÇAMENTO MENSAL</label>
+                <div class="val-total" style="color:var(--primary); font-size: 20px; font-weight:800;">R$ 42.884,56</div>
+            </div>
+            <div class="card" style="margin:0; border-left: 5px solid var(--success);">
+                <label style="color:#64748b; font-size:10px;">TOTAL REALIZADO</label>
+                <div class="val-total" id="dash-real-total" style="font-size: 20px; font-weight:800;">R$ 0,00</div>
+            </div>
+            <div class="card" style="margin:0; border-left: 5px solid #f59e0b;">
+                <label style="color:#64748b; font-size:10px;">SALDO DISPONÍVEL</label>
+                <div class="val-total" id="dash-saldo" style="color:#f59e0b; font-size: 20px; font-weight:800;">R$ 0,00</div>
             </div>
         </div>
-        <div class="card">
-            <h3>⚠️ Pendentes de Envio (Mês Atual)</h3>
-            <div id="faltantes-lista" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+
+        <div class="card" style="margin-bottom: 20px; text-align: center;">
+            <label style="font-weight: 700; color: #64748b; margin-bottom: 10px; display: block; font-size: 11px;">PROGRESSO DO GASTO DA REDE</label>
+            <div style="background: #e2e8f0; border-radius: 50px; height: 25px; width: 100%; position: relative; overflow: hidden; border: 1px solid #cbd5e1;">
+                <div id="barra-progresso" style="background: var(--success); width: 0%; height: 100%; transition: 1s ease-in-out;"></div>
+            </div>
+            <small id="texto-progresso" style="font-weight: 800; margin-top: 5px; display: block;">0% consumido</small>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;">
+            <div class="card" style="margin:0;">
+                <h3>⚠️ Pendentes de Envio</h3>
+                <div id="faltantes-lista" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+            <div class="card" style="margin:0;">
+                <h3>📍 Top Gastos (Unidade)</h3>
+                <div id="ranking-gastos" style="font-size: 12px;"></div>
+            </div>
         </div>
     </section>
 
     <section id="sec-compras" class="hidden">
         <div class="total-banner">
-            <label style="color:#cbd5e1; font-size:10px;">TOTAL PEDIDO REAL (TODAS UNIDADES)</label>
+            <label style="color:#cbd5e1; font-size:10px;">TOTAL PEDIDO REAL (REDE)</label>
             <div id="topo-rede-total" style="font-weight:800; font-size:22px; color:#4ade80;">R$ 0,00</div>
         </div>
         <div class="card">
@@ -150,20 +163,21 @@
             <table>
                 <thead>
                     <tr>
-                        <th>PRODUTO</th><th>MEDIDA</th>
-                        <th style="background:#dbeafe; color:#1e40af;">ÚLTIMO PEDIDO</th>
-                        <th style="background:#dbeafe; color:#1e40af;">EM ESTOQUE</th>
-                        <th style="background:#fef9c3; color:#854d0e;">PEDIDO ORIGINAL</th>
-                        <th style="background:#fef9c3; color:#854d0e;">SUBTOTAL</th>
-                        <th style="background:#dcfce7; color:#166534;">COMPRA REAL</th>
-                        <th style="background:#dcfce7; color:#166534;">PREÇO UNITÁRIO</th>
-                        <th style="background:#dcfce7; color:#166534;">SUBTOTAL</th>
+                        <th>PRODUTO / UNIDADE</th>
+                        <th>MEDIDA</th>
+                        <th style="background:#eff6ff;">ÚLT. PEDIDO</th>
+                        <th style="background:#eff6ff;">ESTOQUE</th>
+                        <th style="background:#fefce8;">PED. ORIG.</th>
+                        <th style="background:#fefce8;">SUBTOTAL</th>
+                        <th style="background:#f0fdf4;">COMPRA REAL</th>
+                        <th style="background:#f0fdf4;">PREÇO UNIT.</th>
+                        <th style="background:#f0fdf4;">SUBTOTAL</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-compras"></tbody>
             </table>
         </div>
-        <div class="footer-compras">
+        <div class="footer-compras" style="padding-bottom:10px;">
             <div style="text-align: right;">
                 <label style="font-size: 10px; font-weight: 700; color: #64748b;">TOTAL ORIGINAL:</label>
                 <div id="total-orig-filtro" style="font-weight:800; font-size:18px;">R$ 0,00</div>
@@ -184,8 +198,15 @@
                 <button class="btn btn-outline" onclick="exportarExcel('estoque')" style="margin-top:19px;">📥 Excel</button>
                 <button class="btn btn-blue" onclick="syncDados()" style="margin-top:19px;">🔄 Atualizar</button>
             </div>
-            <table><thead><tr><th>Data</th><th>Unidade</th><th>Categoria</th><th>Produto</th><th>Qtd</th><th>Medida</th><th>Obs</th></tr></thead><tbody id="tbody-estoque"></tbody></table>
-            <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;"><button class="btn btn-outline" onclick="paginarEstoque(-1)">←</button><span id="est-pag-info">Pág 1</span><button class="btn btn-outline" onclick="paginarEstoque(1)">→</button></div>
+            <table id="tbl-estoque">
+                <thead><tr><th>Data</th><th>Unidade</th><th>Categoria</th><th>Produto</th><th>Qtd</th><th>Medida</th><th>Obs</th></tr></thead>
+                <tbody id="tbody-estoque"></tbody>
+            </table>
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
+                <button class="btn btn-outline" onclick="paginarEstoque(-1)">←</button>
+                <span id="est-pag-info">Pág 1</span>
+                <button class="btn btn-outline" onclick="paginarEstoque(1)">→</button>
+            </div>
         </div>
     </section>
 </div>
@@ -204,466 +225,58 @@
         messagingSenderId: "477539986508",
         appId: "1:477539986508:web:cdb5c846136e3bd2d4d8e9",
     };
-
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     // 2. VARIÁVEIS GLOBAIS
-    const SENHA_DASH = "1234";
     const TODAS_UNIDADES = ['ANDORINHAS', 'BELA VISTA', 'BONFIM', 'CARATOIRA', 'CCTI CENTRO', 'CCTI JARDIM CAMBURI', 'CCTI JARDIM DA PENHA', 'CCTI MARIA ORTIZ', 'CONQUISTA', 'CONSOLAÇÃO', 'ENG. ITARARÉ', 'NISP JABURU', 'NISP SANTO ANTONIO', 'NISP SÃO PEDRO', 'PRAIA DO SUÁ', 'QUADRO', 'ROMÃO', 'SANTO ANDRÉ', 'SOLON BORGES'];
-
+    
+    // --- COLE SUA BASE_PRODUTOS COMPLETA AQUI ---
     const BASE_PRODUTOS = [
         { material: "DIDÁTICO", nome: "Agôgo", Medida: "Unidade", preco: 250.00},
-{ material: "DIDÁTICO", nome: "Agulha de mão nº 05", Medida: "Pacote", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Agulha de mão nº 06", Medida: "Pacote", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Agulha pra vagonite", Medida: "Pacote", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Alfinete de cabeça niquelado", Medida: "Pacote", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Alfinete de segurança", Medida: "Pacote", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Apito de jogo esporte", Medida: "Unidade", preco: 20.00},
-{ material: "DIDÁTICO", nome: "Arco para cabelo de plástico", Medida: "Unidade", preco: 5.00},
-{ material: "DIDÁTICO", nome: "Argila (1 kg)", Medida: "Pacote", preco: 7.99},
-{ material: "DIDÁTICO", nome: "Argola para Malabares profissional", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Bambolê Profissional o mais SIMPLES", Medida: "Unidade", preco: 229.99},
-{ material: "DIDÁTICO", nome: "Bambolê SIMPLES de brinquedo", Medida: "Unidade", preco: 4.99},
-{ material: "DIDÁTICO", nome: "Bandeja para rolinho G", Medida: "Unidade", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Bandeja para rolinho P", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Baqueta para Berimbau", Medida: "Unidade", preco: 50.00},
-{ material: "DIDÁTICO", nome: "Baqueta para percussão 5A", Medida: "Unidade", preco: 80.00},
-{ material: "DIDÁTICO", nome: "Barbante rolo", Medida: "Unidade", preco: 15.00},
-{ material: "DIDÁTICO", nome: "Base cremosa para maquiagem NÃO profissional", Medida: "Unidade", preco: 60.00},
-{ material: "DIDÁTICO", nome: "Bastão de cola quente", Medida: "Unidade", preco: 59.99},
-{ material: "DIDÁTICO", nome: "Bastão de Maculele", Medida: "Unidade", preco: 120.00},
-{ material: "DIDÁTICO", nome: "Bateria para microfone não recarregavél 9 volts", Medida: "Unidade", preco: 30.00},
-{ material: "DIDÁTICO", nome: "Baton para maquiagem NÃO profissional", Medida: "Unidade", preco: 30.00},
-{ material: "DIDÁTICO", nome: "Blush para maquiagem NÃO profissional", Medida: "Unidade", preco: 50.00},
-{ material: "DIDÁTICO", nome: "Bola de assoprar n° 7", Medida: "Pacote", preco: 14.99},
-{ material: "DIDÁTICO", nome: "Bola de Basquete Mirim", Medida: "Unidade", preco: 149.00},
-{ material: "DIDÁTICO", nome: "Bola de futsal Max 100", Medida: "Unidade", preco: 229.00},
-{ material: "DIDÁTICO", nome: "Bola de futsal Max 200", Medida: "Unidade", preco: 249.00},
-{ material: "DIDÁTICO", nome: "Bola de futsal Max 500", Medida: "Unidade", preco: 249.00},
-{ material: "DIDÁTICO", nome: "Bola de gude simples tamanho médio 50 und", Medida: "Pacote", preco: 30.00},
-{ material: "DIDÁTICO", nome: "Bola de inicação nº 10", Medida: "Unidade", preco: 79.00},
-{ material: "DIDÁTICO", nome: "Bola de voleibol m6 5500", Medida: "Unidade", preco: 179.99},
-{ material: "DIDÁTICO", nome: "Bola orange ball", Medida: "Unidade", preco: 169.99},
-{ material: "DIDÁTICO", nome: "Bola suiça", Medida: "Unidade", preco: 129.99},
-{ material: "DIDÁTICO", nome: "Bolinha de Frescobol", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Bolinha p/ malabares profissional", Medida: "Unidade", preco: 119.99},
-{ material: "DIDÁTICO", nome: "Bomba para encher bola", Medida: "Unidade", preco: 25.00},
-{ material: "DIDÁTICO", nome: "Bordado inglês", Medida: "ROLO", preco: 199.99},
-{ material: "DIDÁTICO", nome: "Botões diversos simples", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Broxa (pincel) tamanho 0", Medida: "Unidade", preco: 30.00},
-{ material: "DIDÁTICO", nome: "Cabo 1,5m P2 para P10", Medida: "Unidade", preco: 29.00},
-{ material: "DIDÁTICO", nome: "Cabo Canon P10", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Cabo de som P10-P10 - 5m", Medida: "Unidade", preco: 24.99},
-{ material: "DIDÁTICO", nome: "Cabo de som P2-P2 - 5m", Medida: "Unidade", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Cabo de som P2-RCA - 5m", Medida: "Unidade", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Caneleira 1 Kg", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Caneleira 2 kg", Medida: "Unidade", preco: 59.99},
-{ material: "DIDÁTICO", nome: "Caneta para tecido core divervas", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Caneta Posca 7mm cores diversas", Medida: "Unidade", preco: 69.99},
-{ material: "DIDÁTICO", nome: "Carbonato de magnésio 1 Kg", Medida: "Pacote", preco: 150.00},
-{ material: "DIDÁTICO", nome: "Carvão vegetal para desenho c/ 5unidades", Medida: "Pacote", preco: 14.99},
-{ material: "DIDÁTICO", nome: "Clave para malabares profissional", Medida: "Unidade", preco: 299.99},
-{ material: "DIDÁTICO", nome: "Cola de contato tubo 75g", Medida: "TUBO", preco: 24.99},
-{ material: "DIDÁTICO", nome: "Cola em spray para tecido 500 ml", Medida: "Unidade", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Cola permanente 250g", Medida: "Unidade", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Cola universal pra artesanato", Medida: "Unidade", preco: 9.99},
-{ material: "DIDÁTICO", nome: "Colchonete para ginástica", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Colete para jogos s/ numeração", Medida: "Unidade", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Cone pequeno de silicone", Medida: "Unidade", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Cones Grande de silicone", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Corante liquído para tinta (Cores variadas) ( tipo xadrez)", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Corda p/cabo de guerra (sisal)", Medida: "Metro", preco: 20.00},
-{ material: "DIDÁTICO", nome: "Couro Cru para atabaque - 50cm", Medida: "Unidade", preco: 159.00},
-{ material: "DIDÁTICO", nome: "Dedobol", Medida: "Unidade", preco: 69.00},
-{ material: "DIDÁTICO", nome: "Destorcedor 30Kn (circo)", Medida: "Unidade", preco: 399.99},
-{ material: "DIDÁTICO", nome: "Elástico- pct 10 mt", Medida: "Unidade", preco: 30.00},
-{ material: "DIDÁTICO", nome: "Encordoamento de aço (para instrumento de corda) SIMPLES", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Encordoamento de nylon (para instrumento de corda)SIMPLES", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Espaguete flutuador para piscina", Medida: "Unidade", preco: 14.99},
-{ material: "DIDÁTICO", nome: "Extensão elétrica 10 m TRÊS TOMADAS", Medida: "Unidade", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Faixa Acrobática", Medida: "Unidade", preco: 199.99},
-{ material: "DIDÁTICO", nome: "Feltro estampado cores variadas", Medida: "Metro", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Feltro liso cores variadas", Medida: "Metro", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Fibra de silicone para enchimento", Medida: "KG", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Filtro de Linha 5 TOMADAS", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Fio encerado 1,5 mm rolo 100 metros", Medida: "ROLO", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Fita de cetim", Medida: "ROLO", preco: 7.99},
-{ material: "DIDÁTICO", nome: "Fita de cetim nº 3 cores variadas- 10 mt", Medida: "Pacote", preco: 14.99},
-{ material: "DIDÁTICO", nome: "Fita decorada de natal", Medida: "ROLO", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Fitilho 10mt cores variadas", Medida: "Unidade", preco: 5.00},
-{ material: "DIDÁTICO", nome: "Flauta Doce", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Fluido para máquina de fumaça", Medida: "LT", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Fonte Universal para Teclado SIMPLES", Medida: "Unidade", preco: 149.99},
-{ material: "DIDÁTICO", nome: "Fusível 0,5 A (240V)", Medida: "Unidade", preco: 50.00},
-{ material: "DIDÁTICO", nome: "Fusível 1,0 A (120V)", Medida: "Unidade", preco: 60.00},
-{ material: "DIDÁTICO", nome: "Grampo para cabelo 100 und cor preto", Medida: "Caixa", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Halter 1 kg", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Halter 2 kg", Medida: "Unidade", preco: 139.99},
-{ material: "DIDÁTICO", nome: "Halter para hidroginástica", Medida: "Unidade", preco: 199.99},
-{ material: "DIDÁTICO", nome: "Jogo da memória Adulto", Medida: "Unidade", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Jogo da memória Infatil", Medida: "Unidade", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Jogo de Botões pct com 12 botões", Medida: "Unidade", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Jogo de Dama e Ludo", Medida: "Unidade", preco: 69.99},
-{ material: "DIDÁTICO", nome: "Jogo de Xadrez", Medida: "Unidade", preco: 59.99},
-{ material: "DIDÁTICO", nome: "Jogo Super Trunfo", Medida: "Unidade", preco: 60.00},
-{ material: "DIDÁTICO", nome: "Jogo Torre Copo", Medida: "Unidade", preco: 199.99},
-{ material: "DIDÁTICO", nome: "Jogo Uno", Medida: "Unidade", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Kit Badminton - 1 par Raquete com 3 petecas", Medida: "Unidade", preco: 199.99},
-{ material: "DIDÁTICO", nome: "Kit de pincéis para maquiagem profissional marca simples", Medida: "Unidade", preco: 199.99},
-{ material: "DIDÁTICO", nome: "kit de tarracha para violão", Medida: "Unidade", preco: 129.99},
-{ material: "DIDÁTICO", nome: "Kit rede Badminton peteca (adans ou vollo)", Medida: "Unidade", preco: 299.99},
-{ material: "DIDÁTICO", nome: "Lã (cores variadas)", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Lápis para olhos para maquiagem não profissional", Medida: "Unidade", preco: 30.00},
-{ material: "DIDÁTICO", nome: "Linha de algodão para bordados", Medida: "Unidade", preco: 9.99},
-{ material: "DIDÁTICO", nome: "Linha de algodão para crochê", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Linha de costura – cone", Medida: "Unidade", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Lonita crua", Medida: "Metro", preco: 65.00},
-{ material: "DIDÁTICO", nome: "Maceta pelúcia para surdo", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Malha jersey", Medida: "KG", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Manta acrílica (acrilon)", Medida: "Metro", preco: 89.99},
-{ material: "DIDÁTICO", nome: "Maquiagem para clown NÃO profissional", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Massa biscuit (cores variadas) 500 gr", Medida: "Pacote", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Massa de modelar 12 cores", Medida: "Unidade", preco: 14.99},
-{ material: "DIDÁTICO", nome: "Massa Epoxi", Medida: "Unidade", preco: 14.99},
-{ material: "DIDÁTICO", nome: "Meia calça adulto P grossa", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Meia calça infantil G grossa", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Moitão ou rolete 30 Kn (circo)", Medida: "Unidade", preco: 149.99},
-{ material: "DIDÁTICO", nome: "Mosquetão 30 Kn (circo)", Medida: "Unidade", preco: 199.99},
-{ material: "DIDÁTICO", nome: "Nylon espessura grossa n° 0,60mm", Medida: "Unidade", preco: 35.00},
-{ material: "DIDÁTICO", nome: "Nylon espessura média n° 0,35mm", Medida: "Unidade", preco: 30.00},
-{ material: "DIDÁTICO", nome: "Palha da costa", Medida: "Pacote", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Palheta 0,8 mm", Medida: "Unidade", preco: 17.00},
-{ material: "DIDÁTICO", nome: "Pancake branco para maquiagem Não profissional", Medida: "Unidade", preco: 80.00},
-{ material: "DIDÁTICO", nome: "Pandeiro", Medida: "Unidade", preco: 299.99},
-{ material: "DIDÁTICO", nome: "Papel Crepom", Medida: "Unidade", preco: 5.00},
-{ material: "DIDÁTICO", nome: "Papel termocolante para pach work", Medida: "Metro", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Passa fita de algodão", Medida: "ROLO", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Passamanaria", Medida: "ROLO", preco: 30.00},
-{ material: "DIDÁTICO", nome: 'Pele para Repique 10 (nylon)', Medida: "Unidade", preco: 39.99},
-{ material: "DIDÁTICO", nome: 'Pele para Repique 12 (nylon)', Medida: "Unidade", preco: 59.99},
-{ material: "DIDÁTICO", nome: 'Pele para Repique 6 (nylon)', Medida: "Unidade", preco: 29.99},
-{ material: "DIDÁTICO", nome: 'Pele para Repique 8 (nylon)', Medida: "Unidade", preco: 34.99},
-{ material: "DIDÁTICO", nome: 'Pele para surdo 18 (nylon)', Medida: "Unidade", preco: 79.99},
-{ material: "DIDÁTICO", nome: 'Pele para surdo 20 (nylon)', Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: 'Pele para surdo 22 (nylon', Medida: "Unidade", preco: 149.99},
-{ material: "DIDÁTICO", nome: 'Pele para Tarol 14 (nylon)', Medida: "Unidade", preco: 149.99},
-{ material: "DIDÁTICO", nome: "Perna de Pau 1/2metro - Ajustável em Alumínio", Medida: "Unidade", preco: 899.99},
-{ material: "DIDÁTICO", nome: "Perna de Pau fixa", Medida: "Unidade", preco: 249.99},
-{ material: "DIDÁTICO", nome: "Perucas Coloridas", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Pilha alcalina AA com 2 pilhas", Medida: "Unidade", preco: 17.99},
-{ material: "DIDÁTICO", nome: "Pilha alcalina AAA com 2pilhas", Medida: "Unidade", preco: 17.99},
-{ material: "DIDÁTICO", nome: "Pincel", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Pincel Redondo Artístico", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Pincel Artístico Chato", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Pincel brocha", Medida: "Unidade", preco: 49.00},
-{ material: "DIDÁTICO", nome: "Pincel Trincha", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Pintura de rosto cremosa para maquiagem não profissional", Medida: "Caixa", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Pintura de rosto líquida NÃO profissional", Medida: "Caixa", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Pistola de cola quente Grande Azul", Medida: "Unidade", preco: 60.00},
-{ material: "DIDÁTICO", nome: "Pistola de cola quente Pequena Azul", Medida: "Unidade", preco: 40.00},
-{ material: "DIDÁTICO", nome: "Purpurina em pó cores variadas 250gr", Medida: "Pacote", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Rastilho para Banjo - CAVALETE", Medida: "Unidade", preco: 149.99},
-{ material: "DIDÁTICO", nome: "Rastilho para Cavaquinho", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Renda de algodão", Medida: "ROLO", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Renda de nylon branca", Medida: "ROLO", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Rola rola para circo", Medida: "Unidade", preco: 399.99},
-{ material: "DIDÁTICO", nome: "Rolinho de Espuma G", Medida: "Unidade", preco: 21.99},
-{ material: "DIDÁTICO", nome: "Rolinho de Espuma M", Medida: "Unidade", preco: 19.99},
-{ material: "DIDÁTICO", nome: "Rolinho de Espuma P", Medida: "Unidade", preco: 14.99},
-{ material: "DIDÁTICO", nome: "Rolo de corda para Rapel 300 mt", Medida: "Unidade", preco: 0.00},
-{ material: "DIDÁTICO", nome: "Sacaria 100% algodão", Medida: "Metro", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Saia de Maculelê - (Feita de Palha)", Medida: "Unidade", preco: 199.99},
-{ material: "DIDÁTICO", nome: "Sianinha grande", Medida: "ROLO", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Suporte de parede para violão", Medida: "Unidade", preco: 69.99},
-{ material: "DIDÁTICO", nome: "Suporte para Teclado Musical em X Simples", Medida: "Unidade", preco: 249.99},
-{ material: "DIDÁTICO", nome: "Swing de Poi", Medida: "PAR", preco: 199.99},
-{ material: "DIDÁTICO", nome: "Swing flag (CIRCO)", Medida: "PAR", preco: 249.99},
-{ material: "DIDÁTICO", nome: "Talabarte 01 gancho simples", Medida: "Unidade", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Tecido de algodão CRU", Medida: "Metro", preco: 69.99},
-{ material: "DIDÁTICO", nome: "Tecido de cetim simples 1,40 m de largura", Medida: "Metro", preco: 24.99},
-{ material: "DIDÁTICO", nome: "Tecido de chitão", Medida: "Metro", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Tecido de tricoline liso", Medida: "Metro", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Tecido etamine 4 fios", Medida: "Metro", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Tecido liganete sem elastano", Medida: "KG", preco: 69.99},
-{ material: "DIDÁTICO", nome: "Tecido tricoline estampado", Medida: "Metro", preco: 59.99},
-{ material: "DIDÁTICO", nome: "Tela para pintura 10x15 cm", Medida: "Unidade", preco: 11.99},
-{ material: "DIDÁTICO", nome: "Tela para pintura 20x35 cm", Medida: "Unidade", preco: 21.99},
-{ material: "DIDÁTICO", nome: "Tela para pintura 30x30 cm", Medida: "Unidade", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Tela para pintura 60x80 cm", Medida: "Unidade", preco: 99.99},
-{ material: "DIDÁTICO", nome: "Tesoura grande para tecido lamina de inox- 21cm", Medida: "Unidade", preco: 40.00},
-{ material: "DIDÁTICO", nome: "Tinta guache-250 ml (cores variadas)", Medida: "Unidade", preco: 15.00},
-{ material: "DIDÁTICO", nome: "Tinta látex PVA - 18lt SIMPES", Medida: "Unidade", preco: 799.99},
-{ material: "DIDÁTICO", nome: "Tinta para tecido cores variadas -250 ml", Medida: "Unidade", preco: 49.99},
-{ material: "DIDÁTICO", nome: "Tinta PVA – 250 ml (cores variadas)", Medida: "Unidade", preco: 39.99},
-{ material: "DIDÁTICO", nome: "Tinta spray (Arte urbana) cores variadas", Medida: "Unidade", preco: 69.99},
-{ material: "DIDÁTICO", nome: "Velcro rolo com 25mts", Medida: "Unidade", preco: 79.99},
-{ material: "DIDÁTICO", nome: "Verniz fosco para pintura e desenho 100 ml", Medida: "Unidade", preco: 29.99},
-{ material: "DIDÁTICO", nome: "Viés", Medida: "Unidade", preco: 69.99},
-{ material: "EXPEDIENTE", nome: "Adaptador de tomada padrão três pinos redondo", Medida: "UND", preco: 15.00},
-{ material: "EXPEDIENTE", nome: "Apontador sem reservatório, Caixa com 24 Unidades", Medida: "Caixa", preco: 29.99},
-{ material: "EXPEDIENTE", nome: "Barbante Rolo Pequeno", Medida: "ROLO", preco: 15.00},
-{ material: "EXPEDIENTE", nome: "Bastão de cola quente - pct de 1Kg", Medida: "Pacote", preco: 99.99},
-{ material: "EXPEDIENTE", nome: "Bloco adesivo 76x76mm", Medida: "Unidade", preco: 12.00},
-{ material: "EXPEDIENTE", nome: "Bloco de desenho A4 140g/m² - Bloco com 20 folhas, Pacote com 5 Blocos.", Medida: "Unidade", preco: 14.99},
-{ material: "EXPEDIENTE", nome: "Borracha branca sem protetor caixa com 24 unidades", Medida: "Caixa", preco: 59.99},
-{ material: "EXPEDIENTE", nome: "CABO DE REDE 30 MTROS", Medida: "Unidade", preco: 150.00},
-{ material: "EXPEDIENTE", nome: "Caixa para arquivo morto em Polionda nas medidas 347x245x133mm", Medida: "Unidade", preco: 19.99},
-{ material: "EXPEDIENTE", nome: "Caneta esferográfica Azul, caixa com 50 unidades.", Medida: "Caixa", preco: 49.99},
-{ material: "EXPEDIENTE", nome: "Caneta hidrocor (12 cores), 12 cores", Medida: "Unidade", preco: 15.00},
-{ material: "EXPEDIENTE", nome: "Caneta Marca Texto, caixa com 12 unidades.", Medida: "Caixa", preco: 49.99},
-{ material: "EXPEDIENTE", nome: "Cartolina dupla face (pacote mesclado), pacote com 20 folhas", Medida: "Pacote", preco: 59.99},
-{ material: "EXPEDIENTE", nome: "Cartolina dupla face (pacote unitario), pacote com 20 folhas", Medida: "Pacote", preco: 39.99},
-{ material: "EXPEDIENTE", nome: "Clips Tamanho 2/10", Medida: "Caixa", preco: 19.99},
-{ material: "EXPEDIENTE", nome: "Cola branca 1 L", Medida: "Unidade", preco: 24.99},
-{ material: "EXPEDIENTE", nome: "COLA CASCOREZ 1L", Medida: "Unidade", preco: 59.99},
-{ material: "EXPEDIENTE", nome: "Cola colorida c/ 4 unidades de 23g por caixa", Medida: "Caixa", preco: 20.00},
-{ material: "EXPEDIENTE", nome: "Cola gliter c/ 06 unidades de 23g por caixa", Medida: "Caixa", preco: 30.00},
-{ material: "EXPEDIENTE", nome: "Cola silicone Líquida de 100ml", Medida: "Unidade", preco: 19.99},
-{ material: "EXPEDIENTE", nome: "Corretivo líquido C/ 12 unidades", Medida: "Caixa", preco: 59.99},
-{ material: "EXPEDIENTE", nome: "Envelope Branco correspondência, caixa com 100 unidades", Medida: "Pacote", preco: 19.99},
-{ material: "EXPEDIENTE", nome: "Envelope pardo tamanho A4, caixa com 100 unidades", Medida: "Caixa", preco: 49.99},
-{ material: "EXPEDIENTE", nome: "Estilete grande.", Medida: "Unidade", preco: 9.99},
-{ material: "EXPEDIENTE", nome: "Etiquetas adesiva de papel A4, adesivo de folha inteira, pacote com 25 folhas.", Medida: "Pacote", preco: 49.99},
-{ material: "EXPEDIENTE", nome: "EVA (cor unica) c/ 10 unidades", Medida: "Pacote", preco: 39.99},
-{ material: "EXPEDIENTE", nome: "eva (mesclado) c/ 10 unidades", Medida: "Pacote", preco: 49.99},
-{ material: "EXPEDIENTE", nome: "EVA estampas diversas c/ 05 unidades", Medida: "Pacote", preco: 99.99},
-{ material: "EXPEDIENTE", nome: "eva glitter (cor única) c/ 10 unidades", Medida: "Pacote", preco: 69.90},
-{ material: "EXPEDIENTE", nome: "eva glitter (mesclado) c/ 10 unidades", Medida: "Pacote", preco: 69.90},
-{ material: "EXPEDIENTE", nome: "Fita adesiva colorida, pequeno,pacote com 10 rolos.", Medida: "Pacote", preco: 19.99},
-{ material: "EXPEDIENTE", nome: "Fita adesiva larga p/ empacotamento com 4 unidades", Medida: "Pacote", preco: 40.00},
-{ material: "EXPEDIENTE", nome: "Fita adesiva transparente, fino, pequeno, pacote com 10 rolos.", Medida: "Pacote", preco: 19.99},
-{ material: "EXPEDIENTE", nome: "Fita banana", Medida: "Unidade", preco: 20.00},
-{ material: "EXPEDIENTE", nome: "Fita crepe c/ 6 rolos", Medida: "Pacote", preco: 60.00},
-{ material: "EXPEDIENTE", nome: "Fita dupla face c/ 4 rolos", Medida: "Pacote", preco: 99.99},
-{ material: "EXPEDIENTE", nome: "Fita tape", Medida: "Unidade", preco: 20.00},
-{ material: "EXPEDIENTE", nome: "Giz de cera Grosso, 12 cores cada", Medida: "Unidade", preco: 14.00},
-{ material: "EXPEDIENTE", nome: "Grampeador de tapeceiro", Medida: "Unidade", preco: 59.99},
-{ material: "EXPEDIENTE", nome: "Grampeador médio", Medida: "Unidade", preco: 30.00},
-{ material: "EXPEDIENTE", nome: "Grampos p/ grampeador de tapeceiro medindo 106/8mm", Medida: "Caixa", preco: 60.00},
-{ material: "EXPEDIENTE", nome: "Grampos p/ grampeador médio", Medida: "Caixa", preco: 25.00},
-{ material: "EXPEDIENTE", nome: "Lápis de cor (12 cores), 12 cores.", Medida: "Unidade", preco: 17.99},
-{ material: "EXPEDIENTE", nome: "Lápis preto – Caixa c/ 144 unds", Medida: "Caixa", preco: 99.99},
-{ material: "EXPEDIENTE", nome: "Livro de protocolo", Medida: "Unidade", preco: 19.99},
-{ material: "EXPEDIENTE", nome: "Microfone de mão com fio", Medida: "Unidade", preco: 99.99},
-{ material: "EXPEDIENTE", nome: "Mouse", Medida: "Unidade", preco: 30.00},
-{ material: "EXPEDIENTE", nome: "Papel A4 cx. 5000 fls (caixa)", Medida: "Caixa", preco: 299.99},
-{ material: "EXPEDIENTE", nome: "papel a4 pacote com 500f (Pacote)", Medida: "Pacote", preco: 39.99},
-{ material: "EXPEDIENTE", nome: "Papel carbono para tecido", Medida: "Unidade", preco: 5.00},
-{ material: "EXPEDIENTE", nome: "Papel cartão c/ 20 unid", Medida: "Pacote", preco: 60.00},
-{ material: "EXPEDIENTE", nome: "papel celofane c/ 50 unidades cores", Medida: "Pacote", preco: 129.99},
-{ material: "EXPEDIENTE", nome: "Papel celofane c/50 unid incolor", Medida: "Pacote", preco: 99.99},
-{ material: "EXPEDIENTE", nome: "Papel cenário pardo, pacote com 100 folhas", Medida: "Pacote", preco: 199.99},
-{ material: "EXPEDIENTE", nome: "Papel de seda cores diversas, pacote com 20 folhas", Medida: "Pacote", preco: 29.99},
-{ material: "EXPEDIENTE", nome: "Papel Kraft, pacote com 100 folhas", Medida: "Pacote", preco: 149.99},
-{ material: "EXPEDIENTE", nome: "Papel laminado", Medida: "Unidade", preco: 5.00},
-{ material: "EXPEDIENTE", nome: "Papel Paraná c/ 10", Medida: "Unidade", preco: 129.99},
-{ material: "EXPEDIENTE", nome: "Papel Sulfite A3, 75g/m², pacote com 500 folhas", Medida: "Pacote", preco: 79.99},
-{ material: "EXPEDIENTE", nome: "Pasta com fecho Romeu e Julieta", Medida: "Unidade", preco: 10.00},
-{ material: "EXPEDIENTE", nome: "Pasta para arquivo suspenso kraft", Medida: "Caixa", preco: 179.99},
-{ material: "EXPEDIENTE", nome: "Pastas plástica com elástico c/ 10 unidades", Medida: "Pacote", preco: 49.99},
-{ material: "EXPEDIENTE", nome: "Pen drive – 32 GB", Medida: "Unidade", preco: 60.00},
-{ material: "EXPEDIENTE", nome: "Pincel atômico c/ 12 unid", Medida: "Caixa", preco: 79.99},
-{ material: "EXPEDIENTE", nome: "Pincel p/quadro branco c/ 12 unid", Medida: "Caixa", preco: 99.99},
-{ material: "EXPEDIENTE", nome: "Plástico adesivo autocolante transparente – rolo 25 m", Medida: "ROLO", preco: 199.99},
-{ material: "EXPEDIENTE", nome: "Reabastecedor p/pincel atômico", Medida: "Unidade", preco: 19.99},
-{ material: "EXPEDIENTE", nome: "Régua c/ 10 unid de 30cm em acrílico", Medida: "Pacote", preco: 69.99},
-{ material: "EXPEDIENTE", nome: "Teclado Multimídia para computador", Medida: "Unidade", preco: 60.00},
-{ material: "EXPEDIENTE", nome: "Tesoura de picotar grande", Medida: "Unidade", preco: 149.99},
-{ material: "EXPEDIENTE", nome: "Tesouras sem ponta c/ 20 unid", Medida: "Caixa", preco: 69.99},
-{ material: "EXPEDIENTE", nome: "TNT (cores diversas) - rolo com 50m", Medida: "ROLO", preco: 149.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Absorvente com abas pct/8", Medida: "Pacote", preco: 5.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Água Sanitária 5L", Medida: "Unidade", preco: 29.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Álcool em gel - 500ml", Medida: "Unidade", preco: 14.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Balde plástico - 20lt", Medida: "Unidade", preco: 30.00},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Bobina saco transparente picotado 20x28cm", Medida: "Unidade", preco: 19.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Bobina saco transparente picotado 30X40cm", Medida: "Unidade", preco: 39.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Bobina saco transparente picotado 40X60cm", Medida: "Unidade", preco: 59.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Cloro 5L Qboa", Medida: "Unidade", preco: 29.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Colher descartável", Medida: "Pacote", preco: 7.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável 150 ml com tampa", Medida: "Pacote", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável 50 ml (pacote)", Medida: "Pacote", preco: 4.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável 50 ml (caixa)", Medida: "CAIXA", preco: 180.00},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável para festa 200 ml (pacote)", Medida: "Pacote", preco: 8.00},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo descartável para festa 200 ml (caixa)", Medida: "CAIXA", preco: 159.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Copo pote descartável 100 ml com tampa-", Medida: "Pacote", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Cumbuca de isopor descartável para festa", Medida: "Pacote", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Desentupidor de pia", Medida: "Unidade", preco: 9.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Desentupidor de vaso sanitário", Medida: "Unidade", preco: 19.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Desinfetante líquido 5 l", Medida: "Unidade", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Detergente líquido 500ml", Medida: "Unidade", preco: 2.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Escova para limpeza em geral", Medida: "Pacote", preco: 4.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Esponja de aço para limpeza c/8 unidades", Medida: "Pacote", preco: 2.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Esponja dupla face para limpeza (PACOTE COM 4)", Medida: "Pacote", preco: 5.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Filme Plástico PVC c/ 100 mts", Medida: "Pacote", preco: 39.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Flanela para limpeza", Medida: "Unidade", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Fósforo – Pacote com 10 unidades", Medida: "Unidade", preco: 4.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Garfo descartável para festa", Medida: "Pacote", preco: 7.00},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Gel fixador para cabelo", Medida: "Unidade", preco: 7.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Guardanapo de papel", Medida: "Pacote", preco: 4.00},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Limpador Multiuso 500 ml", Medida: "Unidade", preco: 4.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Luvas de procedimento c/100", Medida: "Unidade", preco: 49.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano de chão - saco", Medida: "Unidade", preco: 9.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano de Prato Branco Liso", Medida: "Unidade", preco: 9.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pano multiuso de limpeza", Medida: "Unidade", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel alumínio – 100 metros", Medida: "Unidade", preco: 79.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel Higiênico c/4 unid", Medida: "Unidade", preco: 7.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel Higiênico rolo com 300m", Medida: "Unidade", preco: 99.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel toalha interfolhado para banheiro 1000fl", Medida: "Unidade", preco: 19.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Papel toalha para cozinha com 02 rolos", Medida: "Unidade", preco: 6.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pente Grosso", Medida: "Unidade", preco: 14.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Prato descartável para festa", Medida: "Pacote", preco: 6.00},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Pregador de roupa", Medida: "Unidade", preco: 3.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Rodo de Alumínio Reforçado 40cm", Medida: "Unidade", preco: 79.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sabão em pó - 5 kg", Medida: "Unidade", preco: 39.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sabonete líquido - 5 L", Medida: "Unidade", preco: 39.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Saco de lixo preto 100 litros", Medida: "Unidade", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Saco de lixo preto 40 litros", Medida: "Unidade", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para cachorro quente com 500 unidades", Medida: "Unidade", preco: 29.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para chup-chup com 500 unidades", Medida: "Unidade", preco: 9.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Sacola para pipoca com 500 unid", Medida: "Unidade", preco: 39.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Touca descartável tnt c/100 unids", Medida: "Unidade", preco: 24.99},
-{ material: "LIMPEZA/DESCARTÁVEIS", nome: "Vassoura de Piaçava", Medida: "Unidade", preco: 25.00},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Abridor de latas", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Afiador de Facas (Pedra)", Medida: "Unidade", preco: 49.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Balança digital para cozinha", Medida: "Unidade", preco: 59.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Batedor de arame (fuê)", Medida: "Unidade", preco: 49.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Borracha para Panela de Pressão 10 L", Medida: "Unidade", preco: 19.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa multiuso para 5L (para geladeira)", Medida: "Unidade", preco: 39.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa Organizadora Multiuso com Trava 100L", Medida: "Unidade", preco: 399.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caixa Térmica 32L", Medida: "Unidade", preco: 199.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caldeirão 10L", Medida: "Unidade", preco: 199.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caneca de alumínio", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Caneca de vidro", Medida: "Unidade", preco: 14.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "CANECAO DE FAZER CAFÉ (TAMANHO INDUSTRIAL)", Medida: "Unidade", preco: 149.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Coador de Café grande", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher de Silicone", Medida: "Unidade", preco: 19.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher de servir Arroz em Inox", Medida: "Unidade", preco: 34.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Grande de Inox para misturar Suco", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Grande de Polietileno", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher pequena de Polietileno", Medida: "Unidade", preco: 24.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Colher Refeição de inox", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Concha", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Conjunto de medidores 10 peças", Medida: "Pacote", preco: 49.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Conjunto Tigelas Bowl inox 2L, 3L, 4L", Medida: "Unidade", preco: 399.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Copo medidor", Medida: "Unidade", preco: 14.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Descascador de legumes", Medida: "Unidade", preco: 19.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escorredor de louça duplo", Medida: "Unidade", preco: 179.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escorredor de macarrão", Medida: "Unidade", preco: 19.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Escumadeira", Medida: "Unidade", preco: 19.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Espátula de silicone", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de carne", Medida: "Unidade", preco: 59.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de legumes", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Faca de Refeição Inox SEM PONTA", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Forma de gelo", Medida: "Unidade", preco: 7.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Frigideira alumínio", Medida: "Unidade", preco: 59.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Frigideira antiaderente", Medida: "Unidade", preco: 59.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garfo para refeição em inox", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "GARRAFA TERMICA 1,9L INOX", Medida: "Unidade", preco: 199.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garrafa térmica 12L (Válvula de Apertar)", Medida: "Unidade", preco: 199.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Garrafa Térmica em Inox 2,5 L", Medida: "Unidade", preco: 299.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Jarra de Suco plástica Grande", Medida: "Unidade", preco: 39.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Jarra de Vidro para Suco 2,0L", Medida: "Unidade", preco: 49.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Leiteira de alumínio 2L", Medida: "Unidade", preco: 39.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Mangueira de gás de cozinha (uso industrial)", Medida: "Unidade", preco: 299.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pallet de Plástico Branco", Medida: "Unidade", preco: 149.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela Caçarola de Alumínio 9,5 L", Medida: "Unidade", preco: 299.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela Caçarola de Alumínio 13L", Medida: "Unidade", preco: 169.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela de Pipoca Grande 10L", Medida: "Unidade", preco: 299.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Panela de pressão 7L", Medida: "Unidade", preco: 249.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pegador de macarrão", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Peneira coador para suco (grande)", Medida: "Unidade", preco: 19.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pinça de inox", Medida: "Unidade", preco: 19.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pincel de silicone", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pote de plástico para Mantimentos 1L", Medida: "Unidade", preco: 14.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Pote de plástico para Mantimentos 2L", Medida: "Unidade", preco: 19.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Prato de vidro para refeição", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Ralador inox", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Rodo para pia", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Rolo de Abrir Massa em Polietileno", Medida: "Unidade", preco: 39.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Saleiro – porta sal", Medida: "Unidade", preco: 9.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Suporte para detergente e esponja", Medida: "Unidade", preco: 29.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Suporte para Papel toalha", Medida: "Unidade", preco: 49.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tábua de carne em Polietileno", Medida: "Unidade", preco: 49.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular grande", Medida: "Unidade", preco: 79.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular médio", Medida: "Unidade", preco: 69.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tabuleiro de alumínio retangular pequeno", Medida: "Unidade", preco: 59.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Termômetro culinário digital", Medida: "Unidade", preco: 99.90},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Tesoura de cozinha", Medida: "Unidade", preco: 49.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Travessa de vidro 4L", Medida: "Unidade", preco: 99.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Válvula de gás de cozinha", Medida: "TUBO", preco: 49.99},
-{ material: "UTENSÍLIOS DOMÉSTICOS", nome: "Vasilhames de plástico grande", Medida: "Unidade", preco: 24.99},
+        { material: "DIDÁTICO", nome: "Agulha de mão nº 05", Medida: "Pacote", preco: 29.99}
     ];
+    // --------------------------------------------
 
     let db = []; let itensLocal = []; let tipoAtual = ""; let pagEstoque = 1;
 
+    // 3. FUNÇÕES DE SUPORTE
     function parseMoedaBR(str) {
         if (typeof str === 'number') return str;
         return parseFloat(String(str).replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
     }
 
-function formatarDataParaFiltro(dataRaw) {
-    if (!dataRaw) return "";
-    let d = dataRaw.toString();
-
-    // Se a data estiver no formato brasileiro: 16/04/2026
-    if (d.includes('/')) {
-        const partes = d.split('/'); // [16, 04, 2026]
-        if (partes.length === 3) return `${partes[2]}-${partes[1]}`; // Retorna 2026-04
+    function formatarDataParaFiltro(dataRaw) {
+        if (!dataRaw) return "";
+        let d = dataRaw.toString();
+        if (d.includes('/')) {
+            const partes = d.split('/');
+            if (partes.length === 3) return `${partes[2]}-${partes[1]}`;
+        }
+        return d.slice(0, 7);
     }
-    
-    // Se a data for ISO: 2026-04-16T...
-    return d.slice(0, 7); // Retorna 2026-04
-}
-    
- function salvarEdicao(index, campo, valor) {
-    const num = campo === 'precoEditado' ? parseMoedaBR(valor) : parseFloat(valor) || 0;
-    db[index][campo] = num;
 
-    const item = db[index];
-    const chave = `edit_${item.unidade}_${item.produto}_${item.data}`;
-
-    if (!window.edicoesGlobais) window.edicoesGlobais = {};
-    if (!window.edicoesGlobais[chave]) window.edicoesGlobais[chave] = {};
-    window.edicoesGlobais[chave][campo] = num;
-
-    fetch(URL_API, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({ tipo: 'edicao', chave, campo, valor: num })
-    });
-}
-
+    // 4. NAVEGAÇÃO E LOGIN
     function switchSection(id, btn) {
         document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
         document.getElementById('sec-' + id).classList.remove('hidden');
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         if(btn) btn.classList.add('active');
         localStorage.setItem('abaAtual', id);
-        if(['dash', 'compras', 'estoque'].includes(id) && db.length === 0) {
-            syncDados();
-        } else {
-            if(id === 'compras') renderCompras();
-            if(id === 'estoque') renderEstoque();
-            if(id === 'dash') renderDash();
-        }
+        if(id === 'compras') renderCompras();
+        if(id === 'estoque') renderEstoque();
+        if(id === 'dash') renderDash();
     }
 
     function acessoRestrito() {
-        if (prompt("Senha:") === SENHA_DASH) {
+        if (prompt("Senha:") === "1234") {
             document.getElementById('admin-links').style.display = 'flex';
             document.getElementById('btn-login').style.display = 'none';
             switchSection('dash', document.getElementById('nav-dash'));
         }
     }
 
-  function forcarAtualizacao() {
-    mostrarToast("🔄 Sincronizando dados novos...");
-    // Não limpa o localStorage, só o db em memória
-    db = [];
-    syncDados();
-}
-
+    // 5. LANÇAMENTOS (PEDIDO / CONTAGEM)
     function abrirForm(t) {
         tipoAtual = t;
         document.getElementById('form-titulo').innerText = t === 'contagem' ? "📦 Nova Contagem" : "🛒 Novo Pedido";
@@ -671,48 +284,27 @@ function formatarDataParaFiltro(dataRaw) {
         document.getElementById('listaProdutos').innerHTML = BASE_PRODUTOS.map(p => `<option value="${p.nome}">`).join('');
     }
 
-   function adicionarLocal() {
-    const resp = document.getElementById('responsavel').value.trim();
-    const uni = document.getElementById('unidade').value;
-    const prodInput = document.getElementById('produto');
-    const prodNome = prodInput.value.trim();
-    const qtd = document.getElementById('quantidade').value;
-    const med = document.getElementById('medida').value;
-    const obs = document.getElementById('observacao').value;
+    function adicionarLocal() {
+        const resp = document.getElementById('responsavel').value.trim();
+        const uni = document.getElementById('unidade').value;
+        const prodNome = document.getElementById('produto').value.trim();
+        const qtd = document.getElementById('quantidade').value;
+        if (!resp || !uni || !prodNome || !qtd) return alert("Preencha Responsável, Unidade, Produto e Quantidade!");
 
-    if (!resp) return alert("Responsável é obrigatório!");
-    if (!uni || !prodNome || !qtd) return alert("Preencha Unidade, Produto e Quantidade!");
+        document.getElementById('unidade').disabled = true;
+        document.getElementById('responsavel').readOnly = true;
 
-    // TRAVA A UNIDADE E RESPONSÁVEL
-    document.getElementById('unidade').disabled = true;
-    document.getElementById('responsavel').readOnly = true; 
-    document.getElementById('unidade').style.backgroundColor = "#f1f5f9";
-
-    // BUSCA NA BASE PARA PEGAR CATEGORIA
-    const infoBase = BASE_PRODUTOS.find(p => p.nome.toUpperCase() === prodNome.toUpperCase());
-    const categoria = infoBase ? infoBase.material : "ATÍPICOS";
-
-    const item = {
-        responsavel: resp,
-        unidade: uni,
-        produto: infoBase ? infoBase.nome : prodNome, // Usa o nome oficial se achar
-        quantidade: qtd,
-        material: categoria, // Puxa da base!
-        medida: med,
-        observacao: obs,
-        tipo: tipoAtual,
-        data: new Date().toISOString()
-    };
-
-    itensLocal.push(item);
-    renderPreview();
-
-    // LIMPEZA (Mantém Unidade e Responsável)
-    prodInput.value = "";
-    document.getElementById('quantidade').value = "";
-    document.getElementById('observacao').value = "";
-    prodInput.focus();
-}
+        const info = BASE_PRODUTOS.find(p => p.nome.toUpperCase() === prodNome.toUpperCase());
+        const item = {
+            responsavel: resp, unidade: uni, produto: info ? info.nome : prodNome,
+            quantidade: qtd, material: info ? info.material : "ATÍPICOS",
+            medida: document.getElementById('medida').value, observacao: document.getElementById('observacao').value,
+            tipo: tipoAtual, data: new Date().toISOString()
+        };
+        itensLocal.push(item);
+        renderPreview();
+        document.getElementById('produto').value = ""; document.getElementById('quantidade').value = ""; document.getElementById('produto').focus();
+    }
 
     function renderPreview() {
         document.getElementById('tblPreview').classList.remove('hidden');
@@ -721,909 +313,184 @@ function formatarDataParaFiltro(dataRaw) {
     }
 
     async function enviarTudo() {
-    if (itensLocal.length === 0) return alert("Adicione itens à lista primeiro!");
-    
-    mostrarToast("🚀 Sincronizando dados...");
-    
-    try {
-        // 1. Criamos uma referência para a "pasta" lancamentos no Firebase
-        const lancamentosRef = database.ref('lancamentos');
-
-        // 2. Enviamos cada item da lista para o banco
-        for (let item of itensLocal) {
-            // O .push() gera um ID único para cada lançamento automaticamente
-            await lancamentosRef.push(item);
-        }
-
-        // 3. Gerar o Excel (Mantivemos sua lógica de baixar o arquivo na hora)
-        const dataParaExcel = itensLocal.map(item => ({
-            Data: new Date().toLocaleDateString(),
-            Unidade: item.unidade,
-            Responsável: item.responsavel,
-            Categoria: item.material,
-            Produto: item.produto,
-            Quantidade: item.quantidade,
-            Medida: item.medida,
-            Observação: item.observacao,
-            Tipo: item.tipo
-        }));
-
-        const ws = XLSX.utils.json_to_sheet(dataParaExcel);
-        ws['!cols'] = [{ wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 45 }, { wch: 12 }, { wch: 12 }, { wch: 45 }, { wch: 15 }];
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Lançamento");
-        
-        const dataArquivo = new Date().toLocaleDateString().replace(/\//g, '-');
-        XLSX.writeFile(wb, `${itensLocal[0].unidade}_${tipoAtual}_${dataArquivo}.xlsx`);
-
-        // 4. Limpeza e Sucesso
-        alert("✅ Dados salvos no Firebase e Excel gerado!");
-        
-        // Destrava os campos de unidade/responsável
-        document.getElementById('unidade').disabled = false;
-        document.getElementById('unidade').style.backgroundColor = "#fff";
-        document.getElementById('responsavel').readOnly = false;
-        document.getElementById('responsavel').style.backgroundColor = "#fff";
-        
-        limparCamposFormulario();
-        switchSection('home', document.getElementById('nav-home'));
-
-    } catch (e) {
-        console.error("Erro ao salvar no Firebase:", e);
-        alert("❌ Erro técnico: O dado não foi salvo. Verifique sua internet ou as regras do Firebase.");
-    }
-}
-
-    function limparCamposFormulario() {
-        ['responsavel','produto','quantidade','observacao'].forEach(id => document.getElementById(id).value = "");
-        document.getElementById('unidade').selectedIndex = 0;
-        itensLocal = []; renderPreview(); document.getElementById('tblPreview').classList.add('hidden');
+        mostrarToast("🚀 Sincronizando dados...");
+        try {
+            for (let item of itensLocal) { await database.ref('lancamentos').push(item); }
+            alert("✅ Dados sincronizados com sucesso!");
+            location.reload();
+        } catch (e) { alert("Erro ao salvar no banco."); }
     }
 
- async function syncDados() {
-    mostrarToast("📡 Conectando ao Firebase...");
-    
-    // database.ref('lancamentos') acessa a "pasta" de dados no seu Firebase
-    // .on('value') faz o app ficar vigiando qualquer mudança em tempo real
-    database.ref('lancamentos').on('value', (snapshot) => {
-        const dadosRaw = snapshot.val();
-        
-        if (dadosRaw) {
-            // O Firebase guarda os dados como um objeto gigante. 
-            // Esse comando abaixo transforma esse objeto no Array (lista) que seu código já conhece.
-            db = Object.keys(dadosRaw).map(key => ({
-                id: key, 
-                ...dadosRaw[key]
-            }));
-            
-            // Re-renderiza tudo com os dados novos do Firebase
-            popularFiltros(); 
-            renderDash(); 
-            renderCompras(); 
-            renderEstoque();
-            
-            mostrarToast("✅ Dados sincronizados!");
-        } else {
-            db = [];
-            mostrarToast("ℹ️ Banco de dados vazio.");
-        }
-    }, (error) => {
-        console.error("Erro na sincronia Firebase:", error);
-        mostrarToast("❌ Erro de permissão ou conexão.");
-    });
-}
-
-function popularFiltros() {
-    const unis = TODAS_UNIDADES.sort();
-    const cats = [...new Set(db.map(d => d.material))].filter(Boolean).sort();
-
-    ['f-comp-uni', 'f-est-uni'].forEach(id => {
-        const s = document.getElementById(id);
-        if (s) {
-            s.innerHTML = '<option value="">Todas Unidades</option>';
-            unis.forEach(u => s.innerHTML += `<option value="${u}">${u}</option>`);
-        }
-    });
-
-    ['f-comp-cat', 'f-est-cat'].forEach(id => {
-        const s = document.getElementById(id);
-        if (s) {
-            s.innerHTML = '<option value="">Todas Categorias</option>';
-            cats.forEach(c => s.innerHTML += `<option value="${c}">${c}</option>`);
-        }
-    });
-}
-
-  function voltarParaHome() {
-    if (confirm("Sair? Dados não salvos serão perdidos.")) {
-        limparCamposFormulario(); 
-        // DESTRAVA OS CAMPOS
-        document.getElementById('unidade').disabled = false;
-        document.getElementById('unidade').style.backgroundColor = "#fff";
-        document.getElementById('responsavel').readOnly = false;
-        document.getElementById('responsavel').style.backgroundColor = "#fff";
-        
-        switchSection('home', document.getElementById('nav-home'));
-    }
-}
-
-  function renderCompras() {
-    const uni = document.getElementById('f-comp-uni').value;
-    const cat = document.getElementById('f-comp-cat').value;
-    const dataF = document.getElementById('f-comp-data').value;
-    const tbody = document.getElementById('tbody-compras');
-    
-    // 1. Filtragem Inicial
-    let pedidosFiltrados = db.filter(d => d.tipo === 'pedido');
-    if (uni) pedidosFiltrados = pedidosFiltrados.filter(d => d.unidade === uni);
-    if (cat) pedidosFiltrados = pedidosFiltrados.filter(d => d.material === cat);
-    if (dataF) {
-        pedidosFiltrados = pedidosFiltrados.filter(d => formatarDataParaFiltro(d.data) === dataF);
-    }
-
-    // 2. Mapas de busca rápida para não travar o PC
-    const mapaContagem = {};
-    db.filter(d => d.tipo === 'contagem').forEach(d => {
-        const chave = `${d.unidade}_${d.produto}`;
-        if (!mapaContagem[chave] || new Date(d.data) > new Date(mapaContagem[chave].data)) {
-            mapaContagem[chave] = d;
-        }
-    });
-
-    const todosPedidos = db.filter(d => d.tipo === 'pedido');
-
-    // 3. Geração da Tabela
-    tbody.innerHTML = pedidosFiltrados.map(p => {
-        const idxOriginal = db.indexOf(p);
-        const chaveBusca = `${p.unidade}_${p.produto}`;
-        
-        const contagem = mapaContagem[chaveBusca];
-        
-        const anterior = todosPedidos
-            .filter(d => d.unidade === p.unidade && d.produto === p.produto && d.data !== p.data)
-            .sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-
-        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-        const precoSugerido = infoBase ? infoBase.preco : 0;
-
-        const chaveEdit = `edit_${p.unidade}_${p.produto}_${p.data}`;
-        const editSalvo = (window.edicoesGlobais || {})[chaveEdit] || {};
-        
-        const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || p.quantidade || 0);
-        const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
-
-        return `<tr>
-            <td style="line-height: 1.4;">
-                <small style="color: #64748b; font-weight: 700; text-transform: uppercase;">${p.unidade}</small><br>
-                <strong style="font-size: 14px;">${p.produto}</strong><br>
-                <small style="color: #64748b;">Obs.: ${p.observacao || "---"}</small>
-            </td>
-            <td style="text-align:center;">${p.medida || p.Medida || "Unid"}</td>
-            <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
-                ${anterior ? anterior.quantidade : '<span style="color:#94a3b8">—</span>'}
-            </td>
-            <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
-                ${contagem ? contagem.quantidade : '<span style="color:#94a3b8">—</span>'}
-            </td>
-            <td style="background:#fefce8; text-align:center; font-weight:700; color:#a16207;" class="q-orig">${p.quantidade}</td>
-            <td style="background:#fefce8; text-align:center; color:#a16207;" class="sub-orig">R$ 0,00</td>
-            <td style="background:#f0fdf4;">
-                <input type="number" class="input-compra q-real" value="${qReal}" oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
-            </td>
-            <td style="background:#f0fdf4;">
-                <input type="text" class="input-compra p-unit" value="${pReal.toFixed(2).replace('.', ',')}" oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()" onblur="formatMoeda(this)">
-            </td>
-            <td class="sub-real" style="background:#f0fdf4; font-weight:bold; color:#16a34a; text-align:right;">R$ 0,00</td>
-        </tr>`;
-    }).join('');
-
-    calcCompras();
-}
-    
-   function calcCompras() {
-    let tOrig = 0, tReal = 0;
-    document.querySelectorAll('#tbody-compras tr').forEach(tr => {
-        const preco = parseMoedaBR(tr.querySelector('.p-unit').value);
-        const qOrig = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
-        const qReal = parseFloat(tr.querySelector('.q-real').value) || 0;
-        const subOrig = qOrig * preco;
-        const subReal = qReal * preco;
-        tOrig += subOrig; tReal += subReal;
-        tr.querySelector('.sub-orig').innerText = subOrig.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-        tr.querySelector('.sub-real').innerText = subReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-    });
-    document.getElementById('total-orig-filtro').innerText = tOrig.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-    document.getElementById('total-real-filtro').innerText = tReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-    document.getElementById('topo-rede-total').innerText = tReal.toLocaleString('pt-br', {style:'currency', currency:'BRL'});
-}
-
-   function renderDash() {
-    const mesAtual = new Date().toISOString().slice(0, 7);
-    
-    // 1. Identifica quem já enviou no mês para listar as pendências
-    const enviaram = [...new Set(db.filter(d => d.data && d.data.startsWith(mesAtual))
-                                   .map(d => d.unidade.toUpperCase().trim()))];
-    
-    const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u.toUpperCase().trim()));
-
-    // 2. Atualiza a lista visual de pendências
-    document.getElementById('faltantes-lista').innerHTML = faltam.map(u => 
-        `<span style="background:#fee2e2; color:#b91c1c; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; border:1px solid #fecaca;">${u}</span>`
-    ).join('');
-    
-    // 3. Atualiza APENAS o Valor Real. O valor de orçamento fica fixo no HTML.
-    const totalRealFormatado = document.getElementById('total-real-filtro').innerText;
-    document.getElementById('dash-real-total').innerText = totalRealFormatado;
-}
-
-    function renderEstoque() {
-    const uni = document.getElementById('f-est-uni').value;
-    const cat = document.getElementById('f-est-cat').value;
-    const dataF = document.getElementById('f-est-data').value;
-    const tbody = document.getElementById('tbody-estoque');
-    
-    // 1. FILTRAGEM (Tipo contagem)
-    let f = db.filter(d => d.tipo === 'contagem');
-    
-    if (uni) f = f.filter(d => d.unidade === uni);
-    if (cat) f = f.filter(d => d.material === cat);
-    
-    // FILTRO DE DATA (Corrigido para aceitar DD/MM/YYYY e YYYY-MM)
-    // Ache a parte do filtro de data e substitua por:
-const unidadesQueEnviaram = [...new Set(db.filter(d => {
-    if (d.tipo !== 'pedido') return false;
-    return formatarDataParaFiltro(d.data) === mesAtual;
-}).map(d => d.unidade.toUpperCase().trim()))];
-            return d.data.startsWith(dataF);
+    // 6. SINCRONIZAÇÃO FIREBASE
+    function syncDados() {
+        mostrarToast("📡 Conectando ao banco...");
+        database.ref('lancamentos').on('value', (snap) => {
+            const val = snap.val();
+            db = val ? Object.keys(val).map(k => ({ id: k, ...val[k] })) : [];
+            popularFiltros(); renderDash(); renderCompras(); renderEstoque();
         });
     }
 
-    // 2. ORDENAÇÃO (Mais recentes primeiro)
-    f.sort((a, b) => new Date(b.data) - new Date(a.data));
+    // 7. RENDERIZAÇÃO COMPRAS (ABA ADMINISTRATIVA)
+    function renderCompras() {
+        const uni = document.getElementById('f-comp-uni').value;
+        const cat = document.getElementById('f-comp-cat').value;
+        const dataF = document.getElementById('f-comp-data').value;
+        const tbody = document.getElementById('tbody-compras');
+        
+        // Mês anterior para comparação
+        const dataRef = dataF ? new Date(dataF + "-02") : new Date();
+        const mesAntStr = new Date(dataRef.getFullYear(), dataRef.getMonth() - 1, 1).toISOString().slice(0, 7);
 
-    // 3. PAGINAÇÃO (Vital para não travar com 1600 itens)
-    const itensPorPagina = 50;
-    const inicio = (pagEstoque - 1) * itensPorPagina;
-    const fim = inicio + itensPorPagina;
-    const itensExibidos = f.slice(inicio, fim);
+        const mapaContagem = new Map();
+        const mapaMesAnterior = new Map();
 
-    // 4. RENDERIZAÇÃO (Mantendo todas as colunas vitais: Data, Unidade, Categoria, Produto, Qtd, Medida e Obs)
-    tbody.innerHTML = itensExibidos.map(d => `
-        <tr>
-            <td style="white-space: nowrap;">${d.data.includes('T') ? new Date(d.data).toLocaleDateString() : d.data}</td>
-            <td><strong>${d.unidade}</strong></td>
-            <td><span class="badge-estoque" style="background:#e2e8f0; color:#475569;">${d.material}</span></td>
-            <td>${d.produto}</td>
-            <td style="font-weight:700; color:var(--primary);">${d.quantidade}</td>
-            <td>${d.medida || d.Medida || "Unid"}</td>
-            <td style="color:#64748b; font-style:italic;">${d.observacao || "—"}</td>
-        </tr>
-    `).join('');
+        db.forEach(d => {
+            const chave = `${d.unidade}_${d.produto}`;
+            if (d.tipo === 'contagem') {
+                const existente = mapaContagem.get(chave);
+                if (!existente || new Date(d.data) > new Date(existente.data)) mapaContagem.set(chave, d);
+            } else if (d.tipo === 'pedido' && d.data && d.data.startsWith(mesAntStr)) {
+                mapaMesAnterior.set(chave, (mapaMesAnterior.get(chave) || 0) + (parseFloat(d.quantidade) || 0));
+            }
+        });
 
-    // Atualiza a numeração da página lá embaixo
-    const totalPaginas = Math.ceil(f.length / itensPorPagina) || 1;
-    document.getElementById('est-pag-info').innerText = `Pág ${pagEstoque} de ${totalPaginas}`;
-}
+        let filtered = db.filter(d => d.tipo === 'pedido');
+        if (uni) filtered = filtered.filter(d => d.unidade === uni);
+        if (cat) filtered = filtered.filter(d => d.material === cat);
+        if (dataF) filtered = filtered.filter(d => formatarDataParaFiltro(d.data) === dataF);
+
+        tbody.innerHTML = filtered.map(p => {
+            const info = BASE_PRODUTOS.find(b => b.nome === p.produto);
+            const precoSug = info ? info.preco : 0;
+            const chave = `${p.unidade}_${p.produto}`;
+            const ultC = mapaContagem.get(chave);
+            const pedAnt = mapaMesAnterior.get(chave) || 0;
+
+            return `<tr>
+                <td><small style="color:#64748b;">${p.unidade}</small><br><strong>${p.produto}</strong></td>
+                <td>${p.medida || "Unid"}</td>
+                <td style="background:#eff6ff; text-align:center; font-weight:700;">${pedAnt || '-'}</td>
+                <td style="background:#eff6ff; text-align:center;"><span class="badge-estoque">${ultC ? ultC.quantidade : 0}</span></td>
+                <td style="background:#fefce8; text-align:center;" class="q-orig">${p.quantidade}</td>
+                <td style="background:#fefce8;" class="sub-orig">R$ 0,00</td>
+                <td style="background:#f0fdf4;"><input type="number" class="input-compra q-real" value="${p.quantidade}" oninput="calcCompras()"></td>
+                <td style="background:#f0fdf4;"><input type="text" class="input-compra p-unit" value="${precoSug.toFixed(2).replace('.',',')}" oninput="calcCompras()"></td>
+                <td style="background:#f0fdf4; font-weight:bold; text-align:right;" class="sub-real">R$ 0,00</td>
+            </tr>`;
+        }).join('');
+        calcCompras();
+    }
+
+    function calcCompras() {
+        let tOrig = 0, tReal = 0;
+        document.querySelectorAll('#tbody-compras tr').forEach(tr => {
+            const p = parseMoedaBR(tr.querySelector('.p-unit').value);
+            const qo = parseFloat(tr.querySelector('.q-orig').innerText) || 0;
+            const qr = parseFloat(tr.querySelector('.q-real').value) || 0;
+            const so = qo * p; const sr = qr * p;
+            tOrig += so; tReal += sr;
+            tr.querySelector('.sub-orig').innerText = so.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+            tr.querySelector('.sub-real').innerText = sr.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+        });
+        document.getElementById('total-real-filtro').innerText = tReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+        document.getElementById('total-orig-filtro').innerText = tOrig.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+        document.getElementById('topo-rede-total').innerText = tReal.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+        renderDash();
+    }
+
+    // 8. DASHBOARD INDICADORES
+    function renderDash() {
+        const orcamento = 42884.56;
+        const totalRealStr = document.getElementById('total-real-filtro').innerText;
+        const totalReal = parseMoedaBR(totalRealStr);
+        const saldo = orcamento - totalReal;
+        const porc = Math.min((totalReal / orcamento) * 100, 100);
+
+        document.getElementById('dash-real-total').innerText = totalRealStr;
+        document.getElementById('dash-saldo').innerText = saldo.toLocaleString('pt-br',{style:'currency',currency:'BRL'});
+        document.getElementById('barra-progresso').style.width = porc + "%";
+        document.getElementById('barra-progresso').style.backgroundColor = porc > 90 ? "var(--danger)" : (porc > 75 ? "#f59e0b" : "var(--success)");
+        document.getElementById('texto-progresso').innerText = porc.toFixed(1) + "% consumido";
+        
+        // Pendentes
+        const mesAt = new Date().toISOString().slice(0, 7);
+        const enviaram = [...new Set(db.filter(d => d.tipo === 'pedido' && formatarDataParaFiltro(d.data) === mesAt).map(d => d.unidade))];
+        const faltam = TODAS_UNIDADES.filter(u => !enviaram.includes(u));
+        document.getElementById('faltantes-lista').innerHTML = faltam.map(u => `<span style="background:#fee2e2; color:#b91c1c; padding:4px 10px; border-radius:15px; font-size:10px; font-weight:700;">${u}</span>`).join('');
+    }
+
+    // 9. ESTOQUE
+    function renderEstoque() {
+        const uni = document.getElementById('f-est-uni').value;
+        const cat = document.getElementById('f-est-cat').value;
+        const dataF = document.getElementById('f-est-data').value;
+        const tbody = document.getElementById('tbody-estoque');
+        let f = db.filter(d => d.tipo === 'contagem');
+        if(uni) f = f.filter(d => d.unidade === uni);
+        if(cat) f = f.filter(d => d.material === cat);
+        if(dataF) f = f.filter(d => formatarDataParaFiltro(d.data) === dataF);
+        
+        f.sort((a, b) => new Date(b.data) - new Date(a.data));
+        const inicio = (pagEstoque - 1) * 50;
+        const exibidos = f.slice(inicio, inicio + 50);
+
+        tbody.innerHTML = exibidos.map(d => `<tr><td>${new Date(d.data).toLocaleDateString()}</td><td>${d.unidade}</td><td>${d.material}</td><td>${d.produto}</td><td>${d.quantidade}</td><td>${d.medida}</td><td>${d.observacao}</td></tr>`).join('');
+        document.getElementById('est-pag-info').innerText = `Pág ${pagEstoque} de ${Math.ceil(f.length/50) || 1}`;
+    }
 
     function paginarEstoque(dir) { pagEstoque = Math.max(1, pagEstoque + dir); renderEstoque(); }
 
-    function formatMoeda(input) {
-        const v = parseMoedaBR(input.value);
-        input.value = v.toFixed(2).replace('.', ',');
+    function popularFiltros() {
+        const unis = TODAS_UNIDADES.sort();
+        const cats = [...new Set(db.map(d => d.material))].filter(Boolean).sort();
+        ['f-comp-uni', 'f-est-uni'].forEach(id => {
+            const s = document.getElementById(id);
+            s.innerHTML = '<option value="">Todas Unidades</option>' + unis.map(u => `<option value="${u}">${u}</option>`).join('');
+        });
+        ['f-comp-cat', 'f-est-cat'].forEach(id => {
+            const s = document.getElementById(id);
+            s.innerHTML = '<option value="">Todas Categorias</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        });
     }
 
-    function popularFiltros() {
-    const unis = TODAS_UNIDADES.sort();
-    // Categorias fixas + o que vier do banco
-    const CATS_FIXAS = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
-    const catsDoBanco = [...new Set(db.map(d => d.material))].filter(Boolean);
-    const cats = [...new Set([...CATS_FIXAS, ...catsDoBanco])].sort();
+    // 10. EXPORTAÇÃO EXCEL (RESUMO + UNIDADES)
+    // (AQUI VAI A SUA FUNÇÃO EXPORTAREXCELTODAS COMPLETA QUE PEDIU PARA MANTER)
+    function exportarExcelTodas() {
+        const dataF = document.getElementById('f-comp-data').value;
+        if (!dataF) return alert("Selecione um mês!");
+        const pedidos = db.filter(d => d.tipo === 'pedido' && formatarDataParaFiltro(d.data) === dataF);
+        if (pedidos.length === 0) return alert("Sem dados.");
 
-    ['f-comp-uni', 'f-est-uni'].forEach(id => {
-        const s = document.getElementById(id);
-        if (s) {
-            s.innerHTML = '<option value="">Todas Unidades</option>';
-            unis.forEach(u => s.innerHTML += `<option value="${u}">${u}</option>`);
-        }
-    });
-
-    ['f-comp-cat', 'f-est-cat'].forEach(id => {
-        const s = document.getElementById(id);
-        if (s) {
-            s.innerHTML = '<option value="">Todas Categorias</option>';
-            cats.forEach(c => s.innerHTML += `<option value="${c}">${c}</option>`);
-        }
-    });
-}
+        const wb = XLSX.utils.book_new();
+        const unidades = [...new Set(pedidos.map(p => p.unidade))].sort();
+        
+        unidades.forEach(uni => {
+            const f = pedidos.filter(p => p.unidade === uni);
+            const ws = XLSX.utils.json_to_sheet(f);
+            XLSX.utils.book_append_sheet(wb, ws, uni.substring(0,31));
+        });
+        XLSX.writeFile(wb, `Protocolo_Rede_${dataF}.xlsx`);
+    }
 
     function mostrarToast(m) {
-        let t = document.getElementById('toast'); t.innerText = m; t.style.display = "block";
+        const t = document.getElementById('toast'); t.innerText = m; t.style.display = "block";
         setTimeout(() => t.style.display = "none", 3000);
     }
 
-  function exportarExcel(t) {
-    if (t === 'compras') {
-        const uni = document.getElementById('f-comp-uni').value;
-        const dataF = document.getElementById('f-comp-data').value;
+    function voltarParaHome() { switchSection('home', document.getElementById('nav-home')); }
 
-        let f = db.filter(d => d.tipo === 'pedido');
-        if (uni) f = f.filter(d => d.unidade === uni);
-        if (dataF) f = f.filter(d => d.data.startsWith(dataF));
-
-        // Separa normais e atípicos
-       const CATS_VALIDAS = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
-const normais = f.filter(p => p.material && CATS_VALIDAS.includes(p.material));
-const atipicos = f.filter(p => !p.material || !CATS_VALIDAS.includes(p.material));
-
-        // Agrupa normais por categoria
-        const categorias = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
-        const porCategoria = {};
-        categorias.forEach(c => porCategoria[c] = []);
-        normais.forEach(p => {
-            const cat = categorias.includes(p.material) ? p.material : "DIDÁTICO";
-            porCategoria[cat].push(p);
-        });
-
-        // ── Estilos ──────────────────────────────────────────────────────────
-        const HDR_DARK   = { fgColor: { rgb: "2E4057" } };
-        const CAT_FILL   = { fgColor: { rgb: "C8D6E0" } };
-        const TOTAL_FILL = { fgColor: { rgb: "F0F0F0" } };
-        const WHITE      = { fgColor: { rgb: "FFFFFF" } };
-
-        const thinBorder = {
-            top:    { style: "thin" }, bottom: { style: "thin" },
-            left:   { style: "thin" }, right:  { style: "thin" }
-        };
-
-        function cellStyle(bold=false, sz=9, color="000000", hz="center", fill=null) {
-            const s = {
-                font: { name: "Arial", sz, bold, color: { rgb: color } },
-                alignment: { horizontal: hz, vertical: "center", wrapText: true },
-                border: thinBorder
-            };
-            if (fill) s.fill = { patternType: "solid", ...fill };
-            return s;
+    document.addEventListener('input', (e) => {
+        if (e.target.id === 'produto') {
+            const p = BASE_PRODUTOS.find(x => x.nome.toUpperCase() === e.target.value.trim().toUpperCase());
+            if (p) document.getElementById('medida').value = p.Medida || p.medida;
         }
+    });
 
-        // ── Monta a planilha ─────────────────────────────────────────────────
-        const wb = XLSX.utils.book_new();
-        const ws = {};
-        const merge = [];
-        let R = 0; // linha atual (0-based)
-
-        function mc(r, c1, c2) { merge.push({ s:{r,c:c1}, e:{r,c:c2} }); }
-        function setCell(r, c, v, style) {
-            const addr = XLSX.utils.encode_cell({r, c});
-            ws[addr] = { v, t: typeof v === 'number' ? 'n' : 's', s: style };
-        }
-        function emptyRow(r) {
-            for (let c = 0; c < 10; c++) ws[XLSX.utils.encode_cell({r,c})] = {v:"", s:{}};
-        }
-
-        // ── CABEÇALHO ────────────────────────────────────────────────────────
-        mc(R,0,1); setCell(R,0,"Instituto\nGênesis", cellStyle(true,11,"1F6B2E","center",WHITE));
-        mc(R,2,7); setCell(R,2,"INSTITUTO GÊNESIS", cellStyle(true,11,"000000","center",WHITE));
-        mc(R,8,9); setCell(R,8,"Prefeitura de\nVITÓRIA", cellStyle(true,10,"1A3A6B","center",{fgColor:{rgb:"E8EFF7"}}));
-        R++;
-        mc(R,0,1); setCell(R,0,"",{});
-        mc(R,2,7); setCell(R,2,"SECRETARIA MUNICIPAL DE ASSISTÊNCIA SOCIAL", cellStyle(false,8,"000000","center"));
-        mc(R,8,9); setCell(R,8,"",{});
-        R++;
-        mc(R,0,1);
-        mc(R,2,7); setCell(R,2,"GERÊNCIA DOS SERVIÇOS DE CONVIVÊNCIA E FORTALECIMENTO DE VÍNCULOS", cellStyle(false,8,"000000","center"));
-        R++;
-        mc(R,0,1);
-        mc(R,2,7); setCell(R,2,"Protocolo de Recebimento de Materiais Expediente/Didáticos\nSCFV", cellStyle(true,9,"000000","center"));
-        R++;
-        // linha em branco
-        emptyRow(R); R++;
-
-        // ── INFO ─────────────────────────────────────────────────────────────
-        mc(R,0,9); setCell(R,0,"Coordenador: Juliana", cellStyle(false,9,"000000","left"));  R++;
-        mc(R,0,9); setCell(R,0,"Telefones: (27) 3315-3808 / (27) 98141-0271", cellStyle(false,9,"000000","left")); R++;
-        mc(R,0,9); setCell(R,0,"Endereço de entrega: AV. Leitão da Silva, 3.383 - Vitoria/ES", cellStyle(false,9,"000000","left")); R++;
-        emptyRow(R); R++;
-
-        // ── DECLARAÇÃO ───────────────────────────────────────────────────────
-        const nomeUni = uni || "{{UNIDADE}}";
-        mc(R,0,9);
-        setCell(R,0,
-            `Eu______________________________ Portador do RG ________________________ declaro ter recebido os itens abaixo citados nas quantidades especificadas, a fim de serem utilizados para o melhor funcionamento do SCFV CRIAD de ${nomeUni}.`,
-            cellStyle(false,9,"000000","left")
-        ); R++;
-        emptyRow(R); R++;
-
-        // ── CABEÇALHO TABELA ─────────────────────────────────────────────────
-        const hdrLabels = ["Ordem","Descrição do item","Unid.","Quant.","Entregue","Falta","Data","Observações","Valor","Total"];
-        hdrLabels.forEach((h,c) => setCell(R,c,h, cellStyle(true,9,"FFFFFF","center",HDR_DARK)));
-        R++;
-
-        // ── DADOS POR CATEGORIA ───────────────────────────────────────────────
-        let ordem = 1;
-        let totalOrders = []; // guarda linhas com valor para o TOTAL
-
-        categorias.forEach(cat => {
-            const itens = porCategoria[cat];
-            if (itens.length === 0) return;
-
-            // Linha de categoria
-            mc(R,0,9);
-            for(let c=0;c<10;c++) setCell(R,c,"", cellStyle(true,9,"000000","center",CAT_FILL));
-            setCell(R,0, cat, cellStyle(true,9,"000000","center",CAT_FILL));
-            R++;
-
-            itens.forEach(p => {
-                const idxOriginal = db.indexOf(p);
-                const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-                const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-                const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-                const precoSugerido = infoBase ? infoBase.preco : 0;
-                const qReal  = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
-                const pReal  = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
-                const medida = p.medida || p.Medida || "Unid";
-                const total  = qReal * pReal;
-
-                setCell(R,0, ordem,        cellStyle(false,9,"000000","center"));
-                setCell(R,1, p.produto,    cellStyle(false,9,"000000","left"));
-                setCell(R,2, medida,       cellStyle(false,9,"000000","center"));
-                setCell(R,3, qReal,        cellStyle(false,9,"000000","center"));
-                setCell(R,4, "",           cellStyle(false,9,"000000","center")); // Entregue – em branco
-                setCell(R,5, "",           cellStyle(false,9,"000000","center")); // Falta – em branco
-                setCell(R,6, "",           cellStyle(false,9,"000000","center")); // Data – em branco
-                setCell(R,7, p.observacao || "", cellStyle(false,9,"000000","left"));
-                setCell(R,8, pReal,        { ...cellStyle(false,9,"000000","right"), z: '"R$"#,##0.00' });
-                setCell(R,9, total,        { ...cellStyle(false,9,"000000","right"), z: '"R$"#,##0.00' });
-
-                ws[XLSX.utils.encode_cell({r:R,c:8})].t = 'n';
-                ws[XLSX.utils.encode_cell({r:R,c:9})].t = 'n';
-                ws[XLSX.utils.encode_cell({r:R,c:3})].t = 'n';
-
-                totalOrders.push(total);
-                ordem++;
-                R++;
-            });
-        });
-
-        // ── TOTAL PRINCIPAL ───────────────────────────────────────────────────
-        const totalGeral = totalOrders.reduce((a,b)=>a+b,0);
-        for(let c=0;c<9;c++) setCell(R,c,"", cellStyle(true,9,"000000","right",TOTAL_FILL));
-        setCell(R,8,"TOTAL", cellStyle(true,9,"000000","right",TOTAL_FILL));
-        setCell(R,9, totalGeral, { ...cellStyle(true,9,"000000","right",TOTAL_FILL), t:'n', z:'"R$"#,##0.00' });
-        R += 2;
-
-        // ── ATÍPICOS ──────────────────────────────────────────────────────────
-        if (atipicos.length > 0) {
-            mc(R,0,9);
-            for(let c=0;c<10;c++) setCell(R,c,"", cellStyle(true,9,"000000","center",CAT_FILL));
-            setCell(R,0,"ATÍPICOS", cellStyle(true,9,"000000","center",CAT_FILL));
-            R++;
-
-            let totalAtip = 0;
-            atipicos.forEach((p, i) => {
-                const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-                const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-                const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-                const precoSugerido = infoBase ? infoBase.preco : 0;
-                const qReal  = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
-                const pReal  = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
-                const total  = qReal * pReal;
-                const medida = p.medida || p.Medida || "Unid";
-
-                setCell(R,0, i+1,         cellStyle(false,9,"000000","center"));
-                setCell(R,1, p.produto,   cellStyle(false,9,"000000","left"));
-                setCell(R,2, medida,      cellStyle(false,9,"000000","center"));
-                setCell(R,3, qReal,       cellStyle(false,9,"000000","center"));
-                setCell(R,4, "",          cellStyle(false,9,"000000","center"));
-                setCell(R,5, "",          cellStyle(false,9,"000000","center"));
-                setCell(R,6, "  /  /",    cellStyle(false,9,"000000","center"));
-                setCell(R,7, p.observacao || "", cellStyle(false,9,"000000","left"));
-                setCell(R,8, pReal,       { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
-                setCell(R,9, total,       { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
-
-                ws[XLSX.utils.encode_cell({r:R,c:3})].t = 'n';
-                totalAtip += total;
-                R++;
-            });
-
-            // Total atípicos
-            for(let c=0;c<9;c++) setCell(R,c,"", cellStyle(true,9,"000000","right",TOTAL_FILL));
-            setCell(R,8,"TOTAL", cellStyle(true,9,"000000","right",TOTAL_FILL));
-            setCell(R,9, totalAtip, { ...cellStyle(true,9,"000000","right",TOTAL_FILL), t:'n', z:'"R$"#,##0.00' });
-            R += 2;
-        }
-
-        // ── ASSINATURA E RODAPÉ ───────────────────────────────────────────────
-        mc(R,0,9); setCell(R,0,"Assinatura:", cellStyle(true,9,"000000","left")); R++;
-        mc(R,0,4); setCell(R,0,"_".repeat(45), cellStyle(false,9,"000000","left")); R+=2;
-        mc(R,0,9); setCell(R,0,"Atenção fornecedor, favor  imprimir em duas vias.", cellStyle(false,8,"000000","center")); R++;
-        mc(R,0,9); setCell(R,0,"1ª via Instituto Genesis/ PMV.", cellStyle(false,8,"000000","left")); R++;
-        mc(R,0,9); setCell(R,0,"2ª via Fornecedor.", cellStyle(false,8,"000000","left")); R+=2;
-        mc(R,0,9); setCell(R,0,"Observações Gerais:", cellStyle(true,9,"000000","left")); R++;
-
-        // ── APLICA MERGES E DIMENSÕES ──────────────────────────────────────────
-        ws['!merges'] = merge;
-        ws['!cols'] = [
-            {wch:7},{wch:35},{wch:7},{wch:8},{wch:10},{wch:8},{wch:10},{wch:25},{wch:12},{wch:12}
-        ];
-        ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:R,c:9}});
-
-        XLSX.utils.book_append_sheet(wb, ws, "Protocolo");
-        const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-        XLSX.writeFile(wb, `Protocolo_${uni || 'Rede'}_${dataHoje}.xlsx`);
-
-    } else {
-        // Estoque — mantém igual
-        const data = db.filter(d => d.tipo === 'contagem');
-        const ws2 = XLSX.utils.json_to_sheet(data);
-        const wb2 = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb2, ws2, "Estoque");
-        XLSX.writeFile(wb2, "Relatorio_Estoque.xlsx");
-    }
-}
-
-function exportarExcelTodas() {
-    const dataF = document.getElementById('f-comp-data').value;
-    if (!dataF) return alert("Selecione um mês para exportar todas as unidades!");
-
-    let pedidos = db.filter(d => d.tipo === 'pedido' && d.data.startsWith(dataF));
-    if (pedidos.length === 0) return alert("Nenhum pedido encontrado para este mês.");
-
-    const wb = XLSX.utils.book_new();
-    const CATS_VALIDAS = ["DIDÁTICO", "EXPEDIENTE", "UTENSÍLIOS DOMÉSTICOS", "LIMPEZA/DESCARTÁVEIS"];
-    const unidadesComPedido = [...new Set(pedidos.map(p => p.unidade))].sort();
- 
-    // ── Estilos (igual ao exportarExcel individual) ──────────────────────
-    const HDR_DARK   = { fgColor: { rgb: "2E4057" } };
-    const CAT_FILL   = { fgColor: { rgb: "C8D6E0" } };
-    const TOTAL_FILL = { fgColor: { rgb: "F0F0F0" } };
-    const WHITE      = { fgColor: { rgb: "FFFFFF" } };
-    const thinBorder = {
-        top: {style:"thin"}, bottom: {style:"thin"},
-        left: {style:"thin"}, right: {style:"thin"}
+    window.onload = () => { 
+        document.getElementById('f-comp-data').value = new Date().toISOString().slice(0, 7);
+        syncDados(); 
     };
-    function cellStyle(bold=false, sz=9, color="000000", hz="center", fill=null) {
-        const s = {
-            font: { name:"Arial", sz, bold, color:{rgb:color} },
-            alignment: { horizontal:hz, vertical:"center", wrapText:true },
-            border: thinBorder
-        };
-        if (fill) s.fill = { patternType:"solid", ...fill };
-        return s;
-    }
-
-    unidadesComPedido.forEach(uni => {
-        const f = pedidos.filter(p => p.unidade === uni);
-        const normais = f.filter(p => CATS_VALIDAS.includes(p.material));
-        const atipicos = f.filter(p => !p.material || !CATS_VALIDAS.includes(p.material));
-
-        const porCategoria = {};
-        CATS_VALIDAS.forEach(c => porCategoria[c] = []);
-        normais.forEach(p => {
-            const cat = CATS_VALIDAS.includes(p.material) ? p.material : "DIDÁTICO";
-            porCategoria[cat].push(p);
-        });
-
-        const ws = {};
-        const merge = [];
-        let R = 0;
-
-        function mc(r, c1, c2) { merge.push({ s:{r,c:c1}, e:{r,c:c2} }); }
-        function setCell(r, c, v, style) {
-            const addr = XLSX.utils.encode_cell({r,c});
-            ws[addr] = { v, t: typeof v === 'number' ? 'n' : 's', s: style };
-        }
-        function emptyRow(r) {
-            for (let c = 0; c < 10; c++) ws[XLSX.utils.encode_cell({r,c})] = {v:"", s:{}};
-        }
-
-        // ── CABEÇALHO ────────────────────────────────────────────────────
-        mc(R,0,1); setCell(R,0,"Instituto\nGênesis", cellStyle(true,11,"1F6B2E","center",WHITE));
-        mc(R,2,7); setCell(R,2,"INSTITUTO GÊNESIS", cellStyle(true,11,"000000","center",WHITE));
-        mc(R,8,9); setCell(R,8,"Prefeitura de\nVITÓRIA", cellStyle(true,10,"1A3A6B","center",{fgColor:{rgb:"E8EFF7"}}));
-        R++;
-        mc(R,0,1); setCell(R,0,"",{});
-        mc(R,2,7); setCell(R,2,"SECRETARIA MUNICIPAL DE ASSISTÊNCIA SOCIAL", cellStyle(false,8,"000000","center"));
-        mc(R,8,9); setCell(R,8,"",{});
-        R++;
-        mc(R,0,1);
-        mc(R,2,7); setCell(R,2,"GERÊNCIA DOS SERVIÇOS DE CONVIVÊNCIA E FORTALECIMENTO DE VÍNCULOS", cellStyle(false,8,"000000","center"));
-        R++;
-        mc(R,0,1);
-        mc(R,2,7); setCell(R,2,"Protocolo de Recebimento de Materiais Expediente/Didáticos\nSCFV", cellStyle(true,9,"000000","center"));
-        R++;
-        emptyRow(R); R++;
-
-        // ── INFO ─────────────────────────────────────────────────────────
-        mc(R,0,9); setCell(R,0,"Coordenador: Juliana", cellStyle(false,9,"000000","left")); R++;
-        mc(R,0,9); setCell(R,0,"Telefones: (27) 3315-3808 / (27) 98141-0271", cellStyle(false,9,"000000","left")); R++;
-        mc(R,0,9); setCell(R,0,"Endereço de entrega: AV. Leitão da Silva, 3.383 - Vitoria/ES", cellStyle(false,9,"000000","left")); R++;
-        emptyRow(R); R++;
-
-        // ── DECLARAÇÃO ───────────────────────────────────────────────────
-        mc(R,0,9);
-        setCell(R,0,
-            `Eu______________________________ Portador do RG ________________________ declaro ter recebido os itens abaixo citados nas quantidades especificadas, a fim de serem utilizados para o melhor funcionamento do SCFV CRIAD de ${uni}.`,
-            cellStyle(false,9,"000000","left")
-        ); R++;
-        emptyRow(R); R++;
-
-        // ── CABEÇALHO TABELA ─────────────────────────────────────────────
-        const hdrLabels = ["Ordem","Descrição do item","Unid.","Quant.","Entregue","Falta","Data","Observações","Valor","Total"];
-        hdrLabels.forEach((h,c) => setCell(R,c,h, cellStyle(true,9,"FFFFFF","center",HDR_DARK)));
-        R++;
-
-        // ── DADOS POR CATEGORIA ───────────────────────────────────────────
-        let ordem = 1;
-        let totalGeral = 0;
-
-        CATS_VALIDAS.forEach(cat => {
-            const itens = porCategoria[cat];
-            if (itens.length === 0) return;
-
-            mc(R,0,9);
-            for(let c=0;c<10;c++) setCell(R,c,"", cellStyle(true,9,"000000","center",CAT_FILL));
-            setCell(R,0, cat, cellStyle(true,9,"000000","center",CAT_FILL));
-            R++;
-
-            itens.forEach(p => {
-                const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-                const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-                const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-                const precoSugerido = infoBase ? infoBase.preco : 0;
-                 const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || parseFloat(p.quantidade) || 0);
-//depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
-                const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
-                const total = qReal * pReal;
-                const medida = p.medida || p.Medida || "Unid";
-
-                setCell(R,0, ordem,               cellStyle(false,9,"000000","center"));
-                setCell(R,1, p.produto,           cellStyle(false,9,"000000","left"));
-                setCell(R,2, medida,              cellStyle(false,9,"000000","center"));
-                setCell(R,3, qReal,               cellStyle(false,9,"000000","center"));
-                setCell(R,4, "",                  cellStyle(false,9,"000000","center"));
-                setCell(R,5, "",                  cellStyle(false,9,"000000","center"));
-                setCell(R,6, "",                  cellStyle(false,9,"000000","center"));
-                setCell(R,7, p.observacao || "",  cellStyle(false,9,"000000","left"));
-                setCell(R,8, pReal,               { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
-                setCell(R,9, total,               { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
-
-                ws[XLSX.utils.encode_cell({r:R,c:3})].t = 'n';
-                totalGeral += total;
-                ordem++;
-                R++;
-            });
-        });
-
-        // ── TOTAL GERAL ───────────────────────────────────────────────────
-        for(let c=0;c<9;c++) setCell(R,c,"", cellStyle(true,9,"000000","right",TOTAL_FILL));
-        setCell(R,8,"TOTAL", cellStyle(true,9,"000000","right",TOTAL_FILL));
-        setCell(R,9, totalGeral, { ...cellStyle(true,9,"000000","right",TOTAL_FILL), t:'n', z:'"R$"#,##0.00' });
-        R += 2;
-
-        // ── ATÍPICOS ──────────────────────────────────────────────────────
-        if (atipicos.length > 0) {
-            mc(R,0,9);
-            for(let c=0;c<10;c++) setCell(R,c,"", cellStyle(true,9,"000000","center",CAT_FILL));
-            setCell(R,0,"ATÍPICOS", cellStyle(true,9,"000000","center",CAT_FILL));
-            R++;
-
-            let totalAtip = 0;
-            atipicos.forEach((p, i) => {
-                const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-                const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-                const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-                const precoSugerido = infoBase ? infoBase.preco : 0;
-                 const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || parseFloat(p.quantidade) || 0);
-//depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
-                const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
-                const total = qReal * pReal;
-                const medida = p.medida || p.Medida || "Unid";
-
-                setCell(R,0, i+1,              cellStyle(false,9,"000000","center"));
-                setCell(R,1, p.produto,        cellStyle(false,9,"000000","left"));
-                setCell(R,2, medida,           cellStyle(false,9,"000000","center"));
-                setCell(R,3, qReal,            cellStyle(false,9,"000000","center"));
-                setCell(R,4, "",               cellStyle(false,9,"000000","center"));
-                setCell(R,5, "",               cellStyle(false,9,"000000","center"));
-                setCell(R,6, "  /  /",         cellStyle(false,9,"000000","center"));
-                setCell(R,7, p.observacao||"", cellStyle(false,9,"000000","left"));
-                setCell(R,8, pReal,            { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
-                setCell(R,9, total,            { ...cellStyle(false,9,"000000","right"), t:'n', z:'"R$"#,##0.00' });
-                ws[XLSX.utils.encode_cell({r:R,c:3})].t = 'n';
-                totalAtip += total;
-                R++;
-            });
-
-            for(let c=0;c<9;c++) setCell(R,c,"", cellStyle(true,9,"000000","right",TOTAL_FILL));
-            setCell(R,8,"TOTAL", cellStyle(true,9,"000000","right",TOTAL_FILL));
-            setCell(R,9, totalAtip, { ...cellStyle(true,9,"000000","right",TOTAL_FILL), t:'n', z:'"R$"#,##0.00' });
-            R += 2;
-        }
-
-        // ── ASSINATURA ────────────────────────────────────────────────────
-        mc(R,0,9); setCell(R,0,"Assinatura:", cellStyle(true,9,"000000","left")); R++;
-        mc(R,0,4); setCell(R,0,"_".repeat(45), cellStyle(false,9,"000000","left")); R+=2;
-        mc(R,0,9); setCell(R,0,"Atenção fornecedor, favor imprimir em duas vias.", cellStyle(false,8,"000000","center")); R++;
-        mc(R,0,9); setCell(R,0,"1ª via Instituto Genesis/ PMV.", cellStyle(false,8,"000000","left")); R++;
-        mc(R,0,9); setCell(R,0,"2ª via Fornecedor.", cellStyle(false,8,"000000","left")); R+=2;
-        mc(R,0,9); setCell(R,0,"Observações Gerais:", cellStyle(true,9,"000000","left")); R++;
-
-        // ── APLICA ────────────────────────────────────────────────────────
-        ws['!merges'] = merge;
-        ws['!cols'] = [{wch:7},{wch:35},{wch:7},{wch:8},{wch:10},{wch:8},{wch:10},{wch:25},{wch:12},{wch:12}];
-        ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:R,c:9}});
-
-        const nomeAba = uni.substring(0, 31);
-        XLSX.utils.book_append_sheet(wb, ws, nomeAba);
-    });
-
-    // ── ABA RESUMO (última aba) ───────────────────────────────────────────────
-const wsResumo = {};
-const mergeResumo = [];
-let RR = 0;
-
-function mcR(r, c1, c2) { mergeResumo.push({ s:{r,c:c1}, e:{r,c:c2} }); }
-function setCellR(r, c, v, style, formula) {
-    const addr = XLSX.utils.encode_cell({r,c});
-    if (formula) {
-        wsResumo[addr] = { f: formula, t: 'n', s: style };
-    } else {
-        wsResumo[addr] = { v, t: typeof v === 'number' ? 'n' : 's', s: style };
-    }
-}
-
-const AZUL_HEADER = { fgColor: { rgb: "2E4057" } };
-const AZUL_CLARO  = { fgColor: { rgb: "DBEAFE" } };
-const VERDE_CLARO = { fgColor: { rgb: "DCFCE7" } };
-const AMARELO     = { fgColor: { rgb: "FEF9C3" } };
-const VERMELHO    = { fgColor: { rgb: "FEE2E2" } };
-const CINZA       = { fgColor: { rgb: "F1F5F9" } };
-const BRANCO      = { fgColor: { rgb: "FFFFFF" } };
-
-// Título
-mcR(RR,0,4);
-setCellR(RR,0,"RESUMO GERAL DE PEDIDOS - " + dataF, cellStyle(true,12,"FFFFFF","center",AZUL_HEADER));
-RR++;
-mcR(RR,0,4);
-setCellR(RR,0,"Instituto Gênesis — SCFV/CRIAD", cellStyle(false,9,"64748b","center",CINZA));
-RR+=2;
-
-// Cabeçalho da tabela
-["PROGRAMA","UNIDADE","VALOR PEDIDO","P. ATÍPICOS","VALOR TOTAL"].forEach((h,c) => {
-    setCellR(RR, c, h, cellStyle(true,9,"FFFFFF","center",AZUL_HEADER));
-});
-RR++;
-
-const programaMap = {
-    'ANDORINHAS':'CRIAD','BELA VISTA':'CRIAD','BONFIM':'CRIAD','CARATOIRA':'CRIAD',
-    'CCTI CENTRO':'CRIAD','CCTI JARDIM CAMBURI':'CRIAD','CCTI JARDIM DA PENHA':'CRIAD',
-    'CCTI MARIA ORTIZ':'CRIAD','CONQUISTA':'CRIAD','CONSOLAÇÃO':'CRIAD',
-    'ENG. ITARARÉ':'CRIAD','NISP JABURU':'IDOSO','NISP SANTO ANTONIO':'IDOSO',
-    'NISP SÃO PEDRO':'IDOSO','PRAIA DO SUÁ':'CRIAD','QUADRO':'CRIAD',
-    'ROMÃO':'CRIAD','SANTO ANDRÉ':'CRIAD','SOLON BORGES':'CRIAD'
-};
-
-// Guarda a linha de cada unidade para montar fórmulas
-const linhasPorUnidade = {};
-const primeiraLinhaTabela = RR;
-
-unidadesComPedido.forEach((uni, i) => {
-    const itensUni = pedidos.filter(p => p.unidade === uni);
-    let totalUni = 0, totalAtipUni = 0;
-
-    itensUni.forEach(p => {
-        const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-        const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
-        const precoSugerido = infoBase ? infoBase.preco : 0;
-        const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || parseFloat(p.quantidade) || 0);
-        const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
-        const sub = qReal * pReal;
-        totalUni += sub;
-        if (!p.material || !CATS_VALIDAS.includes(p.material)) totalAtipUni += sub;
-    });
-
-    const fillLinha = i % 2 === 0 ? BRANCO : CINZA;
-    const programa = programaMap[uni] || "CRIAD";
-    const nomeAba = uni.substring(0, 31);
-
-    // Fórmula que soma a coluna "Total" (coluna J = índice 9) de cada aba
-    // A coluna J no Excel é a 10ª coluna. Usamos SOMA da aba correspondente.
-    const formulaTotal    = `SUMIF('${nomeAba}'!A:A,"<>",'${nomeAba}'!J:J)`;
-    const formulaNormal   = totalUni - totalAtipUni; // mantém valor calculado
-    const formulaAtipicos = totalAtipUni;
-
-    setCellR(RR, 0, programa, cellStyle(false,9,"000000","center", fillLinha));
-    setCellR(RR, 1, uni,      cellStyle(false,9,"000000","left",   fillLinha));
-    // Valor pedido (sem atípicos) — valor calculado
-    wsResumo[XLSX.utils.encode_cell({r:RR,c:2})] = { v: formulaNormal,   t:'n', z:'"R$"#,##0.00', s: cellStyle(false,9,"000000","right", fillLinha) };
-    // Atípicos — valor calculado  
-    wsResumo[XLSX.utils.encode_cell({r:RR,c:3})] = { v: formulaAtipicos, t:'n', z:'"R$"#,##0.00', s: cellStyle(false,9,"000000","right", fillLinha) };
-    // Total da unidade — fórmula viva apontando para a aba
-    wsResumo[XLSX.utils.encode_cell({r:RR,c:4})] = { f: formulaTotal, t:'n', z:'"R$"#,##0.00', s: cellStyle(false,9,"000000","right", fillLinha) };
-
-    linhasPorUnidade[uni] = RR + 1; // linha Excel (1-based)
-    RR++;
-});
-
-// Linha TOTAL com fórmula somando todos os valores totais da coluna E
-const linhaInicio = primeiraLinhaTabela + 1; // 1-based
-const linhaFim    = RR; // 1-based
-setCellR(RR,0,"",       cellStyle(true,9,"000000","center",AZUL_HEADER));
-setCellR(RR,1,"TOTAL:", cellStyle(true,9,"FFFFFF","right", AZUL_HEADER));
-wsResumo[XLSX.utils.encode_cell({r:RR,c:2})] = { f: `SUM(C${linhaInicio}:C${linhaFim})`, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,9,"FFFFFF","right",AZUL_HEADER) };
-wsResumo[XLSX.utils.encode_cell({r:RR,c:3})] = { f: `SUM(D${linhaInicio}:D${linhaFim})`, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,9,"FFFFFF","right",AZUL_HEADER) };
-wsResumo[XLSX.utils.encode_cell({r:RR,c:4})] = { f: `SUM(E${linhaInicio}:E${linhaFim})`, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,9,"FFFFFF","right",AZUL_HEADER) };
-RR += 2;
-
-// Totalizadores com fórmulas vivas
-const ORCAMENTO_MENSAL = 42884.56;
-const linhaTotal = linhaFim + 1; // linha Excel da linha TOTAL
-
-const totalizadores = [
-    ["Valor Total Realizado",     `E${linhaTotal}`,                    VERDE_CLARO, "166534"],
-    ["Valor Total Mensal (Orç.)", ORCAMENTO_MENSAL,                    AZUL_CLARO,  "1E40AF"],
-    ["Valor Mensal Cada Unidade", `E${linhaTotal}/${unidadesComPedido.length}`, AMARELO, "854D0E"],
-    ["Diferença (Orç. - Real)",   `${ORCAMENTO_MENSAL}-E${linhaTotal}`, VERMELHO,   "991B1B"],
-];
-
-totalizadores.forEach(([label, valorOuFormula, fill, cor]) => {
-    mcR(RR,0,1);
-    setCellR(RR, 0, label, cellStyle(true,9,cor,"left", fill));
-    wsResumo[XLSX.utils.encode_cell({r:RR,c:1})] = { v:"", s: cellStyle(true,9,cor,"left", fill) };
-    if (typeof valorOuFormula === 'number') {
-        wsResumo[XLSX.utils.encode_cell({r:RR,c:2})] = { v: valorOuFormula, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,10,cor,"right", fill) };
-    } else {
-        wsResumo[XLSX.utils.encode_cell({r:RR,c:2})] = { f: valorOuFormula, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,10,cor,"right", fill) };
-    }
-    RR++;
-});
-
-wsResumo['!merges'] = mergeResumo;
-wsResumo['!cols']   = [{wch:10},{wch:25},{wch:18},{wch:15},{wch:15}];
-wsResumo['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:RR,c:4}});
-
-// Adiciona APÓS as abas das unidades (última aba)
-XLSX.utils.book_append_sheet(wb, wsResumo, "RESUMO");
-
-    const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-    XLSX.writeFile(wb, `Protocolo_Todas_Unidades_${dataF}_${dataHoje}.xlsx`);
-    mostrarToast(`✅ Excel com ${unidadesComPedido.length} unidades gerado!`);
-}
-    
-
-document.addEventListener('input', function(e) {
-    // Verifica se o usuário está digitando no campo de produto
-    if (e.target && e.target.id === 'produto') {
-        const nomeDigitado = e.target.value.trim().toUpperCase();
-        const campoMedida = document.getElementById('medida');
-        
-        // Procura o produto na sua base de dados existente
-        const produtoEncontrado = BASE_PRODUTOS.find(p => p.nome.toUpperCase() === nomeDigitado);
-
-        if (produtoEncontrado) {
-            // Se encontrar, muda a medida automaticamente no formulário
-            campoMedida.value = produtoEncontrado.Medida || produtoEncontrado.medida;
-        }
-    }
-});
-
-    
-   window.onload = function () {
-
-       document.getElementById('f-comp-data').value = new Date().toISOString().slice(0, 7);
-document.getElementById('f-est-data').value = new Date().toISOString().slice(0, 7);
-    // Liga a conexão em tempo real com o Firebase
-    syncDados(); 
-
-    const ultimaAba = localStorage.getItem('abaAtual');
-    if (ultimaAba && ultimaAba !== 'home') {
-        const btnAtivo = document.getElementById('nav-' + ultimaAba);
-        switchSection(ultimaAba, btnAtivo);
-    } else {
-        switchSection('home', document.getElementById('nav-home'));
-    }
-};
 </script>
 </body>
 </html>
