@@ -853,33 +853,32 @@ function popularFiltros() {
     const dataF = document.getElementById('f-comp-data').value;
     const tbody = document.getElementById('tbody-compras');
     
-    // 1. FILTRAGEM INICIAL (Somente tipo pedido)
+    // 1. Filtragem Inicial
     let pedidosFiltrados = db.filter(d => d.tipo === 'pedido');
     if (uni) pedidosFiltrados = pedidosFiltrados.filter(d => d.unidade === uni);
     if (cat) pedidosFiltrados = pedidosFiltrados.filter(d => d.material === cat);
-    
-    // FILTRO DE DATA (Compatível com DD/MM/YYYY e YYYY-MM)
     if (dataF) {
-    pedidosFiltrados = pedidosFiltrados.filter(d => formatarDataParaFiltro(d.data) === dataF);
-}
-            return d.data.startsWith(dataF);
-        });
+        pedidosFiltrados = pedidosFiltrados.filter(d => formatarDataParaFiltro(d.data) === dataF);
     }
 
-    // 2. PRÉ-PROCESSAMENTO (Para ganhar velocidade, vamos separar contagens e outros pedidos antes)
-    const todasContagens = db.filter(d => d.tipo === 'contagem');
+    // 2. Mapas de busca rápida para não travar o PC
+    const mapaContagem = {};
+    db.filter(d => d.tipo === 'contagem').forEach(d => {
+        const chave = `${d.unidade}_${d.produto}`;
+        if (!mapaContagem[chave] || new Date(d.data) > new Date(mapaContagem[chave].data)) {
+            mapaContagem[chave] = d;
+        }
+    });
+
     const todosPedidos = db.filter(d => d.tipo === 'pedido');
 
-    // 3. GERAÇÃO DA TABELA
+    // 3. Geração da Tabela
     tbody.innerHTML = pedidosFiltrados.map(p => {
         const idxOriginal = db.indexOf(p);
+        const chaveBusca = `${p.unidade}_${p.produto}`;
         
-        // Busca a última contagem (Saldo em Estoque)
-        const contagem = todasContagens
-            .filter(d => d.unidade === p.unidade && d.produto === p.produto)
-            .sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-
-        // Busca o pedido anterior (Último Pedido) - Ignora o pedido atual
+        const contagem = mapaContagem[chaveBusca];
+        
         const anterior = todosPedidos
             .filter(d => d.unidade === p.unidade && d.produto === p.produto && d.data !== p.data)
             .sort((a,b) => new Date(b.data) - new Date(a.data))[0];
@@ -887,9 +886,8 @@ function popularFiltros() {
         const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
         const precoSugerido = infoBase ? infoBase.preco : 0;
 
-        // Recupera edições (Quantidade Real e Preço Editado) salvos no Firebase
-        const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-        const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+        const chaveEdit = `edit_${p.unidade}_${p.produto}_${p.data}`;
+        const editSalvo = (window.edicoesGlobais || {})[chaveEdit] || {};
         
         const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || p.quantidade || 0);
         const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
@@ -901,37 +899,27 @@ function popularFiltros() {
                 <small style="color: #64748b;">Obs.: ${p.observacao || "---"}</small>
             </td>
             <td style="text-align:center;">${p.medida || p.Medida || "Unid"}</td>
-
             <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
                 ${anterior ? anterior.quantidade : '<span style="color:#94a3b8">—</span>'}
             </td>
-
             <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
                 ${contagem ? contagem.quantidade : '<span style="color:#94a3b8">—</span>'}
             </td>
-
             <td style="background:#fefce8; text-align:center; font-weight:700; color:#a16207;" class="q-orig">${p.quantidade}</td>
             <td style="background:#fefce8; text-align:center; color:#a16207;" class="sub-orig">R$ 0,00</td>
-
             <td style="background:#f0fdf4;">
-                <input type="number" class="input-compra q-real" 
-                    value="${qReal}" 
-                    oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
+                <input type="number" class="input-compra q-real" value="${qReal}" oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
             </td>
-
             <td style="background:#f0fdf4;">
-                <input type="text" class="input-compra p-unit" 
-                    value="${pReal.toFixed(2).replace('.', ',')}" 
-                    oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()"
-                    onblur="formatMoeda(this)">
+                <input type="text" class="input-compra p-unit" value="${pReal.toFixed(2).replace('.', ',')}" oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()" onblur="formatMoeda(this)">
             </td>
-
             <td class="sub-real" style="background:#f0fdf4; font-weight:bold; color:#16a34a; text-align:right;">R$ 0,00</td>
         </tr>`;
     }).join('');
 
-    calcCompras(); // Atualiza os banners de valores no topo/rodapé
+    calcCompras();
 }
+    
    function calcCompras() {
     let tOrig = 0, tReal = 0;
     document.querySelectorAll('#tbody-compras tr').forEach(tr => {
