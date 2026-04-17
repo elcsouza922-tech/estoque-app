@@ -833,94 +833,96 @@ function popularFiltros() {
     }
 }
 
-   function renderCompras() {
+  function renderCompras() {
     const uni = document.getElementById('f-comp-uni').value;
+    const cat = document.getElementById('f-comp-cat').value;
     const dataF = document.getElementById('f-comp-data').value;
     const tbody = document.getElementById('tbody-compras');
     
-   let f = db.filter(d => d.tipo === 'pedido');
-if(uni) f = f.filter(d => d.unidade === uni);
-const cat = document.getElementById('f-comp-cat').value;
-if(cat) f = f.filter(d => d.material === cat);
-
-if(dataF) f = f.filter(d => d.data.startsWith(dataF));
+    // 1. FILTRAGEM INICIAL (Somente tipo pedido)
+    let pedidosFiltrados = db.filter(d => d.tipo === 'pedido');
+    if (uni) pedidosFiltrados = pedidosFiltrados.filter(d => d.unidade === uni);
+    if (cat) pedidosFiltrados = pedidosFiltrados.filter(d => d.material === cat);
     
-    tbody.innerHTML = f.map(p => {
-        // Pega o índice real do item no banco principal
+    // FILTRO DE DATA (Compatível com DD/MM/YYYY e YYYY-MM)
+    if (dataF) {
+        const [anoF, mesF] = dataF.split('-');
+        pedidosFiltrados = pedidosFiltrados.filter(d => {
+            if (!d.data) return false;
+            if (d.data.includes('/')) {
+                const partes = d.data.split('/');
+                return partes[2] === anoF && partes[1] === mesF;
+            }
+            return d.data.startsWith(dataF);
+        });
+    }
+
+    // 2. PRÉ-PROCESSAMENTO (Para ganhar velocidade, vamos separar contagens e outros pedidos antes)
+    const todasContagens = db.filter(d => d.tipo === 'contagem');
+    const todosPedidos = db.filter(d => d.tipo === 'pedido');
+
+    // 3. GERAÇÃO DA TABELA
+    tbody.innerHTML = pedidosFiltrados.map(p => {
         const idxOriginal = db.indexOf(p);
         
-        const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
-        const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-        
+        // Busca a última contagem (Saldo em Estoque)
+        const contagem = todasContagens
+            .filter(d => d.unidade === p.unidade && d.produto === p.produto)
+            .sort((a,b) => new Date(b.data) - new Date(a.data))[0];
+
+        // Busca o pedido anterior (Último Pedido) - Ignora o pedido atual
+        const anterior = todosPedidos
+            .filter(d => d.unidade === p.unidade && d.produto === p.produto && d.data !== p.data)
+            .sort((a,b) => new Date(b.data) - new Date(a.data))[0];
+
         const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
         const precoSugerido = infoBase ? infoBase.preco : 0;
 
-        // Recupera o que foi digitado anteriormente ou deixa 0
-const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
-const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-       const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || parseFloat(p.quantidade) || 0);
-//depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
-const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
+        // Recupera edições (Quantidade Real e Preço Editado) salvos no Firebase
+        const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+        const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+        
+        const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || p.quantidade || 0);
+        const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
 
         return `<tr>
-    <td style="line-height: 1.4;">
-        <small style="color: #64748b; font-weight: 600; text-transform: uppercase;">${p.unidade}</small><br>
-        <strong style="font-size: 14px;">${p.produto}</strong><br>
-        <small style="color: #64748b;">Obs.: ${p.observacao || "---"}</small>
-    </td>
-    <td>${p.Medida || p.medida || "Unidade"}</td>
+            <td style="line-height: 1.4;">
+                <small style="color: #64748b; font-weight: 700; text-transform: uppercase;">${p.unidade}</small><br>
+                <strong style="font-size: 14px;">${p.produto}</strong><br>
+                <small style="color: #64748b;">Obs.: ${p.observacao || "---"}</small>
+            </td>
+            <td style="text-align:center;">${p.medida || p.Medida || "Unid"}</td>
 
-    <!-- ÚLTIMO PEDIDO: busca o pedido mais recente ANTERIOR ao atual -->
-    <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
-        ${(() => {
-            const anterior = db.filter(d =>
-                d.tipo === 'pedido' &&
-                d.unidade === p.unidade &&
-                d.produto === p.produto &&
-                d.data !== p.data
-            ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-            return anterior ? anterior.quantidade : '<span style="color:#94a3b8">—</span>';
-        })()}
-    </td>
+            <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
+                ${anterior ? anterior.quantidade : '<span style="color:#94a3b8">—</span>'}
+            </td>
 
-<td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
-    ${(() => {
-        const contagem = db.filter(d =>
-            d.tipo === 'contagem' &&
-            d.unidade === p.unidade &&
-            d.produto === p.produto
-        ).sort((a,b) => new Date(b.data) - new Date(a.data))[0];
-        return contagem ? contagem.quantidade : '<span style="color:#94a3b8">—</span>';
-    })()}
-</td>
-    <!-- PEDIDO ORIGINAL -->
-    <td style="background:#fefce8; text-align:center; font-weight:700; color:#a16207;" class="q-orig">${p.quantidade}</td>
+            <td style="background:#eff6ff; text-align:center; font-weight:700; color:#1d4ed8;">
+                ${contagem ? contagem.quantidade : '<span style="color:#94a3b8">—</span>'}
+            </td>
 
-    <!-- SUBTOTAL ORIGINAL -->
-    <td style="background:#fefce8; text-align:center; color:#a16207;" class="sub-orig">R$ 0,00</td>
+            <td style="background:#fefce8; text-align:center; font-weight:700; color:#a16207;" class="q-orig">${p.quantidade}</td>
+            <td style="background:#fefce8; text-align:center; color:#a16207;" class="sub-orig">R$ 0,00</td>
 
-    <!-- COMPRA REAL -->
-    <td style="background:#f0fdf4;">
-        <input type="number" class="input-compra q-real"
-            value="${qReal}"
-            oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
-    </td>
+            <td style="background:#f0fdf4;">
+                <input type="number" class="input-compra q-real" 
+                    value="${qReal}" 
+                    oninput="salvarEdicao(${idxOriginal}, 'quantidadeReal', this.value); calcCompras()">
+            </td>
 
-    <!-- PREÇO UNIT -->
-    <td style="background:#f0fdf4;">
-        <input type="text" class="input-compra p-unit"
-            value="${pReal.toFixed(2).replace('.', ',')}"
-            oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()"
-            onblur="formatMoeda(this)">
-    </td>
+            <td style="background:#f0fdf4;">
+                <input type="text" class="input-compra p-unit" 
+                    value="${pReal.toFixed(2).replace('.', ',')}" 
+                    oninput="salvarEdicao(${idxOriginal}, 'precoEditado', this.value); calcCompras()"
+                    onblur="formatMoeda(this)">
+            </td>
 
-    <!-- SUBTOTAL REAL -->
-    <td class="sub-real" style="background:#f0fdf4; font-weight:bold; color:#16a34a">R$ 0,00</td>
-</tr>`;
+            <td class="sub-real" style="background:#f0fdf4; font-weight:bold; color:#16a34a; text-align:right;">R$ 0,00</td>
+        </tr>`;
     }).join('');
-    calcCompras();
-}
 
+    calcCompras(); // Atualiza os banners de valores no topo/rodapé
+}
    function calcCompras() {
     let tOrig = 0, tReal = 0;
     document.querySelectorAll('#tbody-compras tr').forEach(tr => {
@@ -958,12 +960,56 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
 }
 
     function renderEstoque() {
-        const uni = document.getElementById('f-est-uni').value, cat = document.getElementById('f-est-cat').value, dataF = document.getElementById('f-est-data').value;
-        let f = db.filter(d => d.tipo === 'contagem');
-        if (uni) f = f.filter(d => d.unidade === uni); if (cat) f = f.filter(d => d.material === cat); if (dataF) f = f.filter(d => d.data && d.data.startsWith(dataF));
-        document.getElementById('tbody-estoque').innerHTML = f.slice((pagEstoque - 1) * 50, pagEstoque * 50).map(d => `<tr><td>${new Date(d.data).toLocaleDateString()}</td><td>${d.unidade}</td><td>${d.material}</td><td>${d.produto}</td><td>${d.quantidade}</td><td>${d.medida || d.Medida}</td><td>${d.observacao}</td></tr>`).join('');
-        document.getElementById('est-pag-info').innerText = `Pág ${pagEstoque}`;
+    const uni = document.getElementById('f-est-uni').value;
+    const cat = document.getElementById('f-est-cat').value;
+    const dataF = document.getElementById('f-est-data').value;
+    const tbody = document.getElementById('tbody-estoque');
+    
+    // 1. FILTRAGEM (Tipo contagem)
+    let f = db.filter(d => d.tipo === 'contagem');
+    
+    if (uni) f = f.filter(d => d.unidade === uni);
+    if (cat) f = f.filter(d => d.material === cat);
+    
+    // FILTRO DE DATA (Corrigido para aceitar DD/MM/YYYY e YYYY-MM)
+    if (dataF) {
+        const [anoF, mesF] = dataF.split('-');
+        f = f.filter(d => {
+            if (!d.data) return false;
+            if (d.data.includes('/')) {
+                const partes = d.data.split('/');
+                return partes[2] === anoF && partes[1] === mesF;
+            }
+            return d.data.startsWith(dataF);
+        });
     }
+
+    // 2. ORDENAÇÃO (Mais recentes primeiro)
+    f.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+    // 3. PAGINAÇÃO (Vital para não travar com 1600 itens)
+    const itensPorPagina = 50;
+    const inicio = (pagEstoque - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const itensExibidos = f.slice(inicio, fim);
+
+    // 4. RENDERIZAÇÃO (Mantendo todas as colunas vitais: Data, Unidade, Categoria, Produto, Qtd, Medida e Obs)
+    tbody.innerHTML = itensExibidos.map(d => `
+        <tr>
+            <td style="white-space: nowrap;">${d.data.includes('T') ? new Date(d.data).toLocaleDateString() : d.data}</td>
+            <td><strong>${d.unidade}</strong></td>
+            <td><span class="badge-estoque" style="background:#e2e8f0; color:#475569;">${d.material}</span></td>
+            <td>${d.produto}</td>
+            <td style="font-weight:700; color:var(--primary);">${d.quantidade}</td>
+            <td>${d.medida || d.Medida || "Unid"}</td>
+            <td style="color:#64748b; font-style:italic;">${d.observacao || "—"}</td>
+        </tr>
+    `).join('');
+
+    // Atualiza a numeração da página lá embaixo
+    const totalPaginas = Math.ceil(f.length / itensPorPagina) || 1;
+    document.getElementById('est-pag-info').innerText = `Pág ${pagEstoque} de ${totalPaginas}`;
+}
 
     function paginarEstoque(dir) { pagEstoque = Math.max(1, pagEstoque + dir); renderEstoque(); }
 
