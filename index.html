@@ -38,40 +38,10 @@
         .op-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
         .op-card { padding: 40px; text-align: center; cursor: pointer; background: #fff; border-radius: 25px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; transition: 0.3s; }
         .op-card:hover { transform: translateY(-5px); border-color: var(--primary); }
-        /* Estilo para o Rodapé Flutuante */
-.footer-compras {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: #fff;
-    padding: 15px 40px;
-    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: flex-end;
-    gap: 50px;
-    z-index: 1500;
-    border-top: 1px solid #e2e8f0;
-}
-
-/* Ajuste para o conteúdo não ficar escondido atrás do rodapé */
-#sec-compras {
-    padding-bottom: 80px;
-}
-
-@media (max-width: 600px) {
-    .footer-compras { 
-        gap: 15px; 
-        padding: 10px 20px; 
-        justify-content: space-around;
-    }
-}
-        input[readonly], select[disabled] {
-    background-color: #f1f5f9 !important;
-    color: #64748b;
-    cursor: not-allowed;
-    border: 1px solid #e2e8f0;
-}
+        .footer-compras { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; padding: 15px 40px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); display: flex; justify-content: flex-end; gap: 50px; z-index: 1500; border-top: 1px solid #e2e8f0; }
+        #sec-compras { padding-bottom: 80px; }
+        @media (max-width: 600px) { .footer-compras { gap: 15px; padding: 10px 20px; justify-content: space-around; } }
+        input[readonly], select[disabled] { background-color: #f1f5f9 !important; color: #64748b; cursor: not-allowed; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
@@ -106,136 +76,104 @@
         </div>
     </section>
 
-   <section id="sec-form" class="hidden">
-    <div class="card" style="max-width: 800px; margin: auto;">
-        <button class="btn btn-outline" onclick="voltarParaHome()" style="margin-bottom: 20px;">← Voltar</button>
-        <h2 id="form-titulo" style="text-align: center; margin-bottom: 25px;"></h2>
-        
-        <div class="form-group">
-            <div><label>Responsável</label><input type="text" id="responsavel"></div>
-            <div>
-                <label>Unidade</label>
-                <select id="unidade">
-                    <option value="">Selecione...</option>
-                    <option>ANDORINHAS</option>
-                    <option>BELA VISTA</option>
-                    <option>BONFIM</option>
-                    <option>CARATOIRA</option>
-                    <option>CCTI CENTRO</option>
-                    <option>CCTI JARDIM CAMBURI</option>
-                    <option>CCTI JARDIM DA PENHA</option>
-                    <option>CCTI MARIA ORTIZ</option>
-                    <option>CONQUISTA</option>
-                    <option>CONSOLAÇÃO</option>
-                    <option>ENG. ITARARÉ</option>
-                    <option>NISP JABURU</option>
-                    <option>NISP SANTO ANTONIO</option>
-                    <option>NISP SÃO PEDRO</option>
-                    <option>PRAIA DO SUÁ</option>
-                    <option>QUADRO</option>
-                    <option>ROMÃO</option>
-                    <option>SANTO ANDRÉ</option>
-                    <option>SOLON BORGES</option>
-                </select>
+    <section id="sec-form" class="hidden">
+        <div class="card" style="max-width: 800px; margin: auto;">
+            <button class="btn btn-outline" onclick="voltarParaHome()" style="margin-bottom: 20px;">← Voltar</button>
+            <h2 id="form-titulo" style="text-align: center; margin-bottom: 25px;"></h2>
+            <div class="form-group">
+                <div><label>Responsável</label><input type="text" id="responsavel"></div>
+                <div>
+                    <label>Unidade</label>
+                    <select id="unidade">
+                        <option value="">Selecione...</option>
+                        <option>ANDORINHAS</option><option>BELA VISTA</option><option>BONFIM</option><option>CARATOIRA</option><option>CCTI CENTRO</option><option>CCTI JARDIM CAMBURI</option><option>CCTI JARDIM DA PENHA</option><option>CCTI MARIA ORTIZ</option><option>CONQUISTA</option><option>CONSOLAÇÃO</option><option>ENG. ITARARÉ</option><option>NISP JABURU</option><option>NISP SANTO ANTONIO</option><option>NISP SÃO PEDRO</option><option>PRAIA DO SUÁ</option><option>QUADRO</option><option>ROMÃO</option><option>SANTO ANDRÉ</option><option>SOLON BORGES</option>
+                    </select>
+                </div>
             </div>
-        </div>
-
-        <div class="form-group" style="grid-template-columns: 2fr 1fr;">
-            <div><label>Produto</label><input type="text" id="produto" list="listaProdutos"><datalist id="listaProdutos"></datalist></div>
-            <div><label>Quantidade</label><input type="number" id="quantidade"></div>
-        </div>
-
-        <div class="form-group" style="grid-template-columns: 2fr 1fr;">
-            <div><label>Observação</label><input type="text" id="observacao" placeholder="Opcional..."></div>
-            <div>
-                <label>Medida</label>
-                <select id="medida">
-                    <option>Unidade</option>
-                    <option>Pacote</option>
-                    <option>Caixa</option>
-                    <option>LT</option>
-                    <option>KG</option>
-                    <option>Metro</option>
-                </select>
+            <div class="form-group" style="grid-template-columns: 2fr 1fr;">
+                <div><label>Produto</label><input type="text" id="produto" list="listaProdutos"><datalist id="listaProdutos"></datalist></div>
+                <div><label>Quantidade</label><input type="number" id="quantidade"></div>
             </div>
+            <div class="form-group" style="grid-template-columns: 2fr 1fr;">
+                <div><label>Observação</label><input type="text" id="observacao" placeholder="Opcional..."></div>
+                <div>
+                    <label>Medida</label>
+                    <select id="medida">
+                        <option>Unidade</option><option>Pacote</option><option>Caixa</option><option>LT</option><option>KG</option><option>Metro</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-blue" onclick="adicionarLocal()" style="width: 100%;">➕ Adicionar à Lista</button>
+            <div id="preview-lista" style="margin-top:20px; border-top: 1px solid #eee; padding-top:10px;">
+                <table id="tblPreview" class="hidden">
+                    <thead><tr><th>Produto</th><th>Qtd</th><th>Excluir</th></tr></thead>
+                    <tbody id="tbodyPreview"></tbody>
+                </table>
+            </div>
+            <button id="btn-enviar" class="btn btn-green hidden" onclick="enviarTudo()" style="width: 100%; margin-top: 20px;">🚀 FINALIZAR E SINCRONIZAR</button>
         </div>
-
-        <button class="btn btn-blue" onclick="adicionarLocal()" style="width: 100%;">➕ Adicionar à Lista</button>
-        
-        <div id="preview-lista" style="margin-top:20px; border-top: 1px solid #eee; padding-top:10px;">
-            <table id="tblPreview" class="hidden">
-                <thead><tr><th>Produto</th><th>Qtd</th><th>Excluir</th></tr></thead>
-                <tbody id="tbodyPreview"></tbody>
-            </table>
-        </div>
-        <button id="btn-enviar" class="btn btn-green hidden" onclick="enviarTudo()" style="width: 100%; margin-top: 20px;">🚀 FINALIZAR E SINCRONIZAR</button>
-    </div>
-</section>
+    </section>
 
     <section id="sec-dash" class="hidden">
-    <div class="card">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div class="card" style="margin:0; border-left: 5px solid var(--primary);">
-                <label style="color:#64748b; font-size:11px;">VALOR TOTAL MENSAL (ORÇAMENTO)</label>
-                <div class="val-total" style="color:var(--primary)">R$ 42.884,56</div>
+        <div class="card">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="card" style="margin:0; border-left: 5px solid var(--primary);">
+                    <label style="color:#64748b; font-size:11px;">VALOR TOTAL MENSAL (ORÇAMENTO)</label>
+                    <div class="val-total" style="color:var(--primary)">R$ 42.884,56</div>
+                </div>
+                <div class="card" style="margin:0; border-left: 5px solid var(--success);">
+                    <label style="color:#64748b; font-size:11px;">TOTAL PEDIDO REAL (TODAS UNIDADES)</label>
+                    <div class="val-total" id="dash-real-total">R$ 0,00</div>
+                </div>
             </div>
-            <div class="card" style="margin:0; border-left: 5px solid var(--success);">
-                <label style="color:#64748b; font-size:11px;">TOTAL PEDIDO REAL (TODAS UNIDADES)</label>
-                <div class="val-total" id="dash-real-total">R$ 0,00</div>
+        </div>
+        <div class="card">
+            <h3>⚠️ Pendentes de Envio (Mês Atual)</h3>
+            <div id="faltantes-lista" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        </div>
+    </section>
+
+    <section id="sec-compras" class="hidden">
+        <div class="total-banner">
+            <label style="color:#cbd5e1; font-size:10px;">TOTAL PEDIDO REAL (TODAS UNIDADES)</label>
+            <div id="topo-rede-total" style="font-weight:800; font-size:22px; color:#4ade80;">R$ 0,00</div>
+        </div>
+        <div class="card">
+            <div class="form-group" style="grid-template-columns: 1fr 1fr 1fr auto auto auto;">
+                <select id="f-comp-uni" onchange="renderCompras()"><option value="">Todas Unidades</option></select>
+                <select id="f-comp-cat" onchange="renderCompras()"><option value="">Todas Categorias</option></select>
+                <input type="month" id="f-comp-data" onchange="renderCompras()">
+                <button class="btn btn-outline" onclick="exportarExcel('compras')" style="margin-top:19px;">📥 Unidade</button>
+                <button class="btn btn-green" onclick="exportarExcelTodas()" style="margin-top:19px;">📥 Todas</button>
+                <button class="btn btn-blue" onclick="syncDados()" style="margin-top:19px;">🔄 Atualizar</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>PRODUTO</th><th>MEDIDA</th>
+                        <th style="background:#dbeafe; color:#1e40af;">ÚLTIMO PEDIDO</th>
+                        <th style="background:#dbeafe; color:#1e40af;">EM ESTOQUE</th>
+                        <th style="background:#fef9c3; color:#854d0e;">PEDIDO ORIGINAL</th>
+                        <th style="background:#fef9c3; color:#854d0e;">SUBTOTAL</th>
+                        <th style="background:#dcfce7; color:#166534;">COMPRA REAL</th>
+                        <th style="background:#dcfce7; color:#166534;">PREÇO UNITÁRIO</th>
+                        <th style="background:#dcfce7; color:#166534;">SUBTOTAL</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-compras"></tbody>
+            </table>
+        </div>
+        <div class="footer-compras">
+            <div style="text-align: right;">
+                <label style="font-size: 10px; font-weight: 700; color: #64748b;">TOTAL ORIGINAL:</label>
+                <div id="total-orig-filtro" style="font-weight:800; font-size:18px;">R$ 0,00</div>
+            </div>
+            <div style="text-align: right;">
+                <label style="font-size: 10px; font-weight: 700; color: #64748b;">TOTAL REAL:</label>
+                <div id="total-real-filtro" style="font-weight:800; font-size:18px; color:var(--success)">R$ 0,00</div>
             </div>
         </div>
-    </div>
-    <div class="card">
-        <h3>⚠️ Pendentes de Envio (Mês Atual)</h3>
-        <div id="faltantes-lista" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-    </div>
-</section>
-
-   <section id="sec-compras" class="hidden">
-    <div class="total-banner">
-        <label style="color:#cbd5e1; font-size:10px;">TOTAL PEDIDO REAL (TODAS UNIDADES)</label>
-        <div id="topo-rede-total" style="font-weight:800; font-size:22px; color:#4ade80;">R$ 0,00</div>
-    </div>
-    
-    <div class="card">
-        <div class="form-group" style="grid-template-columns: 1fr 1fr 1fr auto auto auto;">
-    <select id="f-comp-uni" onchange="renderCompras()"><option value="">Todas Unidades</option></select>
-    <select id="f-comp-cat" onchange="renderCompras()"><option value="">Todas Categorias</option></select>
-    <input type="month" id="f-comp-data" onchange="renderCompras()">
-    <button class="btn btn-outline" onclick="exportarExcel('compras')" style="margin-top:19px;">📥 Unidade</button>
-    <button class="btn btn-green" onclick="exportarExcelTodas()" style="margin-top:19px;">📥 Todas</button>
-    <button class="btn btn-blue" onclick="forcarAtualizacao()" style="margin-top:19px;">🔄 Atualizar</button>
-</div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>PRODUTO</th>
-<th>MEDIDA</th>
-<th style="background:#dbeafe; color:#1e40af;">ÚLTIMO PEDIDO</th>
-<th style="background:#dbeafe; color:#1e40af;">EM ESTOQUE</th>
-<th style="background:#fef9c3; color:#854d0e;">PEDIDO ORIGINAL</th>
-<th style="background:#fef9c3; color:#854d0e;">SUBTOTAL</th>
-<th style="background:#dcfce7; color:#166534;">COMPRA REAL</th>
-<th style="background:#dcfce7; color:#166534;">PREÇO UNITÁRIO</th>
-<th style="background:#dcfce7; color:#166534;">SUBTOTAL</th>
-                </tr>
-            </thead>
-            <tbody id="tbody-compras"></tbody>
-        </table>
-    </div>
-
-    <div class="footer-compras">
-        <div style="text-align: right;">
-            <label style="font-size: 10px; font-weight: 700; color: #64748b;">TOTAL ORIGINAL:</label>
-            <div id="total-orig-filtro" style="font-weight:800; font-size:18px;">R$ 0,00</div>
-        </div>
-        <div style="text-align: right;">
-            <label style="font-size: 10px; font-weight: 700; color: #64748b;">TOTAL REAL:</label>
-            <div id="total-real-filtro" style="font-weight:800; font-size:18px; color:var(--success)">R$ 0,00</div>
-        </div>
-    </div>
-</section>
+    </section>
 
     <section id="sec-estoque" class="hidden">
         <div class="card">
@@ -244,7 +182,7 @@
                 <select id="f-est-cat" onchange="renderEstoque()"><option value="">Categoria</option></select>
                 <input type="month" id="f-est-data" onchange="renderEstoque()">
                 <button class="btn btn-outline" onclick="exportarExcel('estoque')" style="margin-top:19px;">📥 Excel</button>
-                <button class="btn btn-blue" onclick="forcarAtualizacao()" style="margin-top:19px;">🔄 Atualizar</button>
+                <button class="btn btn-blue" onclick="syncDados()" style="margin-top:19px;">🔄 Atualizar</button>
             </div>
             <table><thead><tr><th>Data</th><th>Unidade</th><th>Categoria</th><th>Produto</th><th>Qtd</th><th>Medida</th><th>Obs</th></tr></thead><tbody id="tbody-estoque"></tbody></table>
             <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;"><button class="btn btn-outline" onclick="paginarEstoque(-1)">←</button><span id="est-pag-info">Pág 1</span><button class="btn btn-outline" onclick="paginarEstoque(1)">→</button></div>
@@ -256,45 +194,24 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
 <script>
+    // 1. CONFIGURAÇÃO FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyDViBZl61Mq7mEg2plnkUBmhPc5nl_u2sg",
+        authDomain: "estoque-pro-1449b.firebaseapp.com",
+        databaseURL: "https://estoque-pro-1449b-default-rtdb.firebaseio.com",
+        projectId: "estoque-pro-1449b",
+        storageBucket: "estoque-pro-1449b.firebasestorage.app",
+        messagingSenderId: "477539986508",
+        appId: "1:477539986508:web:cdb5c846136e3bd2d4d8e9",
+    };
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDViBZl61Mq7mEg2plnkUBmhPc5nl_u2sg",
-    authDomain: "estoque-pro-1449b.firebaseapp.com",
-    databaseURL: "https://estoque-pro-1449b-default-rtdb.firebaseio.com",
-    projectId: "estoque-pro-1449b",
-    storageBucket:  "estoque-pro-1449b.firebasestorage.app",
-    messagingSenderId: "477539986508",
-  appId: "1:477539986508:web:cdb5c846136e3bd2d4d8e9",
-  };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-  // Inicializa o Firebase
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
-</script>
-    
-    //const URL_API = "https://script.google.com/macros/s/AKfycbxCchSkeQ_V70BdDzGSX9UinQ36X--4oJpK6UGFJchTmpcGMLxZXc8vZGimLuvqVs9wiQ/exec"; 
+    // 2. VARIÁVEIS GLOBAIS
     const SENHA_DASH = "1234";
-    const TODAS_UNIDADES = [
-    'ANDORINHAS', 
-    'BELA VISTA', 
-    'BONFIM', 
-    'CARATOIRA', 
-    'CCTI CENTRO', 
-    'CCTI JARDIM CAMBURI', 
-    'CCTI JARDIM DA PENHA', 
-    'CCTI MARIA ORTIZ', 
-    'CONQUISTA', 
-    'CONSOLAÇÃO', 
-    'ENG. ITARARÉ', 
-    'NISP JABURU', 
-    'NISP SANTO ANTONIO', 
-    'NISP SÃO PEDRO', 
-    'PRAIA DO SUÁ', 
-    'QUADRO', 
-    'ROMÃO', 
-    'SANTO ANDRÉ', 
-    'SOLON BORGES'
-];
+    const TODAS_UNIDADES = ['ANDORINHAS', 'BELA VISTA', 'BONFIM', 'CARATOIRA', 'CCTI CENTRO', 'CCTI JARDIM CAMBURI', 'CCTI JARDIM DA PENHA', 'CCTI MARIA ORTIZ', 'CONQUISTA', 'CONSOLAÇÃO', 'ENG. ITARARÉ', 'NISP JABURU', 'NISP SANTO ANTONIO', 'NISP SÃO PEDRO', 'PRAIA DO SUÁ', 'QUADRO', 'ROMÃO', 'SANTO ANDRÉ', 'SOLON BORGES'];
+
     const BASE_PRODUTOS = [
         { material: "DIDÁTICO", nome: "Agôgo", Medida: "Unidade", preco: 250.00},
 { material: "DIDÁTICO", nome: "Agulha de mão nº 05", Medida: "Pacote", preco: 29.99},
@@ -1652,10 +1569,18 @@ document.addEventListener('input', function(e) {
 });
 
     
-    window.onload = function () {
-        const ultimaAba = localStorage.getItem('abaAtual');
-        if (ultimaAba === 'home' || !ultimaAba) switchSection('home', document.getElementById('nav-home'));
-    };
+   window.onload = function () {
+    // Liga a conexão em tempo real com o Firebase
+    syncDados(); 
+
+    const ultimaAba = localStorage.getItem('abaAtual');
+    if (ultimaAba && ultimaAba !== 'home') {
+        const btnAtivo = document.getElementById('nav-' + ultimaAba);
+        switchSection(ultimaAba, btnAtivo);
+    } else {
+        switchSection('home', document.getElementById('nav-home'));
+    }
+};
 </script>
 </body>
 </html>
