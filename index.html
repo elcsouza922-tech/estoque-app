@@ -210,22 +210,27 @@
 </div>
 
         <table>
-            <thead>
-                <tr>
-                    <th>PRODUTO</th>
-<th>MEDIDA</th>
-<th style="background:#dbeafe; color:#1e40af;">ÚLTIMO PEDIDO</th>
-<th style="background:#dbeafe; color:#1e40af;">EM ESTOQUE</th>
-<th style="background:#fef9c3; color:#854d0e;">PEDIDO ORIGINAL</th>
-<th style="background:#fef9c3; color:#854d0e;">SUBTOTAL</th>
-<th style="background:#dcfce7; color:#166534;">COMPRA REAL</th>
-<th style="background:#dcfce7; color:#166534;">PREÇO UNITÁRIO</th>
-<th style="background:#dcfce7; color:#166534;">SUBTOTAL</th>
-                </tr>
-            </thead>
-            <tbody id="tbody-compras"></tbody>
-        </table>
-    </div>
+    <thead>
+        <tr>
+            <th>PRODUTO</th>
+            <th>MEDIDA</th>
+            <th style="background:#dbeafe; color:#1e40af;">ÚLTIMO PEDIDO</th>
+            <th style="background:#dbeafe; color:#1e40af;">EM ESTOQUE</th>
+            <th style="background:#fef9c3; color:#854d0e;">PEDIDO ORIGINAL</th>
+            <th style="background:#fef9c3; color:#854d0e;">SUBTOTAL</th>
+            <th style="background:#dcfce7; color:#166534;">COMPRA REAL</th>
+            <th style="background:#dcfce7; color:#166534;">PREÇO UNITÁRIO</th>
+            <th style="background:#dcfce7; color:#166534;">SUBTOTAL</th>
+        </tr>
+    </thead>
+    <tbody id="tbody-compras"></tbody>
+</table>
+
+<div style="display:flex; justify-content:center; gap:10px; margin-top:20px; padding-bottom: 20px;">
+    <button class="btn btn-outline" onclick="paginarCompras(-1)">←</button>
+    <span id="comp-pag-info" style="font-weight: bold; align-self: center;">Pág 1</span>
+    <button class="btn btn-outline" onclick="paginarCompras(1)">→</button>
+</div>
 
     <div class="footer-compras">
         <div style="text-align: right;">
@@ -255,6 +260,7 @@
 </div>
 
 <script>
+    let pagCompras = 1; // Adicione perto de let pagEstoque = 1;
     const URL_API = "https://script.google.com/macros/s/AKfycbxCchSkeQ_V70BdDzGSX9UinQ36X--4oJpK6UGFJchTmpcGMLxZXc8vZGimLuvqVs9wiQ/exec"; 
     const SENHA_DASH = "1234";
     const TODAS_UNIDADES = [
@@ -905,11 +911,12 @@ const cat = document.getElementById('f-comp-cat').value;
 if(cat) f = f.filter(d => d.material === cat);
 
 if(dataF) f = f.filter(d => d.data.startsWith(dataF));
-    
-    tbody.innerHTML = f.map(p => {
-        // Pega o índice real do item no banco principal
+// Atualiza o indicador de página
+    document.getElementById('comp-pag-info').innerText = `Pág ${pagCompras}`;
+
+    // Aplica o fatiamento de 15 itens e renderiza
+    tbody.innerHTML = f.slice((pagCompras - 1) * 15, pagCompras * 15).map(p => {
         const idxOriginal = db.indexOf(p);
-        
         const hist = db.filter(d => d.tipo === 'contagem' && d.unidade === p.unidade && d.produto === p.produto);
         const ult = hist.sort((a,b) => new Date(b.data) - new Date(a.data))[0];
         
@@ -1022,7 +1029,7 @@ const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p
         const uni = document.getElementById('f-est-uni').value, cat = document.getElementById('f-est-cat').value, dataF = document.getElementById('f-est-data').value;
         let f = db.filter(d => d.tipo === 'contagem');
         if (uni) f = f.filter(d => d.unidade === uni); if (cat) f = f.filter(d => d.material === cat); if (dataF) f = f.filter(d => d.data && d.data.startsWith(dataF));
-        document.getElementById('tbody-estoque').innerHTML = f.slice((pagEstoque - 1) * 50, pagEstoque * 50).map(d => `<tr><td>${new Date(d.data).toLocaleDateString()}</td><td>${d.unidade}</td><td>${d.material}</td><td>${d.produto}</td><td>${d.quantidade}</td><td>${d.medida || d.Medida}</td><td>${d.observacao}</td></tr>`).join('');
+        document.getElementById('tbody-estoque').innerHTML = f.slice((pagEstoque - 1) * 15, pagEstoque * 50).map(d => `<tr><td>${new Date(d.data).toLocaleDateString()}</td><td>${d.unidade}</td><td>${d.material}</td><td>${d.produto}</td><td>${d.quantidade}</td><td>${d.medida || d.Medida}</td><td>${d.observacao}</td></tr>`).join('');
         document.getElementById('est-pag-info').innerText = `Pág ${pagEstoque}`;
     }
 
@@ -1482,6 +1489,28 @@ function exportarExcelTodas() {
     XLSX.writeFile(wb, `Protocolo_Todas_Unidades_${dataF}_${dataHoje}.xlsx`);
     mostrarToast(`✅ Excel com ${unidadesComPedido.length} unidades gerado!`);
 }
+
+function paginarCompras(dir) {
+    const itensPorPagina = 15;
+    const uni = document.getElementById('f-comp-uni').value;
+    const dataF = document.getElementById('f-comp-data').value;
+    let f = db.filter(d => d.tipo === 'pedido');
+    if(uni) f = f.filter(d => d.unidade === uni);
+    const totalPaginas = Math.ceil(f.length / itensPorPagina) || 1;
+
+    pagCompras += dir;
+    if (pagCompras < 1) pagCompras = 1;
+    if (pagCompras > totalPaginas) pagCompras = totalPaginas;
+    
+    renderCompras();
+    window.scrollTo(0,0);
+}
+
+// Resetar páginas ao mudar filtros
+document.getElementById('f-comp-uni').addEventListener('change', () => pagCompras = 1);
+document.getElementById('f-comp-cat').addEventListener('change', () => pagCompras = 1);
+document.getElementById('f-est-uni').addEventListener('change', () => pagEstoque = 1);
+document.getElementById('f-est-cat').addEventListener('change', () => pagEstoque = 1);
     
 // --- COPIE A PARTIR DAQUI ---
 // ITEM 1: LISTENER PARA PREENCHIMENTO AUTOMÁTICO DE MEDIDA
