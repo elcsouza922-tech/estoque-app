@@ -915,7 +915,7 @@ if(dataF) f = f.filter(d => d.data.startsWith(dataF));
         // Recupera o que foi digitado anteriormente ou deixa 0
 const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
 const editSalvo = (window.edicoesGlobais || {})[chave] || {};
-        const qReal = parseFloat(p.quantidade) || 0;
+       const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || parseFloat(p.quantidade) || 0);
 //depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
 const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
 
@@ -1387,7 +1387,7 @@ function exportarExcelTodas() {
                 const editSalvo = (window.edicoesGlobais || {})[chave] || {};
                 const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
                 const precoSugerido = infoBase ? infoBase.preco : 0;
-                 const qReal = parseFloat(p.quantidade) || 0;
+                 const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || parseFloat(p.quantidade) || 0);
 //depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
                 const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
                 const total = qReal * pReal;
@@ -1430,7 +1430,7 @@ function exportarExcelTodas() {
                 const editSalvo = (window.edicoesGlobais || {})[chave] || {};
                 const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
                 const precoSugerido = infoBase ? infoBase.preco : 0;
-                 const qReal = parseFloat(p.quantidade) || 0;
+                 const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || parseFloat(p.quantidade) || 0);
 //depois mudar para esse const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || 0);
                 const pReal = editSalvo.precoEditado   !== undefined ? editSalvo.precoEditado   : (p.precoEditado || precoSugerido);
                 const total = qReal * pReal;
@@ -1474,13 +1474,141 @@ function exportarExcelTodas() {
         XLSX.utils.book_append_sheet(wb, ws, nomeAba);
     });
 
+    // ── ABA RESUMO (última aba) ───────────────────────────────────────────────
+const wsResumo = {};
+const mergeResumo = [];
+let RR = 0;
+
+function mcR(r, c1, c2) { mergeResumo.push({ s:{r,c:c1}, e:{r,c:c2} }); }
+function setCellR(r, c, v, style, formula) {
+    const addr = XLSX.utils.encode_cell({r,c});
+    if (formula) {
+        wsResumo[addr] = { f: formula, t: 'n', s: style };
+    } else {
+        wsResumo[addr] = { v, t: typeof v === 'number' ? 'n' : 's', s: style };
+    }
+}
+
+const AZUL_HEADER = { fgColor: { rgb: "2E4057" } };
+const AZUL_CLARO  = { fgColor: { rgb: "DBEAFE" } };
+const VERDE_CLARO = { fgColor: { rgb: "DCFCE7" } };
+const AMARELO     = { fgColor: { rgb: "FEF9C3" } };
+const VERMELHO    = { fgColor: { rgb: "FEE2E2" } };
+const CINZA       = { fgColor: { rgb: "F1F5F9" } };
+const BRANCO      = { fgColor: { rgb: "FFFFFF" } };
+
+// Título
+mcR(RR,0,4);
+setCellR(RR,0,"RESUMO GERAL DE PEDIDOS - " + dataF, cellStyle(true,12,"FFFFFF","center",AZUL_HEADER));
+RR++;
+mcR(RR,0,4);
+setCellR(RR,0,"Instituto Gênesis — SCFV/CRIAD", cellStyle(false,9,"64748b","center",CINZA));
+RR+=2;
+
+// Cabeçalho da tabela
+["PROGRAMA","UNIDADE","VALOR PEDIDO","P. ATÍPICOS","VALOR TOTAL"].forEach((h,c) => {
+    setCellR(RR, c, h, cellStyle(true,9,"FFFFFF","center",AZUL_HEADER));
+});
+RR++;
+
+const programaMap = {
+    'ANDORINHAS':'CRIAD','BELA VISTA':'CRIAD','BONFIM':'CRIAD','CARATOIRA':'CRIAD',
+    'CCTI CENTRO':'CRIAD','CCTI JARDIM CAMBURI':'CRIAD','CCTI JARDIM DA PENHA':'CRIAD',
+    'CCTI MARIA ORTIZ':'CRIAD','CONQUISTA':'CRIAD','CONSOLAÇÃO':'CRIAD',
+    'ENG. ITARARÉ':'CRIAD','NISP JABURU':'IDOSO','NISP SANTO ANTONIO':'IDOSO',
+    'NISP SÃO PEDRO':'IDOSO','PRAIA DO SUÁ':'CRIAD','QUADRO':'CRIAD',
+    'ROMÃO':'CRIAD','SANTO ANDRÉ':'CRIAD','SOLON BORGES':'CRIAD'
+};
+
+// Guarda a linha de cada unidade para montar fórmulas
+const linhasPorUnidade = {};
+const primeiraLinhaTabela = RR;
+
+unidadesComPedido.forEach((uni, i) => {
+    const itensUni = pedidos.filter(p => p.unidade === uni);
+    let totalUni = 0, totalAtipUni = 0;
+
+    itensUni.forEach(p => {
+        const chave = `edit_${p.unidade}_${p.produto}_${p.data}`;
+        const editSalvo = (window.edicoesGlobais || {})[chave] || {};
+        const infoBase = BASE_PRODUTOS.find(b => b.nome === p.produto);
+        const precoSugerido = infoBase ? infoBase.preco : 0;
+        const qReal = editSalvo.quantidadeReal !== undefined ? editSalvo.quantidadeReal : (p.quantidadeReal || parseFloat(p.quantidade) || 0);
+        const pReal = editSalvo.precoEditado !== undefined ? editSalvo.precoEditado : (p.precoEditado || precoSugerido);
+        const sub = qReal * pReal;
+        totalUni += sub;
+        if (!p.material || !CATS_VALIDAS.includes(p.material)) totalAtipUni += sub;
+    });
+
+    const fillLinha = i % 2 === 0 ? BRANCO : CINZA;
+    const programa = programaMap[uni] || "CRIAD";
+    const nomeAba = uni.substring(0, 31);
+
+    // Fórmula que soma a coluna "Total" (coluna J = índice 9) de cada aba
+    // A coluna J no Excel é a 10ª coluna. Usamos SOMA da aba correspondente.
+    const formulaTotal    = `SUMIF('${nomeAba}'!A:A,"<>",'${nomeAba}'!J:J)`;
+    const formulaNormal   = totalUni - totalAtipUni; // mantém valor calculado
+    const formulaAtipicos = totalAtipUni;
+
+    setCellR(RR, 0, programa, cellStyle(false,9,"000000","center", fillLinha));
+    setCellR(RR, 1, uni,      cellStyle(false,9,"000000","left",   fillLinha));
+    // Valor pedido (sem atípicos) — valor calculado
+    wsResumo[XLSX.utils.encode_cell({r:RR,c:2})] = { v: formulaNormal,   t:'n', z:'"R$"#,##0.00', s: cellStyle(false,9,"000000","right", fillLinha) };
+    // Atípicos — valor calculado  
+    wsResumo[XLSX.utils.encode_cell({r:RR,c:3})] = { v: formulaAtipicos, t:'n', z:'"R$"#,##0.00', s: cellStyle(false,9,"000000","right", fillLinha) };
+    // Total da unidade — fórmula viva apontando para a aba
+    wsResumo[XLSX.utils.encode_cell({r:RR,c:4})] = { f: formulaTotal, t:'n', z:'"R$"#,##0.00', s: cellStyle(false,9,"000000","right", fillLinha) };
+
+    linhasPorUnidade[uni] = RR + 1; // linha Excel (1-based)
+    RR++;
+});
+
+// Linha TOTAL com fórmula somando todos os valores totais da coluna E
+const linhaInicio = primeiraLinhaTabela + 1; // 1-based
+const linhaFim    = RR; // 1-based
+setCellR(RR,0,"",       cellStyle(true,9,"000000","center",AZUL_HEADER));
+setCellR(RR,1,"TOTAL:", cellStyle(true,9,"FFFFFF","right", AZUL_HEADER));
+wsResumo[XLSX.utils.encode_cell({r:RR,c:2})] = { f: `SUM(C${linhaInicio}:C${linhaFim})`, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,9,"FFFFFF","right",AZUL_HEADER) };
+wsResumo[XLSX.utils.encode_cell({r:RR,c:3})] = { f: `SUM(D${linhaInicio}:D${linhaFim})`, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,9,"FFFFFF","right",AZUL_HEADER) };
+wsResumo[XLSX.utils.encode_cell({r:RR,c:4})] = { f: `SUM(E${linhaInicio}:E${linhaFim})`, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,9,"FFFFFF","right",AZUL_HEADER) };
+RR += 2;
+
+// Totalizadores com fórmulas vivas
+const ORCAMENTO_MENSAL = 42884.56;
+const linhaTotal = linhaFim + 1; // linha Excel da linha TOTAL
+
+const totalizadores = [
+    ["Valor Total Realizado",     `E${linhaTotal}`,                    VERDE_CLARO, "166534"],
+    ["Valor Total Mensal (Orç.)", ORCAMENTO_MENSAL,                    AZUL_CLARO,  "1E40AF"],
+    ["Valor Mensal Cada Unidade", `E${linhaTotal}/${unidadesComPedido.length}`, AMARELO, "854D0E"],
+    ["Diferença (Orç. - Real)",   `${ORCAMENTO_MENSAL}-E${linhaTotal}`, VERMELHO,   "991B1B"],
+];
+
+totalizadores.forEach(([label, valorOuFormula, fill, cor]) => {
+    mcR(RR,0,1);
+    setCellR(RR, 0, label, cellStyle(true,9,cor,"left", fill));
+    wsResumo[XLSX.utils.encode_cell({r:RR,c:1})] = { v:"", s: cellStyle(true,9,cor,"left", fill) };
+    if (typeof valorOuFormula === 'number') {
+        wsResumo[XLSX.utils.encode_cell({r:RR,c:2})] = { v: valorOuFormula, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,10,cor,"right", fill) };
+    } else {
+        wsResumo[XLSX.utils.encode_cell({r:RR,c:2})] = { f: valorOuFormula, t:'n', z:'"R$"#,##0.00', s: cellStyle(true,10,cor,"right", fill) };
+    }
+    RR++;
+});
+
+wsResumo['!merges'] = mergeResumo;
+wsResumo['!cols']   = [{wch:10},{wch:25},{wch:18},{wch:15},{wch:15}];
+wsResumo['!ref']    = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:RR,c:4}});
+
+// Adiciona APÓS as abas das unidades (última aba)
+XLSX.utils.book_append_sheet(wb, wsResumo, "RESUMO");
+
     const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
     XLSX.writeFile(wb, `Protocolo_Todas_Unidades_${dataF}_${dataHoje}.xlsx`);
     mostrarToast(`✅ Excel com ${unidadesComPedido.length} unidades gerado!`);
 }
     
-// --- COPIE A PARTIR DAQUI ---
-// ITEM 1: LISTENER PARA PREENCHIMENTO AUTOMÁTICO DE MEDIDA
+
 document.addEventListener('input', function(e) {
     // Verifica se o usuário está digitando no campo de produto
     if (e.target && e.target.id === 'produto') {
@@ -1496,7 +1624,7 @@ document.addEventListener('input', function(e) {
         }
     }
 });
-// --- ATÉ AQUI ---
+
     
     window.onload = function () {
         const ultimaAba = localStorage.getItem('abaAtual');
