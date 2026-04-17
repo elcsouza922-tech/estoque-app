@@ -252,8 +252,27 @@
     </section>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
 <script>
-    const URL_API = "https://script.google.com/macros/s/AKfycbxCchSkeQ_V70BdDzGSX9UinQ36X--4oJpK6UGFJchTmpcGMLxZXc8vZGimLuvqVs9wiQ/exec"; 
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDViBZl61Mq7mEg2plnkUBmhPc5nl_u2sg",
+    authDomain: "estoque-pro-1449b.firebaseapp.com",
+    databaseURL: "https://estoque-pro-1449b-default-rtdb.firebaseio.com",
+    projectId: "estoque-pro-1449b",
+    storageBucket:  "estoque-pro-1449b.firebasestorage.app",
+    messagingSenderId: "477539986508",
+  appId: "1:477539986508:web:cdb5c846136e3bd2d4d8e9",
+  };
+
+  // Inicializa o Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+</script>
+    
+    //const URL_API = "https://script.google.com/macros/s/AKfycbxCchSkeQ_V70BdDzGSX9UinQ36X--4oJpK6UGFJchTmpcGMLxZXc8vZGimLuvqVs9wiQ/exec"; 
     const SENHA_DASH = "1234";
     const TODAS_UNIDADES = [
     'ANDORINHAS', 
@@ -773,15 +792,19 @@
     async function enviarTudo() {
     if (itensLocal.length === 0) return alert("Adicione itens à lista primeiro!");
     
-    mostrarToast("🚀 Sincronizando e baixando Excel...");
+    mostrarToast("🚀 Sincronizando dados...");
     
     try {
-        const dataAtual = new Date().toLocaleDateString().replace(/\//g, '-');
-        const unidade = itensLocal[0].unidade;
-        // Define o nome do arquivo conforme solicitado
-        const nomeArquivo = `${unidade}_${tipoAtual}_${dataAtual}.xlsx`;
+        // 1. Criamos uma referência para a "pasta" lancamentos no Firebase
+        const lancamentosRef = database.ref('lancamentos');
 
-        // Prepara os dados para o Excel
+        // 2. Enviamos cada item da lista para o banco
+        for (let item of itensLocal) {
+            // O .push() gera um ID único para cada lançamento automaticamente
+            await lancamentosRef.push(item);
+        }
+
+        // 3. Gerar o Excel (Mantivemos sua lógica de baixar o arquivo na hora)
         const dataParaExcel = itensLocal.map(item => ({
             Data: new Date().toLocaleDateString(),
             Unidade: item.unidade,
@@ -795,39 +818,28 @@
         }));
 
         const ws = XLSX.utils.json_to_sheet(dataParaExcel);
-
-        // CONFIGURAÇÃO DE ESPAÇAMENTO (Largura das colunas)
-        // wch: 15 (Data), 20 (Unidade), 20 (Responsável), 20 (Categoria), 40 (Produto), 12 (Qtd), 12 (Medida), 40 (Obs), 15 (Tipo)
-        ws['!cols'] = [
-            { wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, 
-            { wch: 45 }, { wch: 12 }, { wch: 12 }, { wch: 45 }, { wch: 15 }
-        ];
-
+        ws['!cols'] = [{ wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 45 }, { wch: 12 }, { wch: 12 }, { wch: 45 }, { wch: 15 }];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Lançamento");
+        
+        const dataArquivo = new Date().toLocaleDateString().replace(/\//g, '-');
+        XLSX.writeFile(wb, `${itensLocal[0].unidade}_${tipoAtual}_${dataArquivo}.xlsx`);
 
-        // Baixa o arquivo
-        XLSX.writeFile(wb, nomeArquivo);
-
-        // Envia para o Google Sheets
-        await fetch(URL_API, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(itensLocal) 
-        });
-
-        alert("✅ Dados enviados e Excel baixado!");
-        // Dentro do try da função enviarTudo, após o sucesso:
-document.getElementById('unidade').disabled = false;
-document.getElementById('unidade').style.backgroundColor = "#fff";
-document.getElementById('responsavel').readOnly = false;
-document.getElementById('responsavel').style.backgroundColor = "#fff";
+        // 4. Limpeza e Sucesso
+        alert("✅ Dados salvos no Firebase e Excel gerado!");
+        
+        // Destrava os campos de unidade/responsável
+        document.getElementById('unidade').disabled = false;
+        document.getElementById('unidade').style.backgroundColor = "#fff";
+        document.getElementById('responsavel').readOnly = false;
+        document.getElementById('responsavel').style.backgroundColor = "#fff";
+        
         limparCamposFormulario();
         switchSection('home', document.getElementById('nav-home'));
 
-    } catch (e) { 
-        console.error(e);
-        alert("Erro ao processar o envio."); 
+    } catch (e) {
+        console.error("Erro ao salvar no Firebase:", e);
+        alert("❌ Erro técnico: O dado não foi salvo. Verifique sua internet ou as regras do Firebase.");
     }
 }
 
@@ -838,22 +850,36 @@ document.getElementById('responsavel').style.backgroundColor = "#fff";
     }
 
  async function syncDados() {
-    try {
-        const r = await fetch(URL_API + "?t=" + Date.now());
-        const resposta = await r.json();
+    mostrarToast("📡 Conectando ao Firebase...");
+    
+    // database.ref('lancamentos') acessa a "pasta" de dados no seu Firebase
+    // .on('value') faz o app ficar vigiando qualquer mudança em tempo real
+    database.ref('lancamentos').on('value', (snapshot) => {
+        const dadosRaw = snapshot.val();
         
-        // Ajuste para aceitar tanto o formato novo quanto o antigo do Google Script
-        db = resposta.dados || resposta; 
-        window.edicoesGlobais = resposta.edicoes || {};
-        
-        popularFiltros(); 
-        renderDash(); 
-        renderCompras(); 
-        renderEstoque();
-    } catch (e) { 
-        console.error("Erro sincronia:", e); 
-        mostrarToast("❌ Erro ao carregar dados.");
-    }
+        if (dadosRaw) {
+            // O Firebase guarda os dados como um objeto gigante. 
+            // Esse comando abaixo transforma esse objeto no Array (lista) que seu código já conhece.
+            db = Object.keys(dadosRaw).map(key => ({
+                id: key, 
+                ...dadosRaw[key]
+            }));
+            
+            // Re-renderiza tudo com os dados novos do Firebase
+            popularFiltros(); 
+            renderDash(); 
+            renderCompras(); 
+            renderEstoque();
+            
+            mostrarToast("✅ Dados sincronizados!");
+        } else {
+            db = [];
+            mostrarToast("ℹ️ Banco de dados vazio.");
+        }
+    }, (error) => {
+        console.error("Erro na sincronia Firebase:", error);
+        mostrarToast("❌ Erro de permissão ou conexão.");
+    });
 }
 
 function popularFiltros() {
