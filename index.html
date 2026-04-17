@@ -602,6 +602,20 @@
         return parseFloat(String(str).replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
     }
 
+function formatarDataParaFiltro(dataRaw) {
+    if (!dataRaw) return "";
+    let d = dataRaw.toString();
+
+    // Se a data estiver no formato brasileiro: 16/04/2026
+    if (d.includes('/')) {
+        const partes = d.split('/'); // [16, 04, 2026]
+        if (partes.length === 3) return `${partes[2]}-${partes[1]}`; // Retorna 2026-04
+    }
+    
+    // Se a data for ISO: 2026-04-16T...
+    return d.slice(0, 7); // Retorna 2026-04
+}
+    
  function salvarEdicao(index, campo, valor) {
     const num = campo === 'precoEditado' ? parseMoedaBR(valor) : parseFloat(valor) || 0;
     db[index][campo] = num;
@@ -846,13 +860,8 @@ function popularFiltros() {
     
     // FILTRO DE DATA (Compatível com DD/MM/YYYY e YYYY-MM)
     if (dataF) {
-        const [anoF, mesF] = dataF.split('-');
-        pedidosFiltrados = pedidosFiltrados.filter(d => {
-            if (!d.data) return false;
-            if (d.data.includes('/')) {
-                const partes = d.data.split('/');
-                return partes[2] === anoF && partes[1] === mesF;
-            }
+    pedidosFiltrados = pedidosFiltrados.filter(d => formatarDataParaFiltro(d.data) === dataF);
+}
             return d.data.startsWith(dataF);
         });
     }
@@ -972,14 +981,11 @@ function popularFiltros() {
     if (cat) f = f.filter(d => d.material === cat);
     
     // FILTRO DE DATA (Corrigido para aceitar DD/MM/YYYY e YYYY-MM)
-    if (dataF) {
-        const [anoF, mesF] = dataF.split('-');
-        f = f.filter(d => {
-            if (!d.data) return false;
-            if (d.data.includes('/')) {
-                const partes = d.data.split('/');
-                return partes[2] === anoF && partes[1] === mesF;
-            }
+    // Ache a parte do filtro de data e substitua por:
+const unidadesQueEnviaram = [...new Set(db.filter(d => {
+    if (d.tipo !== 'pedido') return false;
+    return formatarDataParaFiltro(d.data) === mesAtual;
+}).map(d => d.unidade.toUpperCase().trim()))];
             return d.data.startsWith(dataF);
         });
     }
@@ -1616,6 +1622,9 @@ document.addEventListener('input', function(e) {
 
     
    window.onload = function () {
+
+       document.getElementById('f-comp-data').value = new Date().toISOString().slice(0, 7);
+document.getElementById('f-est-data').value = new Date().toISOString().slice(0, 7);
     // Liga a conexão em tempo real com o Firebase
     syncDados(); 
 
