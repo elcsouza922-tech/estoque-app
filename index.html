@@ -847,22 +847,27 @@ document.getElementById('responsavel').style.backgroundColor = "#fff";
         itensLocal = []; renderPreview(); document.getElementById('tblPreview').classList.add('hidden');
     }
 
- async function syncDados() {
+async function syncDados() {
     try {
         const r = await fetch(URL_API + "?t=" + Date.now());
         const resposta = await r.json();
         
-        // Ajuste para aceitar tanto o formato novo quanto o antigo do Google Script
-        db = resposta.dados || resposta; 
+        // Garante que db seja sempre um array, mesmo se a resposta falhar
+        db = Array.isArray(resposta) ? resposta : (resposta.dados || []);
         window.edicoesGlobais = resposta.edicoes || {};
         
         popularFiltros(); 
         renderDash(); 
         renderCompras(); 
         renderEstoque();
+        
+        if (db.length === 0) {
+            mostrarToast("⚠️ Nenhum dado encontrado no servidor.");
+        }
     } catch (e) { 
         console.error("Erro sincronia:", e); 
-        mostrarToast("❌ Erro ao carregar dados.");
+        db = []; // Evita erro de .filter is not a function
+        mostrarToast("❌ Erro de conexão com o banco.");
     }
 }
 
